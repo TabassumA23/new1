@@ -27,6 +27,13 @@
                     >
                         Reviews
                     </router-link>
+                    <!-- reservations page-->
+                    <router-link
+                        class="link"
+                        :to="{name: 'Reservations'}"
+                    >
+                        Reservations
+                    </router-link>
 
                     <!-- Logout -->
                     <a href= 'http://localhost:8000/logout/'>Log Out</a>
@@ -49,13 +56,13 @@ export default defineComponent({
   <!--Styling for page and navbar mainly colour and positions-->
 <style scoped>
     main{
-        background-color: #B4DABA;
+        background-color:rgb(234, 91, 91);
         font-family: Arial, Helvetica, sans-serif;
     }
     
     .navbar{
         display: flex;
-        background-color: #D9D9D9;
+        background-color:rgb(234, 91, 91);
         padding-left: 0.5rem
     }
 
@@ -69,7 +76,7 @@ export default defineComponent({
         margin: 1em;
         color: black;
         font-size: 1rem;
-        background-color: #659A78;
+        background-color:rgb(234, 91, 91);
         border: none;
     }
 </style>

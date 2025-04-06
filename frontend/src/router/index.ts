@@ -8,6 +8,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import ProfilePage from "../pages/ProfilePage.vue";
 import FindFriends from "../pages/FindFriends.vue";
 import Reviews from "../pages/Reviews.vue";
+import Reservations from "../pages/Reservations.vue";
 
 let base = (import.meta.env.MODE == 'development') ? import.meta.env.BASE_URL : ''
 
@@ -28,6 +29,11 @@ const router = createRouter({
     path: "/reviews",
     name: "Reviews",
     component: Reviews,
+  },
+  {
+    path: "/reservations",
+    name: "Reservations",
+    component: Reservations,
   },
 ]
 })

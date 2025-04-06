@@ -54,3 +54,13 @@ export interface ChosenCuisine{
     cusine: number;
     name: string;
 }
+
+export interface Reservation {
+    id: number;
+    api: string;
+    restaurant: string;  
+    reservation_time: string;  
+    number_of_people: number;
+    status: string; 
+    special_requests: string;
+}

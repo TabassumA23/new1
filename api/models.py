@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 import logging
+from django.core.validators import MinValueValidator
 
 # Create a logger
 logger = logging.getLogger(__name__)
@@ -38,6 +39,8 @@ class Restaurant(models.Model):
     '''
     name = models.CharField(max_length=100)
     description = models.TextField(max_length=100)
+    rating = models.IntegerField(default=0)
+    seats_available = models.IntegerField(default=0)
     
     def __str__(self):
         return self.name
@@ -52,6 +55,8 @@ class Restaurant(models.Model):
             'api': reverse('restaurant api', args=[self.id]),
             'name': self.name,
             'description': self.description,
+            'rating': self.rating,
+            'seats_available': self.seats_available,
         }
     
 class Cuisine(models.Model):
@@ -195,4 +200,39 @@ class Review(models.Model):
                 'id': self.user.id,
             }
         }
+
+class Reservation(models.Model):
+    '''
+    Class for the Reservation
+    '''
+    # Define status choices
+    PENDING = 0
+    CONFIRMED = 1
+    STATUS_CHOICES = [
+        (PENDING, 'Pending'),
+        (CONFIRMED, 'Confirmed'),
+    ]
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)  # Link to Restaurant model
+    reservation_time = models.DateTimeField()
+    number_of_people = models.IntegerField(default=0,validators=[MinValueValidator(0)])
+    status = models.IntegerField(choices=STATUS_CHOICES, default=PENDING)
+    special_requests = models.TextField(max_length=200)
     
+    def __str__(self):
+        return f"Reservation at {self.restaurant.name} for {self.number_of_people} people"
+    
+    '''
+    Dictionary
+    '''
+    def as_dict(self):
+        return {
+            'id': self.id,
+            # Obtains URL pattern for individual restaurant
+            'api': reverse('reservation api', args=[self.id]),
+            'restaurant': self.restaurant.name,
+            'special_requests': self.special_requests,
+            'number_of_people': self.number_of_people,
+            'status': dict(self.STATUS_CHOICES).get(self.status),
+            'reservation_time': self.reservation_time.strftime('%Y-%m-%d %H:%M:%S'),
+        }
+

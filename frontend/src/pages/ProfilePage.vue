@@ -123,16 +123,7 @@
         
      </div>
 
-      <!-- Form to Add a New review. -->
-      <div id="create-review">
-          <h3>Want to add a new review to this website?</h3>
-          <h6>Double check spelling before submission!!</h6>
-          <label for="name">Name of Review:</label><br>
-          <input id="name" v-model="newReview.name" type="text" required=true class="form-control"/><br>
-          <label for="name">Brief review Description:</label><br>
-          <textarea id="description" v-model="newReview.description" required=true class="form-control" rows="2" cols="50"></textarea><br>
-          <button type="submit" @click="createReview">Add Review</button>
-      </div>
+    
   </div>
   
   
@@ -140,11 +131,11 @@
 
 <script lang="ts">
   import { defineComponent } from "vue";
-  import { User, Restaurant, Friendship, Chosen,Cuisine, ChosenCuisine, Review} from "../types/index";
+  import { User, Restaurant, Friendship, Chosen,Cuisine, ChosenCuisine} from "../types/index";
   import { useUserStore } from "../stores/user";
   import { useUsersStore } from "../stores/users";
   import { useRestaurantsStore } from "../stores/restaurants";
-  import { useReviewsStore } from "../stores/reviews";
+
   import { useCuisinesStore } from "../stores/cuisines";
   import { useChosenStore } from "../stores/chosen";
   import { useChosensStore } from "../stores/chosens";
@@ -171,10 +162,7 @@
               date_of_birth: "",
               
           },
-          newReview: {
-              name: "",
-              description: "",
-          },
+          
           chosenRestaurant: "",
           
           chosenChosenCuisine: "",
@@ -336,41 +324,7 @@
         
 
 
-          /* Creating a New review */
-          async createReview(){
-              /* See if review exists in Pinia store */
-              const reviewsStore = useReviewsStore();
-              const lower = this.newReview.name.toLowerCase();
-
-              let reviewExists = reviewsStore.getReviewByName(lower);
-              console.log(this.userStore.csrf)
-              
-              if (reviewExists != undefined){
-                  alert("This review already exists on the website!");
-                  window.location.reload();
-              }
-              else{
-                  const payload = this.newReview;
-                  console.log(payload)
-                  const reviewResponse = await fetch(`http://localhost:8000/reviews/`, 
-                  {
-                      method: "POST",
-                      headers: {
-                          'Authorization': `Bearer ${VueCookies.get('access_token')}`,
-                          'Content-Type': 'application/json',
-                          'X-CSRFToken': VueCookies.get('csrftoken'),
-                      },
-                      credentials: 'include',
-                      body: JSON.stringify(payload),
-                  });
-                  //Add the newly created review to Pinia store 
-                  const data = await reviewResponse.json();
-                  let createdReview = data.review as Review;
-                  reviewsStore.addReview(createdReview); 
-                  window.location.reload();
-                  alert(` Review added successfully!`);
-              }
-          },
+          
           //deletes the friendships between users and friend whether pending or accepted
           async deleteChosen(chosenId: number) {
        
@@ -617,10 +571,7 @@
               const restaurantsStore = useRestaurantsStore;
               return this.restaurantsStore.restaurants; // Bind to the fetched cuisine data from Pinia store
           },
-          reviews(): Review[]{
-              const reviewsStore = useReviewsStore;
-              return this.reviewsStore.reviews; // Bind to the fetched cuisine data from Pinia store
-          },
+          
           cuisines(): Cuisine[]{
               const cuisinesStore = useCuisinesStore;
               return this.cuisinesStore.cuisines; // Bind to the fetched cuisine data from Pinia store
@@ -642,13 +593,12 @@
       setup() {
           const userStore = useUserStore();
           const restaurantsStore = useRestaurantsStore();
-          const reviewsStore = useReviewsStore();
           const cuisinesStore = useCuisinesStore();
           const friendshipsStore = useFriendshipsStore();
           const usersStore = useUsersStore();
           const chosensStore = useChosensStore();
           const chosenCuisinesStore = useChosenCuisinesStore();
-          return { userStore , restaurantsStore , friendshipsStore, usersStore, chosensStore, chosenCuisinesStore, cuisinesStore, reviewsStore};
+          return { userStore , restaurantsStore , friendshipsStore, usersStore, chosensStore, chosenCuisinesStore, cuisinesStore};
       },
   });
   </script>
@@ -680,32 +630,32 @@
   }
   #create-restaurant>h3{
       text-align: center;
-      background-color: #D9D9D9;
+      background-color:rgb(243, 163, 163);
   }
   #create-restaurant>input{
       margin-bottom: 1.5rem;
   }
   .friend-accepted{
 
-      background-color: #D9D9D9;
+      background-color:rgb(243, 163, 163);
       grid-column: 2;
       grid-row: 1/span 2;
       padding-bottom: 2em;
   }
   .friend-pending{
    
-      background-color: #D9D9D9;
+      background-color:rgb(243, 163, 163);
       grid-column: 2;
       grid-row: 3/span 2;
   }
   .body > div{
-      background-color: #659A78;
+      background-color:rgb(243, 163, 163);
       margin:2em;
       padding:2em;
   }
 
   a{
-      background-color: #659A78;
+      background-color:rgb(243, 163, 163);
       margin:0.5em;
       text-decoration: none;
       color:black;
@@ -717,11 +667,11 @@
   }
 
   .restaurants{
-      background-color: #B4DABA;
+      background-color:rgb(243, 163, 163);
   }
 
   h2, .friends, div>p {
-      background-color: #D9D9D9;
+      background-color:rgb(243, 163, 163);
       margin:0.2em;
   }
   h6{
@@ -732,7 +682,7 @@
   }
 
   button{
-      background-color:  #B4DABA;
+      background-color:rgb(243, 163, 163);
       font-size: 1rem;
       margin-bottom: 0.5rem;
       border: none;

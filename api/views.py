@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 
-from .models import Chosen, Restaurant, User, Friendship, ChosenCuisine, Cuisine, Review
+from .models import Chosen, Restaurant, User, Friendship, ChosenCuisine, Cuisine, Review, Reservation
 from .forms import LoginForm, SignUpForm, UpdatePassForm, UpdateUserForm
 
 # Authenticate login before Vue SPA redirect
@@ -86,6 +86,8 @@ def restaurants_api(request: HttpRequest) -> JsonResponse:
         restaurant = Restaurant.objects.create(
             name=POST['name'],
             description=POST['description'],
+            rating=POST['rating'],
+            seats_available=POST['seats_available'],
         )
         return JsonResponse(restaurant.as_dict())
 
@@ -110,6 +112,8 @@ def restaurant_api(request: HttpRequest, restaurant_id: int) -> JsonResponse:
             PUT = json.loads(request.body)
             restaurant.name = PUT.get("name", restaurant.name)
             restaurant.description = PUT.get("description", restaurant.description)
+            restaurant.rating = PUT.get("rating", restaurant.rating)
+            restaurant.seats_available = PUT.get("seats_available", restaurant.seats_available)
             restaurant.save()
             return JsonResponse(restaurant.as_dict())
         except Exception as e:
@@ -493,6 +497,7 @@ def reviews_api(request: HttpRequest) -> JsonResponse:
             'user': {
                 'first_name': review.user.first_name,
                 'last_name': review.user.last_name,
+                'id': review.user.id,
             },
         })
     return JsonResponse({'reviews': reviews_data})
@@ -522,3 +527,71 @@ def review_api(request: HttpRequest, review_id: int) -> JsonResponse:
 
     # GET restaurant data
     return JsonResponse(review.as_dict())
+
+# APIs for restaurant model below
+def reservations_api(request: HttpRequest) -> JsonResponse:
+    """API endpoint for the Reservation"""
+
+    # POST method to create a reservation
+    if request.method == 'POST':
+        try:
+            POST = json.loads(request.body)
+            print("Received POST data:", POST)  # Debugging line to check POST data
+
+            # Ensure 'number_of_people' is in the request
+            if 'number_of_people' not in POST:
+                return JsonResponse({"error": "'number_of_people' is missing"}, status=400)
+
+            restaurant = Restaurant.objects.get(id=POST['restaurant_id'])
+            reservation = Reservation.objects.create(
+                restaurant=restaurant,
+                reservation_time=POST['reservation_time'],
+                number_of_people=POST['number_of_people'],
+                status=POST['status'],
+                special_requests=POST.get('special_requests', ''),
+            )
+            return JsonResponse(reservation.as_dict())
+
+        except KeyError as e:
+            return JsonResponse({"error": f"Missing field: {str(e)}"}, status=400)
+        except Restaurant.DoesNotExist:
+            return JsonResponse({"error": "Restaurant not found"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": f"Error: {str(e)}"}, status=500)
+
+    # If GET method is used, return all reservations
+    return JsonResponse({
+        'reservations': [
+            reservation.as_dict()
+            for reservation in Reservation.objects.all()
+        ]
+    })
+
+def reservation_api(request: HttpRequest, reservation_id: int) -> JsonResponse:
+    """API endpoint for a single reservation"""
+    try:
+        reservation = Reservation.objects.get(id=reservation_id)
+    except Reservation.DoesNotExist:
+        return JsonResponse({"error": "Reservation not found."}, status=404)
+
+    # PUT method to update reservation
+    if request.method == 'PUT':
+        try:
+            PUT = json.loads(request.body)
+            
+            reservation.reservation_time = PUT.get("reservation_time", reservation.reservation_time)
+            reservation.number_of_people = PUT.get("number_of_people", reservation.number_of_people)
+            reservation.status = PUT.get("status", reservation.status)
+            reservation.special_requests = PUT.get("special_requests", reservation.special_requests)
+            reservation.save()
+            return JsonResponse(reservation.as_dict())
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    # DELETE method to delete reservation
+    if request.method == 'DELETE':
+        reservation.delete()
+        return JsonResponse({}, status=204)  # 204 No Content
+
+    # GET reservation data
+    return JsonResponse(reservation.as_dict())

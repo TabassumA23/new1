@@ -43,7 +43,8 @@
     <div class="review-item" v-for="(review, index,) in reviews" :key="index">
         <div class="review-header">
             <h3>{{ review.name }}</h3> <!-- Title of the review -->
-           <p><strong>By:</strong> {{review.user.id}}{{ review.user.first_name }} {{ review.user.last_name }} |  <strong>Date:</strong> {{ formatDate(review.date) }}</p>
+           <p><strong>By:</strong> {{ review.user.id }} {{ review.user.first_name }} {{ review.user.last_name }} | <strong>Date:</strong> {{ formatDate(review.date) }}</p>
+
         </div>
         
         <div class="review-content">
@@ -79,6 +80,7 @@
           newReview: {
               name: "",
               description: "",
+              
           },
           reviews: [],  // Store for reviews fetched from the backend
           };
@@ -165,8 +167,10 @@
                 description: this.newReview.description,  
                 user_id: userId,
             };
-
-            console.log(payload);  
+            
+            console.log(payload); 
+            console.log(userId);  
+            
 
             const reviewResponse = await fetch('http://localhost:8000/reviews/', {
                 method: 'POST',
@@ -189,44 +193,37 @@
             window.location.reload();
             alert('Review added successfully!');
         },
+        async deleteReview(reviewId: number) {
+            // Check if the logged-in user is the one who wrote the review
+            const reviewToDelete = this.reviews.find(review => review.id === reviewId);
+            if (!reviewToDelete || reviewToDelete.user.id !== this.user.id) {
+                alert("You cannot delete this review. Only the author can delete it.");
+                return; // Prevent deletion
+            }
 
-       
-        // Method to delete a review
-    methods: {
-    async deleteReview(reviewId: number) {
-        // Check if the logged-in user is the one who wrote the review
-        const reviewToDelete = this.reviews.find(review => review.id === reviewId);
-        if (!reviewToDelete || reviewToDelete.user.id !== this.user.id) {
-            alert("You cannot delete this review. Only the author can delete it.");
-            return; // Prevent deletion
-        }
+            try {
+                const response = await fetch(`http://localhost:8000/review/${reviewId}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${VueCookies.get('access_token')}`,
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': VueCookies.get('csrftoken'),
+                    },
+                    credentials: 'include',
+                });
 
-        try {
-            const response = await fetch(`http://localhost:8000/reviews/${reviewId}/`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${VueCookies.get('access_token')}`,
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': VueCookies.get('csrftoken'),
-                },
-                credentials: 'include',
-            });
-
-            if (response.ok) {
-                // Remove the deleted review from the list
-                this.reviews = this.reviews.filter(review => review.id !== reviewId);
-                alert('Review deleted successfully!');
-            } else {
+                if (response.ok) {
+                    // Remove the deleted review from the list
+                    this.reviews = this.reviews.filter(review => review.id !== reviewId);
+                    alert('Review deleted successfully!');
+                } else {
+                    alert('Failed to delete the review.');
+                }
+            } catch (error) {
+                console.error('Error deleting review:', error);
                 alert('Failed to delete the review.');
             }
-        } catch (error) {
-            console.error('Error deleting review:', error);
-            alert('Failed to delete the review.');
-        }
-    },
-},
-
-
+        },
 
       }, 
       computed: {
