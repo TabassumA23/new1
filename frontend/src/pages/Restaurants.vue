@@ -1,131 +1,41 @@
 <template>
-  <div class="body">
-     <div id="profile-box">
-        <h2>Welcome {{ user.first_name }}</h2>
-            <p>
-            Username: {{ user.username }}
-            
-            
-            <button> <a href="http://localhost:8000/updateUser/"> Change Username </a> </button>
-            
-        </p>
+    <div class="body">
+        <div id="profile-box">
+            <h2>Welcome {{ user.first_name }}</h2>
+ 
+      <!-- Form to Add a New restaurant. -->
+      <div id="create-restaurant">
+          <h3>Want to add a new restaurant to this website?</h3>
+          <h6>Double check spelling before submission!!</h6>
+          <label for="name">Name of restaurant:</label><br>
+          <input id="name" v-model="newRestaurant.name" type="text" required=true class="form-control"/><br>
+          <label for="restaurant">Brief restaurant Description:</label><br>
+        <textarea id="description" v-model="newRestaurant.description" required class="form-control" rows="2" cols="50"></textarea><br>
+
+          <button type="submit" @click="createRestaurant">Add restaurant</button>
+      </div>
+  </div>
+  <div class="restaurant-blog">
+    <h2>All restaurants</h2>
+
+    <div class="restaurant-item" v-for="(restaurant, index,) in restaurants" :key="index">
+        <div class="restaurant-header">
+            <h3>{{ restaurant.name }}</h3> <!-- Title of the restaurant -->
+           <p><strong>By:</strong> {{ restaurant.user.id }} {{ restaurant.user.first_name }} {{ restaurant.user.last_name }} | <strong>Date:</strong> {{ formatDate(restaurant.date) }}</p>
+
+        </div>
         
-          <p>
-              <span v-if="!editFirstName">First Name: {{ user.first_name }}</span>
-                  <span v-else>
-                      First Name:
-                      <input v-model="editedUser.first_name" type="text" />
-                  </span>
-                  <button v-if="!editFirstName" @click="toggleEditField('FirstName')">Edit</button>
-                  <button v-else @click="saveField('first_name')">Save</button>
-          </p>
-          
-          <p>
-              <span v-if="!editLastName">Last Name: {{ user.last_name }}</span>
-                  <span v-else>
-                      Last Name:
-                      <input v-model="editedUser.last_name" type="text" />
-                  </span>
-                  <button v-if="!editLastName" @click="toggleEditField('LastName')">Edit</button>
-                  <button v-else @click="saveField('last_name')">Save</button>
-          </p>
-          <p>
-              <span v-if="!editEmail">Email: {{ user.email }}</span>
-              <span v-else>
-                  Email:
-                  <input v-model="editedUser.email" type="email" />
-              </span>
-              <button v-if="!editEmail" @click="toggleEditField('Email')">Edit</button>
-              <button v-else @click="saveField('email')">Save</button>
-          </p>
-          <p>
-          <span v-if="!editDateOfBirth">Date of Birth: {{ user.date_of_birth }}</span>
-              <span v-else>
-                  {{ user.date_of_birth }}
-                  <input v-model="editedUser.date_of_birth" type="date" />
-              </span>
-              <button v-if="!editDateOfBirth" @click="toggleEditField('DateOfBirth')">Edit</button>
-              <button v-else @click="saveField('date_of_birth')">Save</button>
-          </p>
-          <p>
-                <span v-if="!editPassword">Password: ********</span>
-            
-                <button> <a href="http://localhost:8000/updatePass/"> Change Password </a> </button>
-                
-            </p>
-         
-    </div>
-    
-    <div class="restaurant">
-        <label for="restaurants">Choose a restaurant:</label>
-        <select id="restaurants" v-model="chosenRestaurant">
-            <option v-for="restaurant in restaurants">
-                {{ restaurant.name }}
-            </option>
-        </select>
-        <button @click="addChosen">Save Choice Here</button>
-        <div class="restaurants">
-                <h4>restaurants</h4>
-                  <ul v-for="(chosen, index) in chosens" :key="index">
-                  <li class="friends" v-if="chosen.user==user.id">
-                      {{ chosen.name }} <button @click="deleteChosen(chosen.id)"> Delete </button>
-                  </li>
-              </ul>
-              
-          </div>
+        <div class="restaurant-content">
+            <p>{{ restaurant.description }}</p> <!-- restaurant content -->
+        </div>
+        
+        <div class="restaurant-actions" v-if="restaurant.user.id === user.id">
+            <button @click="deleteRestaurant(restaurant.id)">Delete restaurant</button>
+        </div>
     </div>
 
-    <div class="cuisine">
-        <label for="cuisines">Choose a cuisine:</label>
-        <select id="cuisines" v-model="this.chosenChosenCuisine">
-            <option v-for="cuisine in cuisines">
-                {{ cuisine.name }}
-            </option>
-        </select>
-        <button @click="addChosenCuisine">Save Choice Here</button>
-        <div class="cuisines">
-                <h4>cuisines</h4>
-                  <ul v-for="(chosenCuisine, index) in chosenCuisines" :key="index">
-                  <li class="friends" v-if="chosenCuisine.user==user.id">
-                      {{ chosenCuisine.name }} <button @click="deleteChosenCuisine(chosenCuisine.id)"> Delete </button>
-                  </li>
-              </ul>
-              
-          </div>
-    </div>
+</div>
 
-
-        
-      
-      <div class="friend-accepted">
-          <div>
-              <h2>Accepted Friends</h2>
-          </div>
-
-          <ul v-for="(friendship, index) in friendships" :key="index">
-              <li class="friends" v-if="friendship.user==user.id && friendship.accepted == true">
-                  {{ friendship.username }} <button @click="deleteFriendship(friendship.id)"> Delete </button>
-              </li>
-          </ul>
-        
-     </div>
-
-     <div  class="friend-pending">
-          <div>
-              <h2>Pending Friends</h2>
-          </div>
-
-          <ul v-for="(friendship, index) in friendships" :key="index">
-              <li class="friends" v-if="friendship.user==user.id && friendship.accepted == false">
-                  {{ friendship.username }} 
-                  <button @click="deleteFriendship(friendship.id)"> Delete </button>
-                  <button @click="acceptFriendship(friendship.id)"> Accept </button>
-              </li>
-          </ul>
-        
-     </div>
-
-    
   </div>
   
   
@@ -609,87 +519,148 @@
 
 
 <style scoped>
-  .body{
-      font-family: Arial, Helvetica, sans-serif;
-      display: grid;
-      grid-template-columns: auto auto;
-      grid-template-rows: 10% 30% 20% 30% 10%;
-      gap: 1rem 0.25rem;
-  }
-  #profile-box{
-      grid-column: 1;
-      grid-row: 1/span 2;
-  }
 
-  #restaurant{
+
+<style scoped>
+    .body{
+        font-family: Arial, Helvetica, sans-serif;
+        display: grid;
+        grid-template-columns: auto auto;
+        grid-template-rows: 10% 30% 20% 30% 10%;
+        gap: 1rem 0.25rem;
+    }
+    #profile-box{
+        grid-column: 1;
+        grid-row: 1/span 2;
+    }
+
+    #restaurant{
     grid-column: 1;
-      grid-row: 3;
+        grid-row: 3;
 
-  }
+    }
 
-  #create-restaurant{
-      grid-column: 1;
-      grid-row: 4;
-      padding-top: 0.5rem;
-  }
-  #create-restaurant>h3{
-      text-align: center;
-      background-color:rgb(243, 163, 163);
-  }
-  #create-restaurant>input{
-      margin-bottom: 1.5rem;
-  }
-  .friend-accepted{
+    #create-restaurant{
+        grid-column: 1;
+        grid-row: 4;
+        padding-top: 0.5rem;
+    }
+    #create-restaurant>h3{
+        text-align: center;
+        background-color: #D9D9D9;
+    }
+    #create-restaurant>input{
+        margin-bottom: 1.5rem;
+    }
+    .friend-accepted{
 
-      background-color:rgb(243, 163, 163);
-      grid-column: 2;
-      grid-row: 1/span 2;
-      padding-bottom: 2em;
-  }
-  .friend-pending{
-   
-      background-color:rgb(243, 163, 163);
-      grid-column: 2;
-      grid-row: 3/span 2;
-  }
-  .body > div{
-      background-color:rgb(243, 163, 163);
-      margin:2em;
-      padding:2em;
-  }
+        background-color: #D9D9D9;
+        grid-column: 2;
+        grid-row: 1/span 2;
+        padding-bottom: 2em;
+    }
+    .friend-pending{
 
-  a{
-      background-color:rgb(243, 163, 163);
-      margin:0.5em;
-      text-decoration: none;
-      color:black;
-      padding: 0.2em;
-  }
+        background-color: #D9D9D9;
+        grid-column: 2;
+        grid-row: 3/span 2;
+    }
+    .body > div{
+        background-color: #659A78;
+        margin:2em;
+        padding:2em;
+    }
 
-  a:hover, button:hover{
-      color:white;
-  }
+    a{
+        background-color: #659A78;
+        margin:0.5em;
+        text-decoration: none;
+        color:black;
+        padding: 0.2em;
+    }
 
-  .restaurants{
-      background-color:rgb(243, 163, 163);
-  }
+    a:hover, button:hover{
+        color:white;
+    }
 
-  h2, .friends, div>p {
-      background-color:rgb(243, 163, 163);
-      margin:0.2em;
-  }
-  h6{
-      text-align: center;
-  }
-  li{
-      display:flex;
-  }
+    .restaurants{
+        background-color: #B4DABA;
+    }
 
-  button{
-      background-color:rgb(243, 163, 163);
-      font-size: 1rem;
-      margin-bottom: 0.5rem;
-      border: none;
-  }
+    h2, .friends, div>p {
+        background-color: #D9D9D9;
+        margin:0.2em;
+    }
+    h6{
+        text-align: center;
+    }
+    li{
+        display:flex;
+    }
+
+    button{
+        background-color:  #B4DABA;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+        border: none;
+    }
+    .review-blog {
+        font-family: Arial, Helvetica, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .review-item {
+        background-color: #f9f9f9;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .review-header {
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+
+    .review-header h3 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .review-header p {
+        margin: 5px 0;
+        font-size: 14px;
+        color: #777;
+    }
+
+    .review-content {
+        font-size: 16px;
+        line-height: 1.6;
+        color: #333;
+    }
+
+    .review-actions {
+        text-align: right;
+        margin-top: 10px;
+    }
+
+    .review-actions button {
+        background-color: #ff4e4e;
+        border: none;
+        color: white;
+        padding: 8px 15px;
+        font-size: 14px;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+
+    .review-actions button:hover {
+        background-color: #ff1c1c;
+    }
+
 
 </style>

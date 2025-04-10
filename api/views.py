@@ -41,6 +41,7 @@ def signup_user(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         form = SignUpForm(request.POST)
         # Clean values if valid and authenticate
+        user_data = form.cleaned_data
         if form.is_valid():
             first_name=form.cleaned_data["first_name"]
             last_name=form.cleaned_data["last_name"]
@@ -48,6 +49,7 @@ def signup_user(request: HttpRequest) -> HttpResponse:
             email=form.cleaned_data["email"]
             date_of_birth=form.cleaned_data["date_of_birth"]
             password=form.cleaned_data["password"]
+            user_type=user_data['user_type']  # Store the user type here
             user = auth.authenticate(username=username, password=password)
             # Rendering Vue SPA if an existing user is not found
             if user is None:
@@ -78,8 +80,13 @@ def logout_user(request: HttpRequest) -> HttpResponse:
 # APIs for restaurant model below
 def restaurants_api(request: HttpRequest) -> JsonResponse:
     """API endpoint for the Restaurant"""
+    
+    # Ensure user is authenticated before checking the user_type
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "User not authenticated"}, status=401)
 
-    # POST method which is the create method
+    # Proceed with the owner check only for authenticated users
+    
     if request.method == 'POST':
         # Create a new restaurant
         POST = json.loads(request.body)
@@ -88,16 +95,10 @@ def restaurants_api(request: HttpRequest) -> JsonResponse:
             description=POST['description'],
             rating=POST['rating'],
             seats_available=POST['seats_available'],
+            location=POST['location']
         )
         return JsonResponse(restaurant.as_dict())
 
-    # GET method which allows the user to view all hobbies
-    return JsonResponse({
-        'restaurants': [
-            restaurant.as_dict()
-            for restaurant in Restaurant.objects.all()
-        ]
-    })
 
 def restaurant_api(request: HttpRequest, restaurant_id: int) -> JsonResponse:
     """API endpoint for a single restaurant"""
@@ -108,12 +109,14 @@ def restaurant_api(request: HttpRequest, restaurant_id: int) -> JsonResponse:
 
     # PUT method to update restaurant
     if request.method == 'PUT':
+        
         try:
             PUT = json.loads(request.body)
             restaurant.name = PUT.get("name", restaurant.name)
             restaurant.description = PUT.get("description", restaurant.description)
             restaurant.rating = PUT.get("rating", restaurant.rating)
             restaurant.seats_available = PUT.get("seats_available", restaurant.seats_available)
+            restaurant.location = PUT.get("location", restaurant.location)
             restaurant.save()
             return JsonResponse(restaurant.as_dict())
         except Exception as e:
@@ -576,6 +579,12 @@ def reservation_api(request: HttpRequest, reservation_id: int) -> JsonResponse:
 
     # PUT method to update reservation
     if request.method == 'PUT':
+        action = request.data.get("action")
+        if action == 'confirm':
+            reservation.status = Reservation.CONFIRMED
+        elif action == 'cancel':
+            reservation.status = Reservation.CANCELLED
+        
         try:
             PUT = json.loads(request.body)
             
@@ -595,3 +604,4 @@ def reservation_api(request: HttpRequest, reservation_id: int) -> JsonResponse:
 
     # GET reservation data
     return JsonResponse(reservation.as_dict())
+

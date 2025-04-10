@@ -24,13 +24,14 @@ class ChosenCuisineInline(admin.TabularInline):
 '''Register the user model to the admin panel'''
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
+    list_display = ('username', 'email', 'user_type', 'is_active', 'is_staff')
     inlines = (ChosenInline, FriendshipInline, ChosenCuisineInline)
 
 
 @admin.register(Restaurant)
 class RestaurantAdmin(admin.ModelAdmin):
     '''Register the restaurant model to the admin panel'''
-    list_display = ('name', 'description', 'rating', 'seats_available')
+    list_display = ('name', 'owner', 'rating', 'seats_available', 'location')
 
 @admin.register(Cuisine)
 class CuisineAdmin(admin.ModelAdmin):

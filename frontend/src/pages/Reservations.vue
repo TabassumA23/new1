@@ -45,13 +45,13 @@
   export default defineComponent({
       data() {
           return {
-          
+           
           newReservation: {
           restaurant: null,          // Will hold the selected restaurant object
           reservation_time: "",      // Will hold the reservation time
           number_of_people: 0,      // Will hold the number of people
           special_requests: "",     // Will hold any special requests (optional)
-          status: 0,                // Will hold the reservation status (default to 'pending', 0)
+          status: 0,   // Will hold the reservation status (default to 'pending', 0)
           },
           chosenRestaurant: "",
           

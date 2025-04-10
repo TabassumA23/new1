@@ -1,4 +1,5 @@
 from django import forms
+from .models import User
 #from .models import Hobby
 
 # Form for letting user log in
@@ -53,4 +54,15 @@ class SignUpForm(forms.Form):
         label="Password ", required="true", max_length=100,
         # Adding a password widget for password 
         widget=forms.PasswordInput()
+    )
+    # Add user_type field for role selection
+    USER_TYPE_CHOICES = [
+        (User.NORMAL_USER, 'Normal User'),
+        (User.OWNER, 'Owner'),
+    ]
+    user_type = forms.ChoiceField(
+        label="User Type",
+        choices=USER_TYPE_CHOICES,
+        widget=forms.Select,
+        required=True
     )
