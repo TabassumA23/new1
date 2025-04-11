@@ -9,6 +9,7 @@ import ProfilePage from "../pages/ProfilePage.vue";
 import FindFriends from "../pages/FindFriends.vue";
 import Reviews from "../pages/Reviews.vue";
 import Reservations from "../pages/Reservations.vue";
+import Restaurants from "../pages/Restaurants.vue";
 
 let base = (import.meta.env.MODE == 'development') ? import.meta.env.BASE_URL : ''
 
@@ -24,6 +25,11 @@ const router = createRouter({
     path: "/findFriends",
     name: "Find Friends",
     component: FindFriends,
+  },
+  {
+    path: "/restaurants",
+    name: "Restaurants",
+    component: Restaurants,
   },
   {
     path: "/reviews",

@@ -75,57 +75,6 @@ def logout_user(request: HttpRequest) -> HttpResponse:
     auth.logout(request)
     return redirect(settings.LOGIN_URL)
 
-# APIs for restaurant model below
-def restaurants_api(request: HttpRequest) -> JsonResponse:
-    """API endpoint for the Restaurant"""
-
-    # POST method which is the create method
-    if request.method == 'POST':
-        # Create a new restaurant
-        POST = json.loads(request.body)
-        restaurant = Restaurant.objects.create(
-            name=POST['name'],
-            description=POST['description'],
-            rating=POST['rating'],
-            seats_available=POST['seats_available'],
-        )
-        return JsonResponse(restaurant.as_dict())
-
-    # GET method which allows the user to view all hobbies
-    return JsonResponse({
-        'restaurants': [
-            restaurant.as_dict()
-            for restaurant in Restaurant.objects.all()
-        ]
-    })
-
-def restaurant_api(request: HttpRequest, restaurant_id: int) -> JsonResponse:
-    """API endpoint for a single restaurant"""
-    try:
-        restaurant = Restaurant.objects.get(id=restaurant_id)
-    except Restaurant.DoesNotExist:
-        return JsonResponse({"error": "Restaurant not found."}, status=404)
-
-    # PUT method to update restaurant
-    if request.method == 'PUT':
-        try:
-            PUT = json.loads(request.body)
-            restaurant.name = PUT.get("name", restaurant.name)
-            restaurant.description = PUT.get("description", restaurant.description)
-            restaurant.rating = PUT.get("rating", restaurant.rating)
-            restaurant.seats_available = PUT.get("seats_available", restaurant.seats_available)
-            restaurant.save()
-            return JsonResponse(restaurant.as_dict())
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-
-    # DELETE method to delete restaurant
-    if request.method == 'DELETE':
-        restaurant.delete()
-        return JsonResponse({}, status=204)  # 204 No Content
-
-    # GET restaurant data
-    return JsonResponse(restaurant.as_dict())
 
 # APIs for user model below
 def users_api(request: HttpRequest) -> JsonResponse:
@@ -595,3 +544,77 @@ def reservation_api(request: HttpRequest, reservation_id: int) -> JsonResponse:
 
     # GET reservation data
     return JsonResponse(reservation.as_dict())
+
+# APIs for restaurant model below
+def restaurants_api(request: HttpRequest) -> JsonResponse:
+    """API endpoint for the Restaurant"""
+
+    # POST method which is the create method
+    if request.method == 'POST':
+        POST = json.loads(request.body)
+        # Create a new restaurant
+        user_id = POST.get('user_id')
+        user = User.objects.get(id = user_id)
+        POST = json.loads(request.body)
+        restaurant = Restaurant.objects.create(
+            name=POST['name'],
+            description=POST['description'],
+            rating=POST['rating'],
+            seats_available=POST['seats_available'],
+            location=POST['location'],
+            user=user,  # Use the user_id from the request
+        )
+        return JsonResponse(restaurant.as_dict())
+    # If GET method is used, return all reviews with user details
+    # restaurants = Restaurant.objects.all()
+    # restaurants_data = []
+    # for restaurant in restaurants:
+    #     restaurants_data.append({
+    #         'id': restaurant.id,
+    #         'name': restaurant.name,
+    #         'description': restaurant.description,  
+    #         'rating': restaurant.rating,
+    #         'seats_available': restaurant.seats_available,
+    #         'location': restaurant.location,
+    #         'user': {
+    #             'first_name': restaurant.user.first_name,
+    #             'last_name': restaurant.user.last_name,
+    #             'id': restaurant.user.id,
+    #         },
+    #     })
+    # GET method which allows the user to view all hobbies
+    return JsonResponse({
+        'restaurants': [
+            restaurant.as_dict()
+            for restaurant in Restaurant.objects.all()
+        ]
+    })
+
+def restaurant_api(request: HttpRequest, restaurant_id: int) -> JsonResponse:
+    """API endpoint for a single restaurant"""
+    try:
+        restaurant = Restaurant.objects.get(id=restaurant_id)
+    except Restaurant.DoesNotExist:
+        return JsonResponse({"error": "Restaurant not found."}, status=404)
+
+    # PUT method to update restaurant
+    if request.method == 'PUT':
+        try:
+            PUT = json.loads(request.body)
+            restaurant.name = PUT.get("name", restaurant.name)
+            restaurant.description = PUT.get("description", restaurant.description)
+            restaurant.rating = PUT.get("rating", restaurant.rating)
+            restaurant.seats_available = PUT.get("seats_available", restaurant.seats_available)
+            restaurant.location = PUT.get("location", restaurant.location)
+            restaurant.save()
+            return JsonResponse(restaurant.as_dict())
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    # DELETE method to delete restaurant
+    if request.method == 'DELETE':
+        restaurant.delete()
+        return JsonResponse({}, status=204)  # 204 No Content
+
+    # GET restaurant data
+    return JsonResponse(restaurant.as_dict())

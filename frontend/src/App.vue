@@ -19,7 +19,12 @@
                     >
                         Find A Friend
                     </router-link>
-
+                    <router-link
+                        class="link"
+                        :to="{name: 'Restaurants'}"
+                    >
+                        Restaurants
+                    </router-link>
                       <!-- Go to reviews page -->
                     <router-link
                         class="link"

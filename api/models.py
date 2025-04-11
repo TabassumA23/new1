@@ -1,9 +1,11 @@
 from django.db import models
 from django.urls import reverse
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, User
 from django.utils import timezone
 import logging
 from django.core.validators import MinValueValidator
+from django.conf import settings
+
 
 # Create a logger
 logger = logging.getLogger(__name__)
@@ -41,6 +43,8 @@ class Restaurant(models.Model):
     description = models.TextField(max_length=100)
     rating = models.IntegerField(default=0)
     seats_available = models.IntegerField(default=0)
+    location = models.TextField(max_length=100)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     
     def __str__(self):
         return self.name
@@ -57,6 +61,12 @@ class Restaurant(models.Model):
             'description': self.description,
             'rating': self.rating,
             'seats_available': self.seats_available,
+            'location' : self.location,
+            'user': {
+                'first_name': self.user.first_name,
+                'last_name': self.user.last_name,
+                'id': self.user.id,
+            }
         }
     
 class Cuisine(models.Model):
@@ -92,9 +102,8 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     date_of_birth = models.DateField(default='2000-01-01')
     password = models.CharField(max_length=100)
-    chosen_restaurant = models.ManyToManyField(Restaurant, through='Chosen')
+    chosen_restaurant = models.ManyToManyField(Restaurant, through='Chosen', related_name="related_rest+")
     chosen_cuisine = models.ManyToManyField(Cuisine, through='ChosenCuisine')
-    # Many-to-many fields to store multiple IDs
     friends = models.ManyToManyField('self', through='Friendship', symmetrical=False, related_name="friends_with+")
 
     def __str__(self):
