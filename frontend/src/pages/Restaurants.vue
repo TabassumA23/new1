@@ -237,7 +237,72 @@
           },
         
 
+         async createRestaurant() {
+            const rrestaurantsStore = useRestaurantsStore();
+            const userId = this.userStore.user.id;
+            const newRestaurant = this.newRestaurant;
+            const payload = {
+                name: this.newRestaurant.name,
+                description: this.newRestaurant.description,  
+                user_id: userId,
+            };
+            
+            console.log(payload); 
+            console.log(userId);  
+            
 
+            const restaurantResponse = await fetch('http://localhost:8000/restaurants/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${VueCookies.get('access_token')}`,
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': VueCookies.get('csrftoken'),
+                },
+                credentials: 'include',
+                body: JSON.stringify(payload),
+            });
+
+            const responseText = await restaurantResponse.text();  // Log raw response for debugging
+            console.log(responseText);
+
+            // Add the newly created review to the Pinia store
+            // const data = await reviewResponse.json();
+            // let createdReview = data.review;
+            // reviewsStore.addReview(createdReview);
+            window.location.reload();
+            alert('Review added successfully!');
+        },
+        async deleteRestaurant(restaurantId: number) {
+            // Check if the logged-in user is the one who wrote the review
+            const restaurantToDelete = this.restaurants.find(restaurant => restaurant.id === restaurantId);
+            if (!restaurantToDelete || restaurantToDelete.user.id !== this.user.id) {
+                alert("You cannot delete this restaurant. Only the author can delete it.");
+                return; // Prevent deletion
+            }
+
+            try {
+                const response = await fetch(`http://localhost:8000/review/${restaurantId}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${VueCookies.get('access_token')}`,
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': VueCookies.get('csrftoken'),
+                    },
+                    credentials: 'include',
+                });
+
+                if (response.ok) {
+                    // Remove the deleted review from the list
+                    this.restaurants = this.restaurants.filter(restaurant => restaurant.id !== restaurantId);
+                    alert('Revrestaurantiew deleted successfully!');
+                } else {
+                    alert('Failed to delete the restaurant.');
+                }
+            } catch (error) {
+                console.error('Error deleting restaurant:', error);
+                alert('Failed to delete the revirestaurantew.');
+            }
+        },
           
           //deletes the friendships between users and friend whether pending or accepted
           async deleteChosen(chosenId: number) {
