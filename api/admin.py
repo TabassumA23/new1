@@ -30,7 +30,11 @@ class UserAdmin(admin.ModelAdmin):
 @admin.register(Restaurant)
 class RestaurantAdmin(admin.ModelAdmin):
     '''Register the restaurant model to the admin panel'''
-    list_display = ('name', 'description', 'rating', 'seats_available')
+    list_display = ('name', 'description','owner_username', 'rating', 'seats_available')
+
+    def owner_username(self, obj):
+        return obj.owner.username  # Access the 'username' field of the owner
+    owner_username.short_description = 'Owner Username'  
 
 @admin.register(Cuisine)
 class CuisineAdmin(admin.ModelAdmin):

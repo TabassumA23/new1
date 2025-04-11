@@ -39,15 +39,18 @@ def login_user(request: HttpRequest) -> HttpResponse:
 def signup_user(request: HttpRequest) -> HttpResponse:
     """ Function to register a new user. """
     if request.method == "POST":
+
         form = SignUpForm(request.POST)
         # Clean values if valid and authenticate
         if form.is_valid():
+            user_data = form.cleaned_data
             first_name=form.cleaned_data["first_name"]
             last_name=form.cleaned_data["last_name"]
             username = form.cleaned_data["username"]
             email=form.cleaned_data["email"]
             date_of_birth=form.cleaned_data["date_of_birth"]
             password=form.cleaned_data["password"]
+            user_type=user_data['user_type']  # Store the user type here
             user = auth.authenticate(username=username, password=password)
             # Rendering Vue SPA if an existing user is not found
             if user is None:
@@ -56,6 +59,7 @@ def signup_user(request: HttpRequest) -> HttpResponse:
                 user.first_name=first_name
                 user.last_name=last_name
                 user.date_of_birth=date_of_birth
+                user.user_type=user_type
                 user.save()
 
                 auth.login(request, user)
@@ -79,17 +83,24 @@ def logout_user(request: HttpRequest) -> HttpResponse:
 def restaurants_api(request: HttpRequest) -> JsonResponse:
     """API endpoint for the Restaurant"""
 
-    # POST method which is the create method
-    if request.method == 'POST':
-        # Create a new restaurant
-        POST = json.loads(request.body)
-        restaurant = Restaurant.objects.create(
-            name=POST['name'],
-            description=POST['description'],
-            rating=POST['rating'],
-            seats_available=POST['seats_available'],
-        )
-        return JsonResponse(restaurant.as_dict())
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "User not authenticated"}, status=401)
+    
+    if request.user.user_type == 'owner':
+            # POST method which is the create method
+            if request.method == 'POST':
+                # Create a new restaurant
+                POST = json.loads(request.body)
+                restaurant = Restaurant.objects.create(
+                    name=POST['name'],
+                    description=POST['description'],
+                    rating=POST['rating'],
+                    seats_available=POST['seats_available'],
+                )
+                return JsonResponse(restaurant.as_dict())
+            else:
+                return JsonResponse({"error": "Invalid method"}, status=400)
+    
 
     # GET method which allows the user to view all hobbies
     return JsonResponse({

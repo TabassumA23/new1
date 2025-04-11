@@ -1,7 +1,9 @@
 from django.db import models
 from django.urls import reverse
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, User
 from django.utils import timezone
+from django.conf import settings
+
 import logging
 from django.core.validators import MinValueValidator
 
@@ -41,6 +43,10 @@ class Restaurant(models.Model):
     description = models.TextField(max_length=100)
     rating = models.IntegerField(default=0)
     seats_available = models.IntegerField(default=0)
+
+    # Establish the foreign key to link each restaurant to a user (owner)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="restaurants")
+
     
     def __str__(self):
         return self.name
@@ -57,6 +63,7 @@ class Restaurant(models.Model):
             'description': self.description,
             'rating': self.rating,
             'seats_available': self.seats_available,
+            'owner': self.owner.username,
         }
     
 class Cuisine(models.Model):
@@ -87,14 +94,21 @@ class User(AbstractUser):
     Class containing the custom user model which inherits the abstract user model from django making use of 
     authentication framework    
     '''
+    NORMAL_USER = 'normal'
+    OWNER = 'owner'
+    USER_TYPE_CHOICES = [
+        (NORMAL_USER, 'Normal User'),
+        (OWNER, 'Owner'),
+    ]
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     date_of_birth = models.DateField(default='2000-01-01')
     password = models.CharField(max_length=100)
+    user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES, default=NORMAL_USER) 
+
     chosen_restaurant = models.ManyToManyField(Restaurant, through='Chosen')
     chosen_cuisine = models.ManyToManyField(Cuisine, through='ChosenCuisine')
-    # Many-to-many fields to store multiple IDs
     friends = models.ManyToManyField('self', through='Friendship', symmetrical=False, related_name="friends_with+")
 
     def __str__(self):
@@ -105,7 +119,7 @@ class User(AbstractUser):
     '''
     def as_dict(self):
         # Gets the list of actual cuisine objects a user has added. 
-        user_cuisines = list(Cuisine.objects.values().filter(name="Reading"))
+        user_cuisines = list(self.chosen_cuisine.all())
         return {  
             'id': self.id,  
             # Obtains URL pattern for individual user
@@ -116,6 +130,9 @@ class User(AbstractUser):
             'email': self.email,
             'date_of_birth': self.date_of_birth,
             'password': self.password,
+            'user_type': self.get_user_type_display(),
+            'chosen_restaurants': [restaurant.name for restaurant in self.chosen_restaurant.all()],
+            'chosen_cuisines': [cuisine.name for cuisine in user_cuisines],
         }
     
 
