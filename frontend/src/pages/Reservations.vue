@@ -404,87 +404,181 @@
 
 
 <style scoped>
-  .body{
-      font-family: Arial, Helvetica, sans-serif;
-      display: grid;
-      grid-template-columns: auto auto;
-      grid-template-rows: 10% 30% 20% 30% 10%;
-      gap: 1rem 0.25rem;
-  }
-  #profile-box{
-      grid-column: 1;
-      grid-row: 1/span 2;
+  /* General body and layout styles */
+  .body {
+    font-family: 'Arial', Helvetica, sans-serif;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto auto auto;
+    gap: 1rem 0.25rem;
+    background-color: #B4DABA; /* Light background for overall page */
+    padding: 2em;
   }
 
-  #restaurant{
+  /* Profile box section */
+  #profile-box {
     grid-column: 1;
-      grid-row: 3;
-
+    grid-row: 1 / span 2;
+    background-color: #659A78; /* Olive green background */
+    padding: 2em;
+    border-radius: 1rem;
   }
 
-  #create-restaurant{
-      grid-column: 1;
-      grid-row: 4;
-      padding-top: 0.5rem;
-  }
-  #create-restaurant>h3{
-      text-align: center;
-      background-color: #D9D9D9;
-  }
-  #create-restaurant>input{
-      margin-bottom: 1.5rem;
-  }
-  .friend-accepted{
-
-      background-color: #D9D9D9;
-      grid-column: 2;
-      grid-row: 1/span 2;
-      padding-bottom: 2em;
-  }
-  .friend-pending{
-   
-      background-color: #D9D9D9;
-      grid-column: 2;
-      grid-row: 3/span 2;
-  }
-  .body > div{
-      background-color: #659A78;
-      margin:2em;
-      padding:2em;
+  /* Reservation form section */
+  .reservation-form {
+    grid-column: 1;
+    grid-row: 3;
+    padding: 2rem;
+    background-color: #D9D9D9; /* Light gray background */
+    border-radius: 1rem;
   }
 
-  a{
-      background-color: #659A78;
-      margin:0.5em;
-      text-decoration: none;
-      color:black;
-      padding: 0.2em;
+  .reservation-form h2 {
+    font-size: 1.8rem;
+    text-align: center;
+    color: #333;
+    margin-bottom: 1.5rem;
   }
 
-  a:hover, button:hover{
-      color:white;
+  .reservation-form label {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    color: #555;
   }
 
-  .restaurants{
-      background-color: #B4DABA;
+  .reservation-form input,
+  .reservation-form select {
+    width: 100%;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #B4DABA;
+    border-radius: 1rem;
+    background-color: #fff;
   }
 
-  h2, .friends, div>p {
-      background-color: #D9D9D9;
-      margin:0.2em;
-  }
-  h6{
-      text-align: center;
-  }
-  li{
-      display:flex;
+  /* Create a new restaurant section */
+  #create-restaurant {
+    grid-column: 1;
+    grid-row: 4;
+    background-color: #D9D9D9;
+    padding: 2rem;
+    border-radius: 1rem;
   }
 
-  button{
-      background-color:  #B4DABA;
-      font-size: 1rem;
-      margin-bottom: 0.5rem;
-      border: none;
+  #create-restaurant h3 {
+    text-align: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: #333;
   }
 
+  /* Buttons styling */
+  button {
+    background-color: #659A78;
+    color: #fff;
+    padding: 0.7rem 2rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 1rem;
+    cursor: pointer;
+    display: block;
+    margin: 0 auto;
+  }
+
+  button:hover {
+    background-color: #B4DABA;
+  }
+
+  /* Restaurant list styling */
+  .restaurants {
+    grid-column: 1;
+    grid-row: 5;
+    background-color: #B4DABA;
+    padding: 2rem;
+    border-radius: 1rem;
+  }
+
+  .restaurants h2 {
+    text-align: center;
+    font-size: 2rem;
+    color: #333;
+  }
+
+  .restaurant-item {
+    background-color: #f9f9f9;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .restaurant-header h3 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+  }
+
+  .restaurant-header p {
+    margin: 0.5rem 0;
+    color: #777;
+    font-size: 1rem;
+  }
+
+  /* Review section styles */
+  .review-item {
+    background-color: #f9f9f9;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    border-radius: 1rem;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .review-header h3 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+  }
+
+  .review-header p {
+    margin: 0.5rem 0;
+    color: #777;
+    font-size: 1rem;
+  }
+
+  .review-content {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    color: #333;
+  }
+
+  /* Review actions (delete, etc.) */
+  .review-actions button {
+    background-color: #ff4e4e;
+    color: white;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 1rem;
+    border: none;
+  }
+
+  .review-actions button:hover {
+    background-color: #ff1c1c;
+  }
+
+  /* Additional styles for links */
+  a {
+    background-color: #659A78;
+    margin: 0.5em;
+    text-decoration: none;
+    color: black;
+    padding: 0.2em;
+    border-radius: 1rem;
+  }
+
+  a:hover {
+    color: white;
+  }
 </style>
+

@@ -23,13 +23,7 @@
                         class="link"
                         :to="{name: 'Restaurants'}"
                     >
-                        Restaurants
-                    </router-link>
-                      <!-- Go to reviews page -->
-                    <router-link
-                        class="link"
-                        :to="{name: 'Reviews'}"
-                    >
+                      
                         Reviews
                     </router-link>
                     <!-- reservations page-->
@@ -60,28 +54,85 @@ export default defineComponent({
 </script>
   <!--Styling for page and navbar mainly colour and positions-->
 <style scoped>
-    main{
-        background-color:rgb(234, 91, 91);
+    main {
+        background-color: #F0F8FF; 
         font-family: Arial, Helvetica, sans-serif;
+        padding: 2rem;
     }
-    
-    .navbar{
+
+    .navbar {
         display: flex;
-        background-color:rgb(234, 91, 91);
-        padding-left: 0.5rem
+        justify-content: space-between;
+        background-color: #4F97C6; 
+        padding: 1rem;
+        border-radius: 10px;
     }
 
-    .nav-parts{
-        display:flex;
+    .nav-parts {
+        display: flex;
+        align-items: center;
     }
 
-    .nav-parts > .link, a{
-        padding: 0.5em;
+    .nav-parts > .link,
+    a {
+        padding: 0.7em;
         text-decoration: none;
-        margin: 1em;
-        color: black;
-        font-size: 1rem;
-        background-color:rgb(234, 91, 91);
-        border: none;
+        color: white;
+        font-size: 1.1rem;
+        background-color: #1D5673; 
+        border-radius: 5px;
+        margin-right: 1rem;
+        transition: background-color 0.3s ease;
     }
+
+    .nav-parts > .link:hover,
+    a:hover {
+        background-color: #B5D3E7; 
+    }
+
+    .navbar h1 {
+        color: #1D5673;
+        font-size: 2rem;
+    }
+
+    .main-content {
+        padding: 2rem;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    button {
+        padding: 0.8rem 2rem;
+        background-color: #4F97C6; 
+        color: white;
+        font-size: 1rem;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+        background-color: #1D5673; 
+    }
+
+    input, textarea {
+        padding: 1rem;
+        width: 100%;
+        border: 1px solid #B5D3E7; 
+        border-radius: 5px;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    h3 {
+        color: #1D5673; 
+        font-size: 1.4rem;
+        margin-bottom: 1rem;
+    }
+
+   
+    
 </style>
+

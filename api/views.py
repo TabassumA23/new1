@@ -48,6 +48,7 @@ def signup_user(request: HttpRequest) -> HttpResponse:
             email=form.cleaned_data["email"]
             date_of_birth=form.cleaned_data["date_of_birth"]
             password=form.cleaned_data["password"]
+            user_type = form.cleaned_data["user_type"]
             user = auth.authenticate(username=username, password=password)
             # Rendering Vue SPA if an existing user is not found
             if user is None:
@@ -56,6 +57,7 @@ def signup_user(request: HttpRequest) -> HttpResponse:
                 user.first_name=first_name
                 user.last_name=last_name
                 user.date_of_birth=date_of_birth
+                user.user_type=user_type
                 user.save()
 
                 auth.login(request, user)

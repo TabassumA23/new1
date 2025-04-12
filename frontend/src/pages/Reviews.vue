@@ -158,7 +158,7 @@
         },
         
           /* Creating a New review */
-          async createReview() {
+        async createReview() {
             const reviewsStore = useReviewsStore();
             const userId = this.userStore.user.id;
             const newReview = this.newReview;
@@ -248,88 +248,128 @@
 
 
 <style scoped>
-    .body{
+    /* General Body Styling */
+    .body {
         font-family: Arial, Helvetica, sans-serif;
         display: grid;
         grid-template-columns: auto auto;
         grid-template-rows: 10% 30% 20% 30% 10%;
         gap: 1rem 0.25rem;
+        background-color: #F0F8FF; /* Light blue background */
     }
-    #profile-box{
+
+    /* Profile Box */
+    #profile-box {
         grid-column: 1;
         grid-row: 1/span 2;
+        background-color: #4F97C6; /* Medium blue for profile box */
+        padding: 2rem;
+        border-radius: 8px;
     }
 
-    #restaurant{
-    grid-column: 1;
+    /* Restaurant Section */
+    #restaurant {
+        grid-column: 1;
         grid-row: 3;
-
+        background-color: #B4DABA; /* Light blue background */
+        padding: 2rem;
+        border-radius: 8px;
     }
 
-    #create-restaurant{
+    /* Create Restaurant Section */
+    #create-restaurant {
         grid-column: 1;
         grid-row: 4;
         padding-top: 0.5rem;
+        background-color: #4F97C6; /* Medium blue background */
+        border-radius: 8px;
     }
-    #create-restaurant>h3{
-        text-align: center;
-        background-color: #D9D9D9;
-    }
-    #create-restaurant>input{
-        margin-bottom: 1.5rem;
-    }
-    .friend-accepted{
 
-        background-color: #D9D9D9;
+    #create-restaurant > h3 {
+        text-align: center;
+        background-color: #D9D9D9; /* Light gray for heading */
+    }
+
+    #create-restaurant > input {
+        margin-bottom: 1.5rem;
+        padding: 0.5rem;
+        border-radius: 8px;
+    }
+
+    /* Friend Section - Accepted */
+    .friend-accepted {
+        background-color: #D9D9D9; /* Light gray for friend accepted section */
         grid-column: 2;
         grid-row: 1/span 2;
         padding-bottom: 2em;
+        border-radius: 8px;
     }
-    .friend-pending{
 
-        background-color: #D9D9D9;
+    /* Friend Section - Pending */
+    .friend-pending {
+        background-color: #D9D9D9; /* Light gray for friend pending section */
         grid-column: 2;
         grid-row: 3/span 2;
-    }
-    .body > div{
-        background-color: #659A78;
-        margin:2em;
-        padding:2em;
+        border-radius: 8px;
     }
 
-    a{
-        background-color: #659A78;
-        margin:0.5em;
+    /* Styling for General Divs */
+    .body > div {
+        background-color: #659A78; /* Olive green background for general sections */
+        margin: 2em;
+        padding: 2em;
+        border-radius: 8px;
+    }
+
+    /* Link Styling */
+    a {
+        background-color: #659A78; /* Olive green for links */
+        margin: 0.5em;
         text-decoration: none;
-        color:black;
+        color: black;
         padding: 0.2em;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
     }
 
-    a:hover, button:hover{
-        color:white;
+    a:hover, button:hover {
+        color: white;
+        background-color: #1D5673; /* Dark blue for hover effect */
     }
 
-    .restaurants{
-        background-color: #B4DABA;
+    /* Restaurant Section Styling */
+    .restaurants {
+        background-color: #B4DABA; /* Light blue for restaurant section */
     }
 
-    h2, .friends, div>p {
-        background-color: #D9D9D9;
-        margin:0.2em;
+    h2, .friends, div > p {
+        background-color: #D9D9D9; /* Light gray for headings and paragraphs */
+        margin: 0.2em;
+        padding: 0.5rem;
+        border-radius: 8px;
     }
-    h6{
+
+    h6 {
         text-align: center;
-    }
-    li{
-        display:flex;
+        font-size: 1rem;
     }
 
-    button{
-        background-color:  #B4DABA;
+    li {
+        display: flex;
+    }
+
+    /* Button Styling */
+    button {
+        background-color: #B4DABA; /* Light blue for buttons */
         font-size: 1rem;
         margin-bottom: 0.5rem;
         border: none;
+        padding: 0.5rem 2rem;
+        border-radius: 1rem;
+        cursor: pointer;
     }
+
+    /* Review Blog Styling */
     .review-blog {
         font-family: Arial, Helvetica, sans-serif;
         max-width: 800px;
@@ -355,6 +395,7 @@
         margin: 0;
         font-size: 24px;
         font-weight: bold;
+        color: #1D5673; /* Dark blue for header */
     }
 
     .review-header p {
@@ -387,6 +428,5 @@
     .review-actions button:hover {
         background-color: #ff1c1c;
     }
-
-
 </style>
+

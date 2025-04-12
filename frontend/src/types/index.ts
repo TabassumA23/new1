@@ -6,6 +6,7 @@ export interface User {
     email: string;
     date_of_birth: number;
     password: string;
+    userType: string;
     restaurant: Restaurant[];
 }
 

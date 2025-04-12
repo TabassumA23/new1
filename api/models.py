@@ -68,7 +68,8 @@ class Restaurant(models.Model):
                 'id': self.user.id,
             }
         }
-    
+
+
 class Cuisine(models.Model):
     '''
     Class for the cusine
@@ -91,6 +92,10 @@ class Cuisine(models.Model):
             'description': self.description,
         }
     
+# Enum for user types
+class UserType(models.TextChoices):
+    OWNER = 'Owner', 'Owner'
+    CUSTOMER = 'Customer', 'Customer'
 
 class User(AbstractUser):
     '''
@@ -102,6 +107,11 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     date_of_birth = models.DateField(default='2000-01-01')
     password = models.CharField(max_length=100)
+    user_type = models.CharField(
+        max_length=20,
+        choices=UserType.choices,
+        default=UserType.CUSTOMER,
+    )  
     chosen_restaurant = models.ManyToManyField(Restaurant, through='Chosen', related_name="related_rest+")
     chosen_cuisine = models.ManyToManyField(Cuisine, through='ChosenCuisine')
     friends = models.ManyToManyField('self', through='Friendship', symmetrical=False, related_name="friends_with+")
@@ -125,6 +135,7 @@ class User(AbstractUser):
             'email': self.email,
             'date_of_birth': self.date_of_birth,
             'password': self.password,
+            'user_type': self.user_type,
         }
     
 
