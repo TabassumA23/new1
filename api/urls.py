@@ -44,5 +44,7 @@ urlpatterns = [
     path('chosen/<int:chosen_id>/', chosen_api, name='chosen api'),
     path('friendships/', friendships_api, name='friendships api'),
     path('friendship/<int:friendship_id>/', friendship_api, name='friendship api'),
+    path('BrowseRestaurants/', restaurants_api, name='BrowseRestaurants api'),
+    
 
 ]

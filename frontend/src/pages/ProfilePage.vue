@@ -103,7 +103,7 @@
     </div>
         
       
-      <div class="friend-accepted">
+      <!-- <div class="friend-accepted">
           <div>
               <h2>Accepted Friends</h2>
           </div>
@@ -129,9 +129,36 @@
               </li>
           </ul>
         
-     </div>
+     </div> -->
 
+   <div>
+    <label for="restaurants">Choose a restaurant:</label>
+    <select id="restaurants" v-model="chosenRestaurant">
+      <option v-for="restaurant in restaurants" :key="restaurant.id" :value="restaurant.id">
+        {{ restaurant.name }}
+      </option>
+    </select>
     
+    <!-- Show button to reveal details -->
+    <button @click="showRestaurantDetails = !showRestaurantDetails">
+      Show Restaurant Details
+    </button>
+
+    <!-- Display details for all restaurants when the button is clicked -->
+    <div v-if="showRestaurantDetails">
+      <div v-for="restaurant in restaurants" :key="restaurant.id">
+        <h3>Details for {{ restaurant.name }}:</h3>
+        <p><strong>Description:</strong> {{ restaurant.description }}</p>
+        <p><strong>Rating:</strong> {{ restaurant.rating }}</p>
+        <p><strong>Seats available:</strong> {{ restaurant.seats_available }}</p>
+        <p><strong>Location:</strong> {{ restaurant.location }}</p>
+      </div>
+    </div>
+
+    <!-- Save button (optional based on selection) -->
+    <button v-if="chosenRestaurant" @click="saveRestaurant">Save</button>
+  </div>
+    <!-- <p><strong>Cuisine:</strong> {{ chosenRestaurant.cuisine }}</p> -->
   </div>
   
   
@@ -171,13 +198,18 @@
               
           },
           
-          chosenRestaurant: "",
-          
+          chosenRestaurant: null,
+          //restaurantDetails: null, // Store the fetched restaurant details
+          //restaurants: [], // Store the list of restaurants
+          selectedRestaurant: null, // Details of the selected restaurant
+          restaurants: [], // List of all restaurants
           chosenChosenCuisine: "",
           
           };
       },
       async mounted() {
+          console.log(this.restaurants);
+          console.log(this.chosenRestaurant);
           console.log(this.user.userType); 
           // Fetching csrf token using session cookie information on mount
           const sessionCookie = (document.cookie).split(';');
@@ -246,6 +278,7 @@
           // Fetching all restaurants from the backend
           let response = await fetch(`http://localhost:8000/restaurants/`);
           let restaurantData = await response.json();
+          this.restaurants = restaurantData.restaurants;
         
 
           // Update the state with the fetched restaurant data
@@ -334,8 +367,35 @@
                   alert(`Failed to update ${field}.`);
               }
           },
-        
+          // Method to fetch the details of the selected restaurant
+          fetchRestaurantDetails() {
+            // Find the selected restaurant based on the chosenRestaurant ID
+            this.selectedRestaurant = this.restaurants.find(restaurant => restaurant.id === this.chosenRestaurant);
+          },
 
+          // Example save method (this can be customized)
+          saveRestaurant() {
+            console.log("Saving restaurant:", this.selectedRestaurant);
+          },
+            
+        //   async fetchRestaurantDetails() {
+        //     // Fetch details for the selected restaurant
+        //     if (this.chosenRestaurant) {
+        //         try {
+        //         const response = await fetch(`http://localhost:8000/restaurants/${this.chosenRestaurant}/`);
+        //         const data = await response.json();
+        //         this.restaurantDetails = data.restaurant; // Assign the fetched details to restaurantDetails
+        //         } catch (error) {
+        //         console.error("Error fetching restaurant details:", error);
+        //         alert("Failed to load restaurant details.");
+        //         }
+        //     }
+        //     },
+        //     saveRestaurant() {
+        //     // Handle saving the chosen restaurant (e.g., send to backend)
+        //     console.log("Saving restaurant:", this.restaurantDetails);
+        //     // Here you can send the `restaurantDetails` to your backend or handle the data as needed
+        //     },
 
           
           //deletes the friendships between users and friend whether pending or accepted
