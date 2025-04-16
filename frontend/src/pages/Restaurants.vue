@@ -68,57 +68,65 @@
     </div>
 
     <div class="restaurant-blog">
-      <h2>My restaurants</h2>
+          <h2>My restaurants</h2>
 
-    <div
-        class="restaurant-item"
-        
-        v-for="(restaurant, index) in restaurants"
-        :key="index"
-        
-    >
-        <div class="restaurant-header">
-          <h3>Name: {{ restaurant.name }}</h3>
-          <p>
-            <strong>By:</strong> {{ restaurant.user.id }} 
-            <!-- | <strong>Date:</strong> {{ formatDate(restaurant.date) }} -->
-          </p>
-        </div>
+          <div
+            class="restaurant-item"
+            v-for="(restaurant, index) in restaurants"
+            :key="index"
+          >
+            <div class="restaurant-header">
+              <h3>Name: {{ restaurant.name }}</h3>
+              <p>
+                <strong>By:</strong> {{ restaurant.user.id }}
+              </p>
+            </div>
 
-        <div class="restaurant-content">
-          <p>Description: {{ restaurant.description }}</p>
-        </div>
+            <div class="restaurant-content">
+              <p>Description: {{ restaurant.description }}</p>
+            </div>
 
-        <div class="restaurant-content">
-          <p>Rating: {{ restaurant.rating }}</p>
+            <div class="restaurant-content">
+              <p>Rating: {{ restaurant.rating }}</p>
+            </div>
+            <div class="restaurant-content">
+              <p>Seats:{{ restaurant.seats_available }}</p>
+            </div>
+            <div class="restaurant-content">
+              <p>Location: {{ restaurant.location }}</p>
+            </div>
+                <button v-if="restaurant.user.id === user.id" @click="deleteRestaurant(restaurant.id)">Delete restaurant</button>
+            <div class="restaurant-actions" >
+              <h4>Reservations</h4>
+              <div v-for="(reservation, index) in reservations" :key="index">
+                <p>Restaurant reserved: {{ reservation.restaurant}}</p>
+                <p>Time: {{ reservation.reservation_time }}</p>
+                <p>Seats: {{ reservation.number_of_people }}</p>
+
+                <!-- Reservation Status Change -->
+                <div>
+                  <p>Status: {{ reservation.status }}</p>
+                  <select v-model="reservation.status" @change="updateReservationStatus(reservation)">
+                    <option value="Pending">Pending</option>
+                    <option value="Confirmed">Confirmed</option>
+                  </select>
+                </div>
+                <p>special_requests: {{ reservation.special_requests }}</p>
+              </div>
+                
+            </div>
+          </div>
         </div>
-        <div class="restaurant-content">
-          <p>Seats:{{ restaurant.seats_available }}</p>
-        </div>
-        <div class="restaurant-content">
-          <p>Location: {{ restaurant.location }}</p>
-        </div>
-        <div class="restaurant-actions" v-if="restaurant.user.id === user.id">
-          <button @click="deleteRestaurant(restaurant.id)">Delete restaurant</button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script lang="ts">
   import { defineComponent } from "vue";
-  import { User, Restaurant, Friendship, Chosen,Cuisine, ChosenCuisine} from "../types/index";
+  import { User, Restaurant, Reservation} from "../types/index";
   import { useUserStore } from "../stores/user";
   import { useUsersStore } from "../stores/users";
   import { useRestaurantsStore } from "../stores/restaurants";
-
-  import { useCuisinesStore } from "../stores/cuisines";
-  import { useChosenStore } from "../stores/chosen";
-  import { useChosensStore } from "../stores/chosens";
-  import { useChosenCuisineStore } from "../stores/chosenCuisine";
-  import { useChosenCuisinesStore } from "../stores/chosenCuisines";
-  import { useFriendshipsStore } from "../stores/friendships";
+  import { useReservationsStore } from "../stores/reservations";
   import VueCookies from 'vue-cookies';
 
   
@@ -127,19 +135,6 @@
   export default defineComponent({
       data() {
           return {
-          
-          editFirstName: false,
-          editLastName: false,
-          editEmail: false,
-          editDateOfBirth: false,
-          
-          editedUser: {
-              first_name: "",
-              last_name: "",
-              email: "",
-              date_of_birth: "",
-              
-          },
 
           newRestaurant: {
             name: "",
@@ -150,7 +145,8 @@
           },
           chosenRestaurant: "",
           
-          chosenChosenCuisine: "",
+          chosenReservation: "",
+          reservations: [],
           
           };
       },
@@ -227,52 +223,20 @@
           restaurantsStore.saveRestaurants(madeRestaurants); 
           console.log(response)
 
-          // Fetching all cuisines from the backend
-          let res = await fetch(`http://localhost:8000/cuisines/`);
-          let cuisineData = await res.json();
+          // Fetching all restaurants from the backend
+          let res = await fetch(`http://localhost:8000/reservations/`);
+          let reservationData = await res.json();
+        
 
-          // Update the state with the fetched cuisine data
-          let madeCuisines = cuisineData.cuisines as Cuisine[];
-          const cuisinesStore = useCuisinesStore();
-          cuisinesStore.saveCuisines(madeCuisines); 
+          // Update the state with the fetched restaurant data
+          let madeReservations = reservationData.reservations as Reservation[];
+          const reservationsStore = useReservationsStore();
+          reservationsStore.saveReservations(madeReservations); 
           console.log(res)
-
-          //fetch all the friendships
-          let responseFriendship = await fetch("http://localhost:8000/friendships/");
-          let dataFriendship = await responseFriendship.json();
-          let friendships = dataFriendship.friendships as Friendship[];
-
-          const storeFriendships = useFriendshipsStore();
-          storeFriendships.saveFriendships(friendships);
-
-          //fetch all the friendships
-          let responseChosen = await fetch("http://localhost:8000/chosens/");
-          let dataChosen = await responseChosen.json();
-          let chosens = dataChosen.chosens as Chosen[];
-  
-          const storeChosens = useChosensStore();
-          storeChosens.saveChosens(chosens);
-
-          //fetch all the friendships
-          let responseChosenCuisine = await fetch("http://localhost:8000/chosenCuisines/");
-          let dataChosenCuisine = await responseChosenCuisine.json();
-          let chosenCuisines = dataChosenCuisine.chosenCuisines as ChosenCuisine[];
-
-          const storeChosenCuisines = useChosenCuisinesStore();
-          storeChosenCuisines.saveChosenCuisines(chosenCuisines);
       },
       methods: {
-          toggleEditField(field: string) {
-            console.log(typeof field)
-              this[`edit${field}`] = !this[`edit${field}`];
-              if (this[`edit${field}`]) {
-                  this.editedUser[field.toLowerCase()] = this.user[field.toLowerCase()];
-              }
-              //this.editPassword = !this.editPassword; // Toggle edit mode
-          },
-          
 
-         async createRestaurant() {
+        async createRestaurant() {
             const restaurantsStore = useRestaurantsStore();
             const userId = this.userStore.user.id;
             const newRestaurant = this.newRestaurant;
@@ -301,13 +265,9 @@
                 body: JSON.stringify(payload),
             });
 
-            const responseText = await restaurantResponse.text();  // Log raw response for debugging
+            const responseText = await restaurantResponse.text();  
             console.log(responseText);
 
-            // Add the newly created review to the Pinia store
-            // const data = await reviewResponse.json();
-            // let createdReview = data.review;
-            // reviewsStore.addReview(createdReview);
             window.location.reload();
             alert('restaurant added successfully!');
         },
@@ -342,242 +302,35 @@
                 alert('Failed to delete the revirestaurantew.');
             }
         },
-          
-          //deletes the friendships between users and friend whether pending or accepted
-          async deleteChosen(chosenId: number) {
-       
+        async updateReservationStatus(reservation: Reservation) {
             try {
-              const response = await fetch(`http://localhost:8000/chosen/${chosenId}/`, {
-                method: "DELETE",
+            const response = await fetch(
+                `http://localhost:8000/reservations/${reservation.id}/`,
+                {
+                method: "PUT",
                 headers: {
-                  "Authorization": `Bearer ${VueCookies.get("access_token")}`,
-                  "Content-Type": "application/json",
-                  "X-CSRFToken": VueCookies.get("csrftoken"),
+                    Authorization: `Bearer ${VueCookies.get("access_token")}`,
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": VueCookies.get("csrftoken"),
                 },
                 credentials: "include",
-              });
+                body: JSON.stringify({
+                    status: reservation.status,
+                }),
+                }
+            );
 
-              if (!response.ok) {
-                throw new Error("Failed to delete chosen restaurant");
-              }
-
-              //Remove the deleted friendship from the store
-              const chosensStore = useChosensStore();
-              chosensStore.removeChosen(chosenId);
-
-              window.location.reload();
-              alert("Chosen restaurant deleted successfully!");
-            } catch (error) {
-              console.error("Error deleting chosen restaurant:", error);
-              alert("Failed to delete chosen restaurant. Please try again.");
-            }
-          },
-
-          async addChosen() {
-            if (this.chosenRestaurant === "") {
-                alert("Invalid restaurant Choice.");
-                return;
-            }
-
-            const chosensStore = useChosensStore();
-            const restaurantsStore = useRestaurantsStore();
-            const chosenRestaurantLower = this.chosenRestaurant.toLowerCase();
-
-            // Check if the logged-in user has already chosen this restaurant
-            let alreadyChosenByUser = chosensStore.chosens.some(chosen => chosen.user === this.user.id && chosen.name.toLowerCase() === chosenRestaurantLower);
-            
-            if (alreadyChosenByUser) {
-                alert("You have already chosen this restaurant.");
-                return;
-            }
-
-            // Find the restaurant from the restaurant store
-            let foundRestaurant = restaurantsStore.getRestaurantByName(this.chosenRestaurant);
-            if (!foundRestaurant) {
-                alert("restaurant not found.");
-                return;
-            }
-
-            const foundRestaurantId = foundRestaurant.id;
-
-            // Prepare the payload for creating a new chosen restaurant
-            const payload = {
-                user_id: this.user.id,
-                restaurant_id: foundRestaurantId,
-            };
-
-            // Send POST request to create a chosen restaurant
-            const chosenResponse = await fetch("http://localhost:8000/chosens/", {
-                method: "POST",
-                headers: {
-                Authorization: `Bearer ${VueCookies.get("access_token")}`,
-                "Content-Type": "application/json",
-                "X-CSRFToken": VueCookies.get("csrftoken"),
-                },
-                credentials: "include",
-                body: JSON.stringify(payload),
-            });
-
-            // If the response is successful, add the new chosen restaurant to the store
-            if (chosenResponse.ok) {
-                const data = await chosenResponse.json();
-                const createdChosen = data.chosen as Chosen;
-                chosensStore.addChosen(createdChosen);
-
-                window.location.reload(); // Refresh the page to reflect the changes
-                alert("Chosen restaurant added successfully!");
+            if (response.ok) {
+                alert("Reservation status updated successfully!");
+                window.location.reload();
             } else {
-                alert("Failed to add the chosen restaurant. Please try again.");
+                alert("Failed to update reservation status.");
             }
-            },
-           // Accepts the pending friendship between user and friend it then makes an accepted friendship between friend and user
-           //This means the friendship is symmetrical 
-           async acceptFriendship(friendshipId: number) {
-              try {
-                  const acceptResponse = await fetch(`http://localhost:8000/friendship/${friendshipId}/`, {
-                      method: "PUT",
-                      headers: {
-                          "Authorization": `Bearer ${VueCookies.get("access_token")}`,
-                          "Content-Type": "application/json",
-                          "X-CSRFToken": VueCookies.get("csrftoken"),
-                      },
-                      credentials: "include",
-                  });
-
-                  if (!acceptResponse.ok) {
-                      throw new Error("Failed to accept friendship.");
-                  }
-
-                  const dataAccept = await acceptResponse.json();
-                  const newAccept = dataAccept.friendship as Friendship;
-
-                  // Update the friendship in the store
-                  const friendshipsStore = useFriendshipsStore();
-                  friendshipsStore.addFriendship(newAccept);
-                  window.location.reload();
-                  alert(`Accepted successfully!`);
-              } catch (error) {
-                  console.error("Error accepting friendship:", error);
-                  alert("Failed to accept friendship. Please try again.");
-              }
-          },
-          //rejects the friendships between users and friend whether pending or accepted
-          async deleteFriendship(friendshipId: number) {
-            console.log(friendshipId)
-            try {
-              const response = await fetch(`http://localhost:8000/friendship/${friendshipId}/`, {
-                method: "DELETE",
-                headers: {
-                  "Authorization": `Bearer ${VueCookies.get("access_token")}`,
-                  "Content-Type": "application/json",
-                  "X-CSRFToken": VueCookies.get("csrftoken"),
-                },
-                credentials: "include",
-              });
-
-              if (!response.ok) {
-                throw new Error("Failed to delete friendship");
-              }
-
-              //Remove the deleted friendship from the store
-              const friendshipsStore = useFriendshipsStore();
-              friendshipsStore.removeFriendship(friendshipId);
-
-              window.location.reload();
-              alert("Friendship deleted successfully!");
             } catch (error) {
-              console.error("Error deleting friendship:", error);
-              alert("Failed to delete friendship. Please try again.");
+            console.error("Error updating reservation status:", error);
+            alert("Failed to update reservation status.");
             }
-          },
-          //deletes the friendships between users and friend whether pending or accepted
-          async deleteChosenCuisine(chosenCuisineId: number) {
-       
-            try {
-              const response = await fetch(`http://localhost:8000/chosenCuisine/${chosenCuisineId}/`, {
-                method: "DELETE",
-                headers: {
-                  "Authorization": `Bearer ${VueCookies.get("access_token")}`,
-                  "Content-Type": "application/json",
-                  "X-CSRFToken": VueCookies.get("csrftoken"),
-                },
-                credentials: "include",
-              });
-
-              if (!response.ok) {
-                throw new Error("Failed to delete chosen cuisine");
-              }
-
-              //Remove the deleted friendship from the store
-              const chosenCuisinesStore = useChosenCuisinesStore();
-              //chosenCuisinesStore.removeChosenCuisine(chosenCuisineId);
-
-              window.location.reload();
-              alert("Chosen cuisine deleted successfully!");
-            } catch (error) {
-              console.error("Error deleting chosen cuisine:", error);
-              alert("Failed to delete chosen cuisine. Please try again.");
-            }
-          },
-
-          async addChosenCuisine() {
-            if (this.chosenChosenCuisine === "") {
-                alert("Invalid cuisine Choice.");
-                return;
-            }
-
-            const chosenCuisinesStore = useChosenCuisinesStore();
-            const cuisinesStore = useCuisinesStore();
-            const chosenChosenCuisineLower = this.chosenChosenCuisine.toLowerCase();
-
-            // Check if the logged-in user has already chosen this cusine
-            let alreadyChosenCuisineByUser = chosenCuisinesStore.chosenCuisines.some(chosenCuisine => chosenCuisine.user === this.user.id && chosenCuisine.name.toLowerCase() === chosenChosenCuisineLower);
-            
-            if (alreadyChosenCuisineByUser) {
-                alert("You have already chosen this cuisine.");
-                return;
-            }
-
-            // Find the cuisine from the cuisine store
-            let foundCuisine = cuisinesStore.getCuisineByName(this.chosenChosenCuisine);
-            if (!foundCuisine) {
-                alert("cuisine not found.");
-                return;
-            }
-
-            const foundCuisineId = foundCuisine.id;
-
-            // Prepare the payload for creating a new chosen cuisine
-            const payload = {
-                user_id: this.user.id,
-                cuisine_id: foundCuisineId,
-            };
-
-            // Send POST request to create a chosen cuisine
-            const chosenCuisineResponse = await fetch("http://localhost:8000/chosenCuisines/", {
-                method: "POST",
-                headers: {
-                Authorization: `Bearer ${VueCookies.get("access_token")}`,
-                "Content-Type": "application/json",
-                "X-CSRFToken": VueCookies.get("csrftoken"),
-                },
-                credentials: "include",
-                body: JSON.stringify(payload),
-            });
-
-            // If the response is successful, add the new chosen restaurant to the store
-            if (chosenCuisineResponse.ok) {
-                const dataC = await chosenCuisineResponse.json();
-                const createdChosenCuisine = dataC.chosenCuisine as ChosenCuisine;
-                //chosenCuisinesStore.addChosenCuisine(createdChosenCuisine);
-
-                window.location.reload(); // Refresh the page to reflect the changes
-                alert("Chosen cuisine added successfully!");
-            } else {
-                alert("Failed to add the chosen cuisine. Please try again.");
-            }
-            },
-
+        },
 
       }, 
       computed: {
@@ -589,34 +342,18 @@
               const restaurantsStore = useRestaurantsStore;
               return this.restaurantsStore.restaurants; // Bind to the fetched cuisine data from Pinia store
           },
+          reservations(): Reservation[]{
+              const reservationsStore = useReservationsStore;
+              return this.reservationsStore.reservations; // Bind to the fetched cuisine data from Pinia store
+          },
           
-          cuisines(): Cuisine[]{
-              const cuisinesStore = useCuisinesStore;
-              return this.cuisinesStore.cuisines; // Bind to the fetched cuisine data from Pinia store
-          },
-          friendships(){
-              const friendshipsStore = useFriendshipsStore;
-              return this.friendshipsStore.friendships;
-          },
-          chosens(){
-              const chosensStore = useChosensStore;
-              return this.chosensStore.chosens;
-          },
-          chosenCuisines(){
-              const chosenCuisinesStore = useChosenCuisinesStore;
-              return this.chosenCuisinesStore.chosenCuisines;
-          },
-    
       },
       setup() {
           const userStore = useUserStore();
           const restaurantsStore = useRestaurantsStore();
-          const cuisinesStore = useCuisinesStore();
-          const friendshipsStore = useFriendshipsStore();
           const usersStore = useUsersStore();
-          const chosensStore = useChosensStore();
-          const chosenCuisinesStore = useChosenCuisinesStore();
-          return { userStore , restaurantsStore , friendshipsStore, usersStore, chosensStore, chosenCuisinesStore, cuisinesStore};
+          const reservationsStore = useReservationsStore();
+          return { userStore , restaurantsStore , usersStore, reservationsStore};
       },
   });
   </script>

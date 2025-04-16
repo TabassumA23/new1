@@ -47,11 +47,11 @@
           return {
           
           newReservation: {
-          restaurant: null,          // Will hold the selected restaurant object
-          reservation_time: "",      // Will hold the reservation time
-          number_of_people: 0,      // Will hold the number of people
-          special_requests: "",     // Will hold any special requests (optional)
-          status: 0,                // Will hold the reservation status (default to 'pending', 0)
+            restaurant: null,          // Will hold the selected restaurant object
+            reservation_time: "",      // Will hold the reservation time
+            number_of_people: 0,      // Will hold the number of people
+            special_requests: "NA",     // Will hold any special requests (optional)
+            status: 0,                // Will hold the reservation status (default to 'pending', 0)
           },
           chosenRestaurant: "",
           
@@ -147,41 +147,7 @@
       methods: {
           
           
-          async saveField(field: string) {
-             
-              try {
-                  
-                  const payload = {
-                      [field.toLowerCase()]: this.editedUser[field.toLowerCase()],
-                  };
-                  console.log(payload)
-                  const response = await fetch(`http://localhost:8000/user/${this.user.id}/`, {
-                      method: "PUT",
-                      headers: {
-                          'Authorization': `Bearer ${VueCookies.get('access_token')}`,
-                          'Content-Type': 'application/json',
-                          'X-CSRFToken': VueCookies.get('csrftoken'),
-                      },
-                      credentials: 'include',
-                      body: JSON.stringify(payload),
-                  });
-              
-                  console.log("CSRF Token:", this.userStore.csrf);
-
-                  if (!response.ok) {
-                      throw new Error("Failed to update field");
-                  }
-
-                  const updatedUser = await response.json();
-                  console.log(updatedUser)
-                  this.userStore = this.userStore.saveUsers(updatedUser); // Update the user state in the store
-                  window.location.reload();
-                  alert(`${field} updated successfully!`);
-              } catch (error) {
-                  console.error(error);
-                  alert(`Failed to update ${field}.`);
-              }
-          },
+        
         
 
 
@@ -226,18 +192,18 @@
                     body: JSON.stringify(payload),
                 });
 
-                //const responseText = await reservationResponse.text();  // Log raw response for debugging
-               // console.log(responseText);
+                const responseText = await reservationResponse.text();  // Log raw response for debugging
+                console.log(responseText);
 
-                //if (reservationResponse.ok) {
+                if (reservationResponse.ok) {
                     const data = await reservationResponse.json();
                     const createdReservation = data.reservation;  // Ensure that the response has reservation data
                     reservationsStore.addReservation(createdReservation);  // Add to the Pinia store
                     window.location.reload();
                     alert('Reservation added successfully!');
-               //} else {
-                    //alert('Failed to create reservation');
-                //}
+                } else {
+                    alert('Failed to create reservation');
+                }
             } catch (error) {
                 console.error('Error creating reservation:', error);
                 alert('Failed to create reservation');
@@ -399,8 +365,8 @@
           
           return { userStore , restaurantsStore , usersStore, chosensStore, reservationsStore};
       },
-  });
-  </script>
+    });
+</script>
 
 
 <style scoped>

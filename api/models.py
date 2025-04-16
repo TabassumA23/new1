@@ -5,7 +5,8 @@ from django.utils import timezone
 import logging
 from django.core.validators import MinValueValidator
 from django.conf import settings
-
+from django.utils import timezone
+from datetime import datetime
 
 # Create a logger
 logger = logging.getLogger(__name__)
@@ -254,5 +255,6 @@ class Reservation(models.Model):
             'number_of_people': self.number_of_people,
             'status': dict(self.STATUS_CHOICES).get(self.status),
             'reservation_time': self.reservation_time.strftime('%Y-%m-%d %H:%M:%S'),
+            
         }
 

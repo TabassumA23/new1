@@ -7,6 +7,8 @@ from django.contrib import auth
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils import timezone
+from datetime import datetime
 
 from .models import Chosen, Restaurant, User, Friendship, ChosenCuisine, Cuisine, Review, Reservation
 from .forms import LoginForm, SignUpForm, UpdatePassForm, UpdateUserForm
@@ -486,6 +488,7 @@ def reservations_api(request: HttpRequest) -> JsonResponse:
     # POST method to create a reservation
     if request.method == 'POST':
         try:
+            
             POST = json.loads(request.body)
             print("Received POST data:", POST)  # Debugging line to check POST data
 
