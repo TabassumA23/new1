@@ -1,7 +1,7 @@
 <template>
   <div class="body">
     <div class="restaurant-blog">
-      <h2>My reservations</h2>
+      <h2>Reservations</h2>
 
     <div
         class="restaurant-item"
@@ -23,11 +23,22 @@
         </div>
 
         <div class="restaurant-content">
-          <p>number_of_people: {{ reservation.ranumber_of_peopleting }}</p>
+          <p>number_of_people: {{ reservation.number_of_people }}</p>
         </div>
-        <div class="restaurant-content">
-          <p>status:{{ reservation.status }}</p>
+
+        <div class="restaurant-content" v-for="(restaurant, index) in restaurants" :key="index">
+            <!-- Loop through reservations for each restaurant -->
+            <div v-if="restaurant.user.id === user.id">
+                <p>Status: {{ reservation.status }}
+                <select v-model="reservation.status" @change="updateStatus(reservation)">
+                    <option value="0">Pending</option>
+                    <option value="1">Confirmed</option>
+                </select>
+                </p>
+            </div>
+            
         </div>
+
         <div class="restaurant-content">
           <p>special_requests: {{ reservation.special_requests }}</p>
         </div>
@@ -83,7 +94,7 @@
           },
           chosenRestaurant: "",
           chosenReservation: "",
-          
+          reservation: null,
           chosenChosenCuisine: "",
           
           };
@@ -167,7 +178,7 @@
         
 
           // Update the state with the fetched restaurant data
-          let madeReservationss = reservationData.reservations as Reservation[];
+          let madeReservations = reservationData.reservations as Reservation[];
           const reservationsStore = useReservationsStore();
           reservationsStore.saveReservations(madeReservations); 
           console.log(response)
@@ -215,7 +226,6 @@
               }
               //this.editPassword = !this.editPassword; // Toggle edit mode
           },
-          
 
          async createRestaurant() {
             const restaurantsStore = useRestaurantsStore();
@@ -265,6 +275,7 @@
             }
 
             try {
+                
                 const response = await fetch(`http://localhost:8000/restaurant/${restaurantId}/`, {
                     method: 'DELETE',
                     headers: {
@@ -274,16 +285,19 @@
                     },
                     credentials: 'include',
                 });
+                console.error('Error deleting restaurant:', error);
                 window.location.reload(); 
                 if (response.ok) {
                     // Remove the deleted review from the list
                     this.restaurants = this.restaurants.filter(restaurant => restaurant.id !== restaurantId);
-                    alert('Revrestaurantiew deleted successfully!');
+                    alert('Restaurant deleted successfully!');
                 } else {
+                    console.log("Deleting reservation with ID:", reservationId);
+
                     alert('Failed to delete the restaurant.');
                 }
             } catch (error) {
-                console.error('Error deleting restaurant:', error);
+                
                 alert('Failed to delete the revirestaurantew.');
             }
         },
@@ -297,6 +311,7 @@
             }
 
             try {
+                
                 const response = await fetch(`http://localhost:8000/reservation/${reservationId}/`, {
                     method: 'DELETE',
                     headers: {
@@ -306,6 +321,7 @@
                     },
                     credentials: 'include',
                 });
+                console.error('Error deleting reservation:', reservationId);
                 window.location.reload(); 
                 if (response.ok) {
                     // Remove the deleted review from the list
@@ -316,10 +332,41 @@
                 }
             } catch (error) {
                 console.error('Error deleting reservation:', error);
-                alert('Failed to delete the reservation.');
+                alert('Failed to delete reservation.');
             }
         },
-          
+
+        async updateStatus(reservation) {
+            try {
+                const payload = {
+                    status: reservation.status, 
+                };
+
+                const response = await fetch(`http://localhost:8000/reservation/${reservation.id}/`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${VueCookies.get('access_token')}`,
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': VueCookies.get('csrftoken'),
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(payload),
+                });
+                window.location.reload();
+                const responseText = await response.text();
+                console.log(responseText);
+
+                if (response.ok) {
+                    alert('Reservation status updated successfully!');
+                } else {
+                    alert('Failed to update reservation status');
+                }
+            } catch (error) {
+                console.error('Error updating reservation status:', error);
+                alert('Failed to update reservation status');
+            }
+        },
+            
           //deletes the friendships between users and friend whether pending or accepted
           async deleteChosen(chosenId: number) {
        

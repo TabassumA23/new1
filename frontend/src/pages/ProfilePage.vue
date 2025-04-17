@@ -2,7 +2,7 @@
   <div class="body">
   <div v-if="this.user.user_type == 'Owner'"> 
     <RouterLink  to="/restaurants">Add or view Restaurants</RouterLink>
-    <RouterLink  to="/wishlists">View Reservations</RouterLink>
+    <RouterLink  to="/confirms">View Reservations</RouterLink>
   
 
   </div>
