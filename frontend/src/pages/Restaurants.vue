@@ -67,45 +67,45 @@
       </div>
     </div>
 
-    <div class="restaurant-blog">
-      <h2>My restaurants</h2>
+ 
+  
+      <div class="restaurant-blog">
+        <h2>My restaurants</h2>
 
-    <div
-        class="restaurant-item"
-        
-        v-for="(restaurant, index) in restaurants"
-        :key="index"
-        
-    >
-        <div class="restaurant-header">
-          <h3>Name: {{ restaurant.name }}</h3>
-          <p>
-            <strong>By:</strong> {{ restaurant.user.id }} 
-            <!-- | <strong>Date:</strong> {{ formatDate(restaurant.date) }} -->
-          </p>
-        </div>
+        <!-- Loop through only the restaurants created by the logged-in user -->
+        <div
+          class="restaurant-item"
+          v-for="(restaurant, index) in filteredRestaurants"
+          :key="index"
+        >
+          <div class="restaurant-header">
+            <h3>Name: {{ restaurant.name }}</h3>
+            <p>
+              <strong>By:</strong> {{ restaurant.user.first_name }}
+            </p>
+          </div>
 
-        <div class="restaurant-content">
-          <p>Description: {{ restaurant.description }}</p>
-        </div>
+          <div class="restaurant-content">
+            <p>Allergies: {{ restaurant.description }}</p>
+          </div>
 
-        <div class="restaurant-content">
-          <p>Rating: {{ restaurant.rating }}</p>
-        </div>
-        <div class="restaurant-content">
-          <p>Seats:{{ restaurant.seats_available }}</p>
-        </div>
-        <div class="restaurant-content">
-          <p>Location: {{ restaurant.location }}</p>
-        </div>
-        <div class="restaurant-actions" v-if="restaurant.user.id === user.id">
-          <button @click="deleteRestaurant(restaurant.id)">Delete restaurant</button>
+          <div class="restaurant-content">
+            <p>Rating: {{ restaurant.rating }}</p>
+          </div>
+          <div class="restaurant-content">
+            <p>Seats:{{ restaurant.seats_available }}</p>
+          </div>
+          <div class="restaurant-content">
+            <p>Location: {{ restaurant.location }}</p>
+          </div>
+          <div class="restaurant-actions" v-if="restaurant.user.id === user.id">
+            <button @click="deleteRestaurant(restaurant.id)">Delete restaurant</button>
+          </div>
         </div>
       </div>
-    </div>
+  
   </div>
 </template>
-
 <script lang="ts">
   import { defineComponent } from "vue";
   import { User, Restaurant, Friendship, Chosen,Cuisine, ChosenCuisine} from "../types/index";
@@ -606,6 +606,15 @@
               const chosenCuisinesStore = useChosenCuisinesStore;
               return this.chosenCuisinesStore.chosenCuisines;
           },
+                filteredRestaurants() {
+            return this.restaurants.filter(restaurant => restaurant.user.id === this.user.id);
+        },
+        filteredReservations() {
+          // First, filter the reservations based on the user's restaurants
+          return this.reservations.filter(reservation => {
+            return this.filteredRestaurants.some(restaurant => restaurant.id === reservation.restaurant.id);
+          });
+        },
     
       },
       setup() {

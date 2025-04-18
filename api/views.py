@@ -487,6 +487,8 @@ def reservations_api(request: HttpRequest) -> JsonResponse:
     if request.method == 'POST':
         try:
             POST = json.loads(request.body)
+            user_id = POST['user_id']
+            
             print("Received POST data:", POST)  # Debugging line to check POST data
 
             # Ensure 'number_of_people' is in the request
@@ -500,6 +502,7 @@ def reservations_api(request: HttpRequest) -> JsonResponse:
                 number_of_people=POST['number_of_people'],
                 status=POST['status'],
                 special_requests=POST.get('special_requests', ''),
+                user=User.objects.get(id=user_id),
             )
             return JsonResponse(reservation.as_dict())
 

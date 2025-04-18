@@ -232,6 +232,7 @@ class Reservation(models.Model):
         (PENDING, 'Pending'),
         (CONFIRMED, 'Confirmed'),
     ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)  # Link to Restaurant model
     reservation_time = models.DateTimeField()
     number_of_people = models.IntegerField(default=0,validators=[MinValueValidator(0)])
@@ -254,5 +255,10 @@ class Reservation(models.Model):
             'number_of_people': self.number_of_people,
             'status': dict(self.STATUS_CHOICES).get(self.status),
             'reservation_time': self.reservation_time.strftime('%Y-%m-%d %H:%M:%S'),
+            'user': {
+                'first_name': self.user.first_name,
+                'last_name': self.user.last_name,
+                'id': self.user.id,
+            }
         }
 
