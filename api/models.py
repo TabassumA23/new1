@@ -33,43 +33,6 @@ class PageView(models.Model):
 
     def __str__(self):
         return f"Page view count: {self.count}"
-
-
-class Restaurant(models.Model):
-    '''
-    Class for the restaurant
-    '''
-    name = models.CharField(max_length=100)
-    description = models.TextField(max_length=100)
-    rating = models.IntegerField(default=0)
-    seats_available = models.IntegerField(default=0)
-    location = models.TextField(max_length=100)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    
-    def __str__(self):
-        return self.name
-    
-    '''
-    Dictionary
-    '''
-    def as_dict(self):
-        return {
-            'id': self.id,
-            # Obtains URL pattern for individual restaurant
-            'api': reverse('restaurant api', args=[self.id]),
-            'name': self.name,
-            'description': self.description,
-            'rating': self.rating,
-            'seats_available': self.seats_available,
-            'location' : self.location,
-            'user': {
-                'first_name': self.user.first_name,
-                'last_name': self.user.last_name,
-                'id': self.user.id,
-            }
-        }
-
-
 class Cuisine(models.Model):
     '''
     Class for the cusine
@@ -91,7 +54,67 @@ class Cuisine(models.Model):
             'name': self.name,
             'description': self.description,
         }
+  
+class Allergy(models.Model):
+    '''
+    Class for the cusine
+    '''
+    name = models.CharField(max_length=100)
+    description = models.TextField(max_length=100)
     
+    def __str__(self):
+        return self.name
+    
+    '''
+    Dictionary
+    '''
+    def as_dict(self):
+        return {
+            'id': self.id,
+            # Obtains URL pattern for individual cuisine
+            'api': reverse('allergy api', args=[self.id]),
+            'name': self.name,
+            'description': self.description,
+        }
+
+
+class Restaurant(models.Model):
+    '''
+    Class for the restaurant
+    '''
+    name = models.CharField(max_length=100)
+    allergies = models.ForeignKey(Allergy, on_delete=models.CASCADE)
+    cuisines = models.ForeignKey(Cuisine, on_delete=models.CASCADE)
+    rating = models.IntegerField(default=0)
+    seats_available = models.IntegerField(default=0)
+    location = models.TextField(max_length=100)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    
+    def __str__(self):
+        return self.name
+    
+    '''
+    Dictionary
+    '''
+    def as_dict(self):
+        return {
+            'id': self.id,
+            # Obtains URL pattern for individual restaurant
+            'api': reverse('restaurant api', args=[self.id]),
+            'name': self.name,
+            'allergies': self.allergies,
+            'cuisines': self.cuisines,
+            'rating': self.rating,
+            'seats_available': self.seats_available,
+            'location' : self.location,
+            'user': {
+                'first_name': self.user.first_name,
+                'last_name': self.user.last_name,
+                'id': self.user.id,
+            }
+        }
+
+  
 # Enum for user types
 class UserType(models.TextChoices):
     OWNER = 'Owner', 'Owner'
@@ -115,7 +138,7 @@ class User(AbstractUser):
     chosen_restaurant = models.ManyToManyField(Restaurant, through='Chosen', related_name="related_rest+")
     chosen_cuisine = models.ManyToManyField(Cuisine, through='ChosenCuisine')
     friends = models.ManyToManyField('self', through='Friendship', symmetrical=False, related_name="friends_with+")
-
+    chosen_allergy = models.ManyToManyField(Allergy, through='ChosenAllergy')
     def __str__(self):
         return f"{self.first_name, self.last_name}"
     
@@ -250,7 +273,10 @@ class Reservation(models.Model):
             'id': self.id,
             # Obtains URL pattern for individual restaurant
             'api': reverse('reservation api', args=[self.id]),
-            'restaurant': self.restaurant.name,
+            'restaurant': {
+                'name': self.restaurant.name,
+                'id': self.restaurant.id,  
+            },
             'special_requests': self.special_requests,
             'number_of_people': self.number_of_people,
             'status': dict(self.STATUS_CHOICES).get(self.status),
@@ -261,4 +287,21 @@ class Reservation(models.Model):
                 'id': self.user.id,
             }
         }
+
+class ChosenAllergy(models.Model):
+     """
+    This class is the ChosenAllergy Model which is a through model 
+    which creates a many to many relationship between user and cuisine
+    """
+     user = models.ForeignKey('User', on_delete=models.CASCADE)
+     allergy = models.ForeignKey('Allergy', on_delete=models.CASCADE)
+     name= models.CharField(max_length=100, default="chosenAllergy")
+     def as_dict(self):
+        return{
+            'id': self.id,
+            'api': reverse('chosen api', args=[self.id]),
+            'user': self.user.id,
+            'allergy': self.allergy.id,
+            'name': self.cuisine.name,
+        }  
 

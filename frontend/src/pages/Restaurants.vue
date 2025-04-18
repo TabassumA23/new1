@@ -67,42 +67,43 @@
       </div>
     </div>
 
-    <div class="restaurant-blog">
-      <h2>My restaurants</h2>
+ 
+  
+      <div class="restaurant-blog">
+        <h2>My restaurants</h2>
 
-    <div
-        class="restaurant-item"
-        
-        v-for="(restaurant, index) in restaurants"
-        :key="index"
-        
-    >
-        <div class="restaurant-header">
-          <h3>Name: {{ restaurant.name }}</h3>
-          <p>
-            <strong>By:</strong> {{ restaurant.user.id }} 
-            <!-- | <strong>Date:</strong> {{ formatDate(restaurant.date) }} -->
-          </p>
-        </div>
+        <!-- Loop through only the restaurants created by the logged-in user -->
+        <div
+          class="restaurant-item"
+          v-for="(restaurant, index) in filteredRestaurants"
+          :key="index"
+        >
+          <div class="restaurant-header">
+            <h3>Name: {{ restaurant.name }}</h3>
+            <p>
+              <strong>By:</strong> {{ restaurant.user.first_name }}
+            </p>
+          </div>
 
-        <div class="restaurant-content">
-          <p>Description: {{ restaurant.description }}</p>
-        </div>
+          <div class="restaurant-content">
+            <p>Allergies: {{ restaurant.allergies }}</p>
+          </div>
 
-        <div class="restaurant-content">
-          <p>Rating: {{ restaurant.rating }}</p>
-        </div>
-        <div class="restaurant-content">
-          <p>Seats:{{ restaurant.seats_available }}</p>
-        </div>
-        <div class="restaurant-content">
-          <p>Location: {{ restaurant.location }}</p>
-        </div>
-        <div class="restaurant-actions" v-if="restaurant.user.id === user.id">
-          <button @click="deleteRestaurant(restaurant.id)">Delete restaurant</button>
+          <div class="restaurant-content">
+            <p>Rating: {{ restaurant.rating }}</p>
+          </div>
+          <div class="restaurant-content">
+            <p>Seats:{{ restaurant.seats_available }}</p>
+          </div>
+          <div class="restaurant-content">
+            <p>Location: {{ restaurant.location }}</p>
+          </div>
+          <div class="restaurant-actions" v-if="restaurant.user.id === user.id">
+            <button @click="deleteRestaurant(restaurant.id)">Delete restaurant</button>
+          </div>
         </div>
       </div>
-    </div>
+  
   </div>
 </template>
 
@@ -143,13 +144,13 @@
 
           newRestaurant: {
             name: "",
-            description: "",
+            allergies: "Not Applicable",
             rating: 0,
             seats_available: 0,
             location: "London",
           },
           chosenRestaurant: "",
-          
+          searchQuery: "",
           chosenChosenCuisine: "",
           
           };
@@ -278,7 +279,7 @@
             const newRestaurant = this.newRestaurant;
             const payload = {
                 name: this.newRestaurant.name,
-                description: this.newRestaurant.description,
+                allergies: this.newRestaurant.allergies,
                 rating: this.newRestaurant.rating,
                 seats_available: this.newRestaurant.seats_available,
                 location: this.newRestaurant.location,
@@ -581,6 +582,15 @@
 
       }, 
       computed: {
+            filteredRestaurants() {
+            return this.restaurants.filter(restaurant => restaurant.user.id === this.user.id);
+        },
+        filteredReservations() {
+          // First, filter the reservations based on the user's restaurants
+          return this.reservations.filter(reservation => {
+            return this.filteredRestaurants.some(restaurant => restaurant.id === reservation.restaurant.id);
+          });
+        },
           user() {
               const userStore = useUserStore;
               return this.userStore.user; // Bind to the fetched user data from Pinia store

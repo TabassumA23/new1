@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 
-from .models import User, Restaurant, Cuisine, Review, Reservation
+from .models import User, Restaurant, Cuisine, Review, Reservation, Allergy
 
 '''Register the friendship through model to the admin panel'''
 
@@ -20,17 +20,20 @@ class ChosenCuisineInline(admin.TabularInline):
     model = User.chosen_cuisine.through
     fk_name = 'user'
 
+class ChosenAllergyInline(admin.TabularInline):
+    model = User.chosen_allergy.through
+    fk_name = 'user'
 
 '''Register the user model to the admin panel'''
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    inlines = (ChosenInline, FriendshipInline, ChosenCuisineInline)
+    inlines = (ChosenInline, FriendshipInline, ChosenCuisineInline, ChosenAllergyInline)
 
 
 @admin.register(Restaurant)
 class RestaurantAdmin(admin.ModelAdmin):
     '''Register the restaurant model to the admin panel'''
-    list_display = ('name', 'description', 'rating', 'seats_available', 'location')
+    list_display = ('name', 'allergies','cuisines', 'rating', 'seats_available', 'location')
 
 @admin.register(Cuisine)
 class CuisineAdmin(admin.ModelAdmin):
@@ -50,3 +53,7 @@ class ReservationAdmin(admin.ModelAdmin):
     search_fields = ('restaurant__name', 'status')  # Allows searching by restaurant name and status
 
 
+@admin.register(Allergy)
+class AllergyAdmin(admin.ModelAdmin):
+    '''Register the allergy model to the admin panel'''
+    list_display = ('name', 'description')

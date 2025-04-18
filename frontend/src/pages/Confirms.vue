@@ -1,47 +1,48 @@
 <template>
   <div class="body">
     <div class="restaurant-blog">
-      <h2>Reservations</h2>
+      <h2>Reservations for Your Restaurants</h2>
 
-    <div
+      <!-- Dropdown for filtering reservations -->
+      <div>
+        <label for="statusFilter">Filter by Status:</label>
+        <select id="statusFilter" v-model="statusFilter">
+          <option value="all">All</option>
+          <option value="0">Pending</option>
+          <option value="1">Confirmed</option>
+        </select>
+      </div>
+
+      <div
         class="restaurant-item"
-        
-        v-for="(reservation, index) in reservations"
+        v-for="(reservation, index) in filteredReservations"
         :key="index"
-        
-    >
+      >
         <div class="restaurant-header">
-          <h3>restaurant: {{ reservation.restaurant }}</h3>
-          <p>
-            <!-- <strong>By:</strong> {{ reservation.user.id }}  -->
-            <!-- | <strong>Date:</strong> {{ formatDate(restaurant.date) }} -->
+          <h3>Restaurant: {{ reservation.restaurant.name }}</h3>
+        </div>
+
+        <div class="restaurant-content">
+          <p>Reservation Time: {{ reservation.reservation_time }}</p>
+        </div>
+
+        <div class="restaurant-content">
+          <p>Number of People: {{ reservation.number_of_people }}</p>
+        </div>
+
+        <div class="restaurant-content">
+          <p>Status: {{ reservation.status }}
+            <select v-model="reservation.status" @change="updateStatus(reservation)">
+              <option value="0">Pending</option>
+              <option value="1">Confirmed</option>
+            </select>
           </p>
         </div>
 
         <div class="restaurant-content">
-          <p>reservation_time: {{ reservation.reservation_time }}</p>
+          <p>Special Requests: {{ reservation.special_requests }}</p>
         </div>
 
-        <div class="restaurant-content">
-          <p>number_of_people: {{ reservation.number_of_people }}</p>
-        </div>
-
-        <div class="restaurant-content" v-for="(restaurant, index) in restaurants" :key="index">
-            <!-- Loop through reservations for each restaurant -->
-            <div v-if="restaurant.user.id === user.id">
-                <p>Status: {{ reservation.status }}
-                <select v-model="reservation.status" @change="updateStatus(reservation)">
-                    <option value="0">Pending</option>
-                    <option value="1">Confirmed</option>
-                </select>
-                </p>
-            </div>
-            
-        </div>
-
-        <div class="restaurant-content">
-          <p>special_requests: {{ reservation.special_requests }}</p>
-        </div>
         <div class="restaurant-actions" v-if="reservation.user.id === user.id">
           <button @click="deleteReservation(reservation.id)">Delete reservation</button>
         </div>
@@ -52,7 +53,7 @@
 
 <script lang="ts">
   import { defineComponent } from "vue";
-  import { User, Restaurant, Reservation, Friendship, Chosen,Cuisine, ChosenCuisine} from "../types/index";
+  import { User, Restaurant, Reservation, Friendship, Chosen, Cuisine, ChosenCuisine} from "../types/index";
   import { useUserStore } from "../stores/user";
   import { useUsersStore } from "../stores/users";
   import { useRestaurantsStore } from "../stores/restaurants";
@@ -72,31 +73,12 @@
       data() {
           return {
           
-          editFirstName: false,
-          editLastName: false,
-          editEmail: false,
-          editDateOfBirth: false,
-          
-          editedUser: {
-              first_name: "",
-              last_name: "",
-              email: "",
-              date_of_birth: "",
-              
-          },
 
-          newRestaurant: {
-            name: "",
-            description: "",
-            rating: 0,
-            seats_available: 0,
-            location: "London",
-          },
           chosenRestaurant: "",
           chosenReservation: "",
           reservation: null,
           chosenChosenCuisine: "",
-          
+          statusFilter: "all",
           };
       },
       async mounted() {
@@ -218,14 +200,10 @@
           storeChosenCuisines.saveChosenCuisines(chosenCuisines);
       },
       methods: {
-          toggleEditField(field: string) {
-            console.log(typeof field)
-              this[`edit${field}`] = !this[`edit${field}`];
-              if (this[`edit${field}`]) {
-                  this.editedUser[field.toLowerCase()] = this.user[field.toLowerCase()];
-              }
-              //this.editPassword = !this.editPassword; // Toggle edit mode
-          },
+          updateStatus(reservation) {
+            
+            console.log('Updated reservation status to: ', reservation.status);
+            },
 
          async createRestaurant() {
             const restaurantsStore = useRestaurantsStore();
@@ -605,6 +583,7 @@
 
       }, 
       computed: {
+        
           user() {
               const userStore = useUserStore;
               return this.userStore.user; // Bind to the fetched user data from Pinia store
@@ -617,24 +596,42 @@
               const reservationsStore = useReservationsStore;
               return this.reservationsStore.reservations; // Bind to the fetched cuisine data from Pinia store
           },
-          cuisines(): Cuisine[]{
-              const cuisinesStore = useCuisinesStore;
-              return this.cuisinesStore.cuisines; // Bind to the fetched cuisine data from Pinia store
+          filteredRestaurants() {
+            return this.restaurants.filter(restaurant => restaurant.user.id === this.user.id);
           },
-          friendships(){
-              const friendshipsStore = useFriendshipsStore;
-              return this.friendshipsStore.friendships;
-          },
-          chosens(){
-              const chosensStore = useChosensStore;
-              return this.chosensStore.chosens;
-          },
-          chosenCuisines(){
-              const chosenCuisinesStore = useChosenCuisinesStore;
-              return this.chosenCuisinesStore.chosenCuisines;
-          },
+          filteredReservations() {
+            const reservationsStore = useReservationsStore();
+            const allReservations = reservationsStore.reservations;
+
+            // Filter by the logged-in user's restaurants
+            const userRestaurants = useRestaurantsStore().restaurants.filter(
+                (restaurant) => restaurant.user.id === this.user.id
+            );
+            console.log("User Restaurants: ", userRestaurants);
+            // Filter reservations that belong to the user's restaurants
+            let filtered = allReservations.filter((reservation) => {
+                console.log("Checking reservation restaurant:", reservation.restaurant.id);
+                console.log("Matching with user restaurants:", userRestaurants.some((restaurant) => restaurant.id === reservation.restaurant.id));
+                return userRestaurants.some(
+                    (restaurant) => restaurant.id === reservation.restaurant.id
+                );
+            });
+            console.log(filtered);
+            // Apply the status filter (Pending or Confirmed)
+            if (this.statusFilter === "0") {
+                 filtered = filtered.filter((reservation) => reservation.status === 0);
+                 console.log(filtered);
+            } else if (this.statusFilter === "1") {
+                filtered = filtered.filter((reservation) => reservation.status === 1);
+                 console.log(filtered);
+            }
+            
+            return filtered;
+            },
+          
+        
     
-      },
+    },
       setup() {
           const userStore = useUserStore();
           const restaurantsStore = useRestaurantsStore();
