@@ -18,7 +18,7 @@ from django.contrib import admin, auth
 from django.urls import include, path
 from django.http import HttpResponse
 
-from .views import login_user, logout_user, signup_user, reviews_api, review_api, restaurants_api, restaurant_api, users_api, user_api, friendship_api, friendships_api, chosens_api, chosen_api, update_password, update_username, chosenCuisines_api, chosenCuisine_api, cuisines_api, cuisine_api, reservation_api, reservations_api, allergy_api, allergys_api, recommend_restaurants
+from .views import login_user, logout_user, signup_user, reviews_api, review_api, restaurants_api, restaurant_api, users_api, user_api, friendship_api, friendships_api, chosens_api, chosen_api, update_password, update_username, chosenCuisines_api, chosenCuisine_api, cuisines_api, cuisine_api, reservation_api, reservations_api, allergy_api, allergys_api, recommend_restaurants, chosenAllergys_api, chosenAllergy_api
 
 # Listing route URLs to views.
 urlpatterns = [
@@ -40,6 +40,10 @@ urlpatterns = [
     path('user/<int:user_id>/', user_api, name='user api'),
     path('chosenCuisines/', chosenCuisines_api, name='chosenCuisines api'),
     path('chosenCuisine/<int:chosenCuisine_id>/', chosenCuisine_api, name='chosenCuisine api'),
+
+    path('chosenAllergys/', chosenAllergys_api, name='chosenAllergys api'),
+    path('chosenAllergy/<int:chosenAllergy_id>/', chosenAllergy_api, name='chosenAllergy api'),
+
     path('chosens/', chosens_api, name='chosens api'),
     path('chosen/<int:chosen_id>/', chosen_api, name='chosen api'),
     path('friendships/', friendships_api, name='friendships api'),

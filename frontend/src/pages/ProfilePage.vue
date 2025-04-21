@@ -103,35 +103,54 @@
               
           </div>
     </div>
+
+    <div class="allergy">
+        <label for="allergys">Choose a allergy:</label>
+        <select id="allergys" v-model="this.chosenChosenAllergy">
+            <option v-for="allergy in allergys">
+                {{ allergy.name }}
+            </option>
+        </select>
+        <button @click="addChosenAllergy">Save Choice Here</button>
+        <div class="allergys">
+                <h4>Allergies</h4>
+                  <ul v-for="(chosenAllergy, index) in chosenAllergys" :key="index">
+                  <li class="friends" v-if="chosenAllergy.user==user.id">
+                      {{ chosenAllergy.name }} <button @click="deleteChosenAllergy(chosenAllergy.id)"> Delete </button>
+                  </li>
+              </ul>
+              
+          </div>
+    </div>
         
-<!--       
-    <div class="friend-accepted">
+  <!--       
+      <div class="friend-accepted">
+            <div>
+                <h2>Accepted Friends</h2>
+            </div>
+
+            <ul v-for="(friendship, index) in friendships" :key="index">
+                <li class="friends" v-if="friendship.user==user.id && friendship.accepted == true">
+                    {{ friendship.username }} <button @click="deleteFriendship(friendship.id)"> Delete </button>
+                </li>
+            </ul>
+          
+      </div>
+
+      <div  class="friend-pending">
           <div>
-              <h2>Accepted Friends</h2>
+              <h2>Pending Friends</h2>
           </div>
 
           <ul v-for="(friendship, index) in friendships" :key="index">
-              <li class="friends" v-if="friendship.user==user.id && friendship.accepted == true">
-                  {{ friendship.username }} <button @click="deleteFriendship(friendship.id)"> Delete </button>
+              <li class="friends" v-if="friendship.user==user.id && friendship.accepted == false">
+                  {{ friendship.username }} 
+                  <button @click="deleteFriendship(friendship.id)"> Delete </button>
+                  <button @click="acceptFriendship(friendship.id)"> Accept </button>
               </li>
           </ul>
         
-    </div>
-
-    <div  class="friend-pending">
-        <div>
-            <h2>Pending Friends</h2>
-        </div>
-
-        <ul v-for="(friendship, index) in friendships" :key="index">
-            <li class="friends" v-if="friendship.user==user.id && friendship.accepted == false">
-                {{ friendship.username }} 
-                <button @click="deleteFriendship(friendship.id)"> Delete </button>
-                <button @click="acceptFriendship(friendship.id)"> Accept </button>
-            </li>
-        </ul>
-      
-    </div> -->
+      </div> -->
 
     <div>
     <h2>Recommended Restaurants</h2>
@@ -140,6 +159,7 @@
       <div v-for="(restaurant, index) in recommendedRestaurants" :key="index">
         <h3>{{ restaurant.name }}</h3>
         <p>Cuisine: {{ restaurant.cuisine }}</p>
+        <p>Allergens: {{ restaurant.allergys }}</p>
         <p>Rating: {{ restaurant.rating }}</p>
         <p>Location: {{ restaurant.location }}</p>
         <p>Seats Available: {{ restaurant.seats_available }}</p>
@@ -158,12 +178,14 @@
 
 <script lang="ts">
   import { defineComponent } from "vue";
-  import { User, Restaurant, Friendship, Chosen,Cuisine, ChosenCuisine} from "../types/index";
+  import { User, Restaurant, Friendship, Chosen,Cuisine, ChosenCuisine, Allergy, ChosenAllergy} from "../types/index";
   import { useUserStore } from "../stores/user";
   import { useUsersStore } from "../stores/users";
   import { useRestaurantsStore } from "../stores/restaurants";
-
-  import { useCuisinesStore } from "../stores/cuisines";
+  import { useAllergysStore } from "../stores/allergys";
+  import { useChosenAllergyStore } from "../stores/chosenAllergy";
+  import { useCuisinesStore } from "../stores/cuisines"; 
+  import { useChosenAllergysStore } from "../stores/chosenAllergys";
   import { useChosenStore } from "../stores/chosen";
   import { useChosensStore } from "../stores/chosens";
   import { useChosenCuisineStore } from "../stores/chosenCuisine";
@@ -191,10 +213,12 @@
           },
           
           chosenRestaurant: "",
-          
-          chosenCuisine: "",
+          chosenChosenAllergys: "",
+          chosenChosenCuisines: "",
           recommendedRestaurants: [],
-          allergies: [],
+          chosenAllergy: [],
+          chosenCuisine:[],
+          
           
           };
       },
@@ -309,6 +333,25 @@
           const storeChosenCuisines = useChosenCuisinesStore();
           storeChosenCuisines.saveChosenCuisines(chosenCuisines);
 
+
+          // Fetching all cuisines from the backend
+          let resA = await fetch(`http://localhost:8000/allergys/`);
+          let allergyData = await resA.json();
+
+          // Update the state with the fetched allergy data
+          let madeAllergys = allergyData.allergys as Allergy[];
+          const allergysStore = useAllergysStore();
+          allergysStore.saveAllergys(madeAllergys); 
+          console.log(resA)
+
+          //fetch all the friendships
+          let responseChosenAllergy = await fetch("http://localhost:8000/chosenAllergys/");
+          let dataChosenAllergy = await responseChosenAllergy.json();
+          let chosenAllergys = dataChosenAllergy.chosenAllergys as ChosenAllergy[];
+
+          const storeChosenAllergys = useChosenAllergysStore();
+          storeChosenAllergys.saveChosenAllergys(chosenAllergys);
+
           await this.getUserPreferences();
 
 
@@ -326,6 +369,7 @@
           },
 
           // Fetch the current user's chosen cuisines and allergies
+           // Fetch the current user's chosen cuisines and allergies
           async getUserPreferences() {
             const user = this.userStore.user;
             console.log('Updated Chosen Cuisines:', this.chosenCuisines);
@@ -333,10 +377,10 @@
 
             // Ensure that chosenCuisine and allergies are defined, default to empty array if not
             this.chosenCuisines = user.chosenCuisines || [];  // Default to empty array if undefined
-            this.allergys = user.allergys || [];  // Default to empty array if undefined
+            this.chosenAllergys = user.chosenAllergys || [];  // Default to empty array if undefined
 
             console.log("Chosen Cuisines:", this.chosenCuisines);
-            console.log("Allergies:", this.allergys);
+            console.log("Allergies:", this.chosenAllergys);
 
             // Now fetch the recommended restaurants based on preferences
             await this.getRecommendedRestaurants();
@@ -344,9 +388,13 @@
           // Fetch the recommended restaurants from the backend
           async getRecommendedRestaurants() {
             // Get the IDs for the chosen cuisines and allergies
-            const cuisineIds = this.chosenCuisines.map(cuisine => cuisine.id);  // Get the IDs of chosen cuisines
-            const allergyIds = this.allergys.map(allergy => allergy.id);  // Get the IDs of allergies
+            const cuisineIds = this.chosenCuisines
+              .filter(c => c.user === this.user.id)
+              .map(c => c.cuisine)
 
+            const allergyIds = this.chosenAllergys
+              .filter(a => a.user === this.user.id)
+              .map(a => a.allergy)
             try {
               const response = await fetch("http://localhost:8000/recommend_restaurants/", {
                 method: "POST",
@@ -373,6 +421,8 @@
               console.error('Error fetching recommended restaurants:', error);
             }
           },
+        
+
         
           
           async saveField(field: string) {
@@ -650,6 +700,95 @@
           },
 
 
+           //deletes the friendships between users and friend whether pending or accepted
+          async deleteChosenAllergy(chosenAllergyId: number) {
+       
+            try {
+              const response = await fetch(`http://localhost:8000/chosenAllergy/${chosenAllergyId}/`, {
+                method: "DELETE",
+                headers: {
+                  "Authorization": `Bearer ${VueCookies.get("access_token")}`,
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": VueCookies.get("csrftoken"),
+                },
+                credentials: "include",
+              });
+
+              if (!response.ok) {
+                throw new Error("Failed to delete chosen allergy");
+              }
+
+              //Remove the deleted friendship from the store
+              const chosenAllergysStore = useChosenAllergysStore();
+              //chosenCuisinesStore.removeChosenCuisine(chosenCuisineId);
+
+              window.location.reload();
+              alert("Chosen allergy deleted successfully!");
+            } catch (error) {
+              console.error("Error deleting chosen allergy:", error);
+              alert("Failed to delete chosen allergy. Please try again.");
+            }
+          },
+
+          async addChosenAllergy() {
+            if (this.chosenChosenAllergy === "") {
+                alert("Invalid allergy Choice.");
+                return;
+            }
+
+            const chosenAllergysStore = useChosenAllergysStore();
+            const allergysStore = useAllergysStore();
+            const chosenChosenAllergyLower = this.chosenChosenAllergy.toLowerCase();
+
+            // Check if the logged-in user has already chosen this cusine
+            let alreadyChosenAllergyByUser = chosenAllergysStore.chosenAllergys.some(chosenAllergy => chosenAllergy.user === this.user.id && chosenAllergy.name.toLowerCase() === chosenChosenAllergyLower);
+            
+            if (alreadyChosenAllergyByUser) {
+                alert("You have already chosen this allergy.");
+                return;
+            }
+
+            // Find the cuisine from the cuisine store
+            let foundAllergy = allergysStore.getAllergyByName(this.chosenChosenAllergy);
+            if (!foundAllergy) {
+                alert("Allergy not found.");
+                return;
+            }
+
+            const foundAllergyId = foundAllergy.id;
+
+            // Prepare the payload for creating a new chosen Allergy
+            const payload = {
+                user_id: this.user.id,
+                allergy_id: foundAllergyId,
+            };
+
+            // Send POST request to create a chosen Allergy
+            const chosenAllergyResponse = await fetch("http://localhost:8000/chosenAllergys/", {
+                method: "POST",
+                headers: {
+                Authorization: `Bearer ${VueCookies.get("access_token")}`,
+                "Content-Type": "application/json",
+                "X-CSRFToken": VueCookies.get("csrftoken"),
+                },
+                credentials: "include",
+                body: JSON.stringify(payload),
+            });
+
+            // If the response is successful, add the new chosen restaurant to the store
+            if (chosenAllergyResponse.ok) {
+                const dataC = await chosenAllergyResponse.json();
+                const createdChosenAllergy = dataC.chosenAllergy as ChosenAllergy;
+                //chosenCuisinesStore.addChosenCuisine(createdChosenCuisine);
+
+                window.location.reload(); // Refresh the page to reflect the changes
+                alert("Chosen Allergy added successfully!");
+            } else {
+                alert("Failed to add the chosen Allergy. Please try again.");
+            }
+          },
+
+
       }, 
       computed: {
           user() {
@@ -665,6 +804,10 @@
               const cuisinesStore = useCuisinesStore;
               return this.cuisinesStore.cuisines; // Bind to the fetched cuisine data from Pinia store
           },
+          allergys(): Allergy[]{
+              const allergysStore = useAllergysStore;
+              return this.allergysStore.allergys; // Bind to the fetched cuisine data from Pinia store
+          },
           friendships(){
               const friendshipsStore = useFriendshipsStore;
               return this.friendshipsStore.friendships;
@@ -677,20 +820,27 @@
               const chosenCuisinesStore = useChosenCuisinesStore;
               return this.chosenCuisinesStore.chosenCuisines;
           },
+          chosenAllergys(){
+              const chosenAllergysStore = useChosenAllergysStore;
+              return this.chosenAllergysStore.chosenAllergys;
+          },
     
       },
       setup() {
           const userStore = useUserStore();
           const restaurantsStore = useRestaurantsStore();
-          const cuisinesStore = useCuisinesStore();
+          const allergysStore = useAllergysStore();
+          const chosenAllergysStore = useChosenAllergysStore();
           const friendshipsStore = useFriendshipsStore();
           const usersStore = useUsersStore();
           const chosensStore = useChosensStore();
           const chosenCuisinesStore = useChosenCuisinesStore();
-          return { userStore , restaurantsStore , friendshipsStore, usersStore, chosensStore, chosenCuisinesStore, cuisinesStore};
+          const cuisinesStore = useCuisinesStore();
+          return { userStore , restaurantsStore , friendshipsStore, usersStore, chosensStore, chosenCuisinesStore, cuisinesStore, chosenAllergysStore, allergysStore};
       },
   });
-  </script>
+</script>
+
 
 
 <style scoped>

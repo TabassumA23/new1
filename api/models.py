@@ -147,6 +147,7 @@ class User(AbstractUser):
     friends = models.ManyToManyField('self', through='Friendship', symmetrical=False, related_name="friends_with+")
     cuisines = models.ManyToManyField(Cuisine, related_name="cuisines")
     allergys = models.ManyToManyField(Allergy, related_name= "allergys")
+    chosen_allergy = models.ManyToManyField(Allergy, through='ChosenAllergy')
     def __str__(self):
         return f"{self.first_name, self.last_name}"
     
@@ -200,6 +201,24 @@ class ChosenCuisine(models.Model):
             'user': self.user.id,
             'cuisine': self.cuisine.id,
             'name': self.cuisine.name,
+        }
+     
+
+class ChosenAllergy(models.Model):
+     """
+    This class is the ChosenAllergy Model which is a through model 
+    which creates a many to many relationship between user and allergy
+    """
+     user = models.ForeignKey('User', on_delete=models.CASCADE)
+     allergy = models.ForeignKey('Allergy', on_delete=models.CASCADE)
+     name= models.CharField(max_length=100, default="chosenAllergy")
+     def as_dict(self):
+        return{
+            'id': self.id,
+            'api': reverse('chosen api', args=[self.id]),
+            'user': self.user.id,
+            'allergy': self.allergy.id,
+            'name': self.allergy.name,
         }
 
 class Friendship(models.Model):

@@ -60,7 +60,13 @@ export interface ChosenCuisine{
     cusine: number;
     name: string;
 }
-
+export interface ChosenAllergy{
+    id: number;
+    api: string;
+    user: number;
+    allergy: number;
+    name: string;
+}
 export interface Reservation {
     id: number;
     api: string;

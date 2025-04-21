@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 
-from .models import Chosen, Restaurant, User, Friendship, ChosenCuisine, Cuisine, Review, Reservation, Allergy
+from .models import Chosen, Restaurant, User, Friendship, ChosenCuisine, Cuisine, Review, Reservation, Allergy,ChosenAllergy
 from .forms import LoginForm, SignUpForm, UpdatePassForm, UpdateUserForm
 
 # Authenticate login before Vue SPA redirect
@@ -417,6 +417,56 @@ def chosenCuisine_api(request: HttpRequest,  chosenCuisine_id: int) -> JsonRespo
     # GET chosenCuisine data
     return JsonResponse(chosenCuisine.as_dict())
 
+
+# APIs for chosenCuisine model below
+def chosenAllergys_api(request: HttpRequest) -> JsonResponse:
+    """API endpoint for the chosenAllergy"""
+
+    # POST method which is the create method
+    if request.method == 'POST':
+        try:
+            # Create a new restaurant
+            POST = json.loads(request.body)
+            user = User.objects.get(id=POST.get("user_id"))
+            allergy = Allergy.objects.get(id=POST.get("allergy_id"))
+            chosenAllergy = ChosenAllergy.objects.create(
+                user = user,
+                allergy = allergy,
+
+            )
+            return JsonResponse(chosenAllergy.as_dict())
+        except ObjectDoesNotExist:
+            return JsonResponse({'error': 'Invalid user_id or restaurant_id'}, status=404)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
+
+    # GET method which allows the user to view all hobbies
+    return JsonResponse({
+        'chosenAllergys': [
+            chosenAllergy.as_dict()
+            for chosenAllergy in ChosenAllergy.objects.all()
+        ]
+    })
+
+
+def chosenAllergy_api(request: HttpRequest,  chosenAllergy_id: int) -> JsonResponse:
+    """API endpoint for a single chosenAllergy"""
+    try:
+        chosenAllergy = ChosenAllergy.objects.get(id=chosenAllergy_id)
+    except chosenAllergy.DoesNotExist:
+        return JsonResponse({"error": "chosenAllergy not found."}, status=404)
+
+    # PUT method to update chosenAllergy need to finish
+    
+
+    # DELETE method to delete chosenAllergy
+    if request.method == 'DELETE':
+        chosenAllergy.delete()
+        return JsonResponse({}, status=204)  # 204 No Content
+
+    # GET chosenAllergy data
+    return JsonResponse(chosenAllergy.as_dict())
+
 # APIs for restaurant model below
 def reviews_api(request: HttpRequest) -> JsonResponse:
     """API endpoint for the Review"""
@@ -672,7 +722,7 @@ def restaurant_api(request: HttpRequest, restaurant_id: int) -> JsonResponse:
 
             if "allergy_ids" in PUT:
                 allergys = Allergy.objects.filter(id__in=PUT['allergy_ids'])
-                restaurant.allergies.set(allergies)  # Update the allergies
+                restaurant.allergys.set(allergys)  # Update the allergies
              
 
             restaurant.save()
@@ -688,18 +738,19 @@ def restaurant_api(request: HttpRequest, restaurant_id: int) -> JsonResponse:
     # GET restaurant data
     return JsonResponse(restaurant.as_dict())
 
+
 def recommend_restaurants(request):
     """API endpoint to recommend restaurants based on allergies and cuisines"""
     
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            #allergy_ids = data.get('allergys', [])
+            allergy_ids = data.get('allergys', [])
             cuisine_ids = data.get('cuisines', [])
 
             # Filter restaurants based on selected allergies and cuisines
             recommended_restaurants = Restaurant.objects.filter(
-                #allergy__in=allergy_ids,
+                allergys__in=allergy_ids,
                 cuisine__in=cuisine_ids
             ).distinct()  # distinct to avoid duplicates
 
