@@ -16,12 +16,13 @@
         </option>
         </select>
 
-         <label for="allergy">Select Allergy:</label>
-        <select id="allergies" v-model="newRestaurant.allergy">
-        <option v-for="allergy in allergys" :key="allergy.id" :value="allergy">
+        <label for="allergys">Allergies:</label>
+        <select v-model="newRestaurant.allergy" class="form-control" id="allergys" multiple>
+          <option v-for="(allergy, index) in allergys" :key="index" :value="allergy.id">
             {{ allergy.name }}
-        </option>
+          </option>
         </select>
+
 
         <label for="rating">Rating:</label>
         <input type="rating" v-model="newRestaurant.rating" />
@@ -72,9 +73,12 @@
         </div>
 
         <div class="restaurant-content">
-          <p>allergy: {{ restaurant.allergy }}</p>
-        </div>
-
+        <p>Allergies:
+          <span v-for="(allergy, index) in restaurant.allergys" :key="index">
+            {{ allergy }}{{ index < restaurant.allergys.length - 1 ? ', ' : '' }}
+          </span>
+        </p>
+      </div>
         <!-- <div class="restaurant-content" v-for="(restaurant, index) in restaurants" :key="index">
             
             <div v-if="restaurant.user.id === user.id">
@@ -130,7 +134,7 @@
           newRestaurant: {
           name: "",          // Will hold the selected restaurant object
           cuisine: null,     // Will hold the reservation time
-          allergy: null,      // Will hold the number of people
+          allergy: [],      // Will hold the number of people
           rating: 0,     // Will hold any special requests (optional)
           seats_available: 0,
           location: "London"                // Will hold the reservation status (default to 'pending', 0)
@@ -308,7 +312,7 @@
 
             const payload = {
                 cuisine_id: this.newRestaurant.cuisine.id, 
-                allergy_id: this.newRestaurant.allergy.id,
+                allergy_ids: this.newRestaurant.allergy, 
                 name: this.newRestaurant.name,
                 seats_available: this.newRestaurant.seats_available,
                 rating: this.newRestaurant.rating,

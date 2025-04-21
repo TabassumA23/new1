@@ -611,21 +611,22 @@ def restaurants_api(request: HttpRequest) -> JsonResponse:
         # Create a new restaurant
         user_id = POST.get('user_id')
         cuisine_id = POST.get('cuisine_id')
-        allergy_id = POST.get('allergy_id')
+        allergy_ids = POST.get('allergy_ids')
         user = User.objects.get(id = user_id)
         cuisine = Cuisine.objects.get(id =cuisine_id)
-        allergy = Allergy.objects.get(id= allergy_id)
+        allergys = Allergy.objects.filter(id__in=allergy_ids)
         POST = json.loads(request.body)
         
         restaurant = Restaurant.objects.create(
             name=POST['name'],
             cuisine= cuisine,
-            allergy= allergy,
             rating=POST['rating'],
             seats_available=POST['seats_available'],
             location=POST['location'],
             user=user,  
         )
+        restaurant.allergys.set(allergys)
+        restaurant.save()
         return JsonResponse(restaurant.as_dict())
     # If GET method is used, return all reviews with user details
     # restaurants = Restaurant.objects.all()
@@ -667,6 +668,12 @@ def restaurant_api(request: HttpRequest, restaurant_id: int) -> JsonResponse:
             restaurant.rating = PUT.get("rating", restaurant.rating)
             restaurant.seats_available = PUT.get("seats_available", restaurant.seats_available)
             restaurant.location = PUT.get("location", restaurant.location)
+
+            if "allergy_ids" in PUT:
+                allergys = Allergy.objects.filter(id__in=PUT['allergy_ids'])
+                restaurant.allergies.set(allergies)  # Update the allergies
+             
+
             restaurant.save()
             return JsonResponse(restaurant.as_dict())
         except Exception as e:

@@ -87,7 +87,7 @@ class Restaurant(models.Model):
     '''
     name = models.CharField(max_length=100)
     cuisine = models.ForeignKey(Cuisine, on_delete=models.CASCADE) 
-    allergy = models.ForeignKey(Allergy, on_delete=models.CASCADE)
+    allergys = models.ManyToManyField(Allergy)
     rating = models.IntegerField(default=0)
     seats_available = models.IntegerField(default=0)
     location = models.TextField(max_length=100)
@@ -107,7 +107,7 @@ class Restaurant(models.Model):
             'api': reverse('restaurant api', args=[self.id]),
             'name': self.name,
             'cuisine': self.cuisine.name,
-            'allergy':self.allergy.name,
+            'allergys': [allergy.name for allergy in self.allergys.all()],
             'rating': self.rating,
             'seats_available': self.seats_available,
             'location' : self.location,
