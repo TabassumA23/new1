@@ -19,9 +19,18 @@
                     >
                         Find A Friend
                     </router-link>
+
+                     <!-- Go to find friends-->
                     <router-link
                         class="link"
-                        :to="{name: 'Restaurants'}"
+                        :to="{name: 'Wishlists'}"
+                    >
+                        Wishlists
+                    </router-link>
+
+                    <router-link
+                        class="link"
+                        :to="{name: 'Reviews'}"
                     >
                       
                         Reviews

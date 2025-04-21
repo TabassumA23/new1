@@ -404,181 +404,95 @@
 
 
 <style scoped>
-  /* General body and layout styles */
+  /* 1) Shared color variables */
+  :root {
+    --bg-start: #0f0c29;
+    --bg-end:   #302b63;
+    --card-bg:  rgba(255,255,255,0.05);
+    --accent:   #ff00c1;
+    --text:     #eee;
+    --muted:    #aaa;
+    --radius:   12px;
+  }
+
+  /* 2) Page grid & background */
   .body {
-    font-family: 'Arial', Helvetica, sans-serif;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto auto auto auto;
-    gap: 1rem 0.25rem;
-    background-color: #B4DABA; /* Light background for overall page */
-    padding: 2em;
-  }
-
-  /* Profile box section */
-  #profile-box {
-    grid-column: 1;
-    grid-row: 1 / span 2;
-    background-color: #659A78; /* Olive green background */
-    padding: 2em;
-    border-radius: 1rem;
-  }
-
-  /* Reservation form section */
-  .reservation-form {
-    grid-column: 1;
-    grid-row: 3;
+    gap: 1.5rem;
+    min-height: 100vh;
     padding: 2rem;
-    background-color: #D9D9D9; /* Light gray background */
-    border-radius: 1rem;
+    background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+    font-family: 'Segoe UI', sans-serif;
+    color: var(--text);
   }
 
-  .reservation-form h2 {
-    font-size: 1.8rem;
-    text-align: center;
-    color: #333;
-    margin-bottom: 1.5rem;
+  /* 3) Profile box card */
+  #profile-box {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
   }
 
+  /* 4) Reservation form card */
+  .reservation-form {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  /* 5) Section headings */
+  .reservation-form h2,
+  #profile-box h2 {
+    margin: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    padding-bottom: 0.5rem;
+    color: var(--text);
+  }
+
+  /* 6) Form labels */
   .reservation-form label {
-    display: block;
     font-size: 1rem;
-    margin-bottom: 0.5rem;
-    color: #555;
+    color: var(--muted);
   }
 
+  /* 7) Inputs & selects */
   .reservation-form input,
   .reservation-form select {
     width: 100%;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    border: 1px solid #B4DABA;
-    border-radius: 1rem;
-    background-color: #fff;
+    padding: 0.6rem 0.8rem;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: var(--radius);
+    color: var(--text);
   }
 
-  /* Create a new restaurant section */
-  #create-restaurant {
-    grid-column: 1;
-    grid-row: 4;
-    background-color: #D9D9D9;
-    padding: 2rem;
-    border-radius: 1rem;
-  }
-
-  #create-restaurant h3 {
-    text-align: center;
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: #333;
-  }
-
-  /* Buttons styling */
+  /* 8) Neon buttons */
   button {
-    background-color: #659A78;
+    background: linear-gradient(90deg, #ff0080, #ff8c00);
+    border: none;
+    padding: 0.6rem 1.2rem;
     color: #fff;
-    padding: 0.7rem 2rem;
-    font-size: 1rem;
-    border: none;
-    border-radius: 1rem;
+    font-weight: 600;
+    border-radius: var(--radius);
     cursor: pointer;
-    display: block;
-    margin: 0 auto;
+    transition: transform .15s ease;
+    align-self: start;
   }
-
   button:hover {
-    background-color: #B4DABA;
+    transform: scale(1.05);
   }
 
-  /* Restaurant list styling */
-  .restaurants {
-    grid-column: 1;
-    grid-row: 5;
-    background-color: #B4DABA;
-    padding: 2rem;
-    border-radius: 1rem;
-  }
-
-  .restaurants h2 {
-    text-align: center;
-    font-size: 2rem;
-    color: #333;
-  }
-
-  .restaurant-item {
-    background-color: #f9f9f9;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    border-radius: 1rem;
-    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  .restaurant-header h3 {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #333;
-  }
-
-  .restaurant-header p {
-    margin: 0.5rem 0;
-    color: #777;
-    font-size: 1rem;
-  }
-
-  /* Review section styles */
-  .review-item {
-    background-color: #f9f9f9;
-    margin-bottom: 1.5rem;
-    padding: 1rem;
-    border-radius: 1rem;
-    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  .review-header h3 {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #333;
-  }
-
-  .review-header p {
-    margin: 0.5rem 0;
-    color: #777;
-    font-size: 1rem;
-  }
-
-  .review-content {
-    font-size: 1.2rem;
-    line-height: 1.6;
-    color: #333;
-  }
-
-  /* Review actions (delete, etc.) */
-  .review-actions button {
-    background-color: #ff4e4e;
-    color: white;
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    cursor: pointer;
-    border-radius: 1rem;
-    border: none;
-  }
-
-  .review-actions button:hover {
-    background-color: #ff1c1c;
-  }
-
-  /* Additional styles for links */
-  a {
-    background-color: #659A78;
-    margin: 0.5em;
-    text-decoration: none;
-    color: black;
-    padding: 0.2em;
-    border-radius: 1rem;
-  }
-
-  a:hover {
-    color: white;
+  /* 9) Responsive layout */
+  @media (max-width: 800px) {
+    .body {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
 
