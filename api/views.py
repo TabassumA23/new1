@@ -7,6 +7,7 @@ from django.contrib import auth
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 
 from .models import Chosen, Restaurant, User, Friendship, ChosenCuisine, Cuisine, Review, Reservation, Allergy
 from .forms import LoginForm, SignUpForm, UpdatePassForm, UpdateUserForm
@@ -686,3 +687,26 @@ def restaurant_api(request: HttpRequest, restaurant_id: int) -> JsonResponse:
 
     # GET restaurant data
     return JsonResponse(restaurant.as_dict())
+
+def recommend_restaurants(request):
+    """API endpoint to recommend restaurants based on allergies and cuisines"""
+    
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            #allergy_ids = data.get('allergys', [])
+            cuisine_ids = data.get('cuisines', [])
+
+            # Filter restaurants based on selected allergies and cuisines
+            recommended_restaurants = Restaurant.objects.filter(
+                #allergy__in=allergy_ids,
+                cuisine__in=cuisine_ids
+            ).distinct()  # distinct to avoid duplicates
+
+            # Prepare the response data
+            restaurants_data = [restaurant.as_dict() for restaurant in recommended_restaurants]
+
+            return JsonResponse({'restaurants': restaurants_data}, status=200)
+        
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)

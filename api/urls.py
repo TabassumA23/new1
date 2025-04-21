@@ -18,7 +18,7 @@ from django.contrib import admin, auth
 from django.urls import include, path
 from django.http import HttpResponse
 
-from .views import login_user, logout_user, signup_user, reviews_api, review_api, restaurants_api, restaurant_api, users_api, user_api, friendship_api, friendships_api, chosens_api, chosen_api, update_password, update_username, chosenCuisines_api, chosenCuisine_api, cuisines_api, cuisine_api, reservation_api, reservations_api, allergy_api, allergys_api
+from .views import login_user, logout_user, signup_user, reviews_api, review_api, restaurants_api, restaurant_api, users_api, user_api, friendship_api, friendships_api, chosens_api, chosen_api, update_password, update_username, chosenCuisines_api, chosenCuisine_api, cuisines_api, cuisine_api, reservation_api, reservations_api, allergy_api, allergys_api, recommend_restaurants
 
 # Listing route URLs to views.
 urlpatterns = [
@@ -46,4 +46,7 @@ urlpatterns = [
     path('friendship/<int:friendship_id>/', friendship_api, name='friendship api'),
     path('allergys/', allergys_api, name='allergys api'),
     path('allergy/<int:allergy_id>/', allergy_api, name='allergy api'),
+
+    path('recommend_restaurants/', recommend_restaurants, name='recommend restaurants'),
+    
 ]

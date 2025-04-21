@@ -145,7 +145,8 @@ class User(AbstractUser):
     chosen_restaurant = models.ManyToManyField(Restaurant, through='Chosen', related_name="related_rest+")
     chosen_cuisine = models.ManyToManyField(Cuisine, through='ChosenCuisine')
     friends = models.ManyToManyField('self', through='Friendship', symmetrical=False, related_name="friends_with+")
-
+    cuisines = models.ManyToManyField(Cuisine, related_name="cuisines")
+    allergys = models.ManyToManyField(Allergy, related_name= "allergys")
     def __str__(self):
         return f"{self.first_name, self.last_name}"
     
@@ -153,8 +154,6 @@ class User(AbstractUser):
     Dictionary
     '''
     def as_dict(self):
-        # Gets the list of actual cuisine objects a user has added. 
-        user_cuisines = list(Cuisine.objects.values().filter(name="Reading"))
         return {  
             'id': self.id,  
             # Obtains URL pattern for individual user

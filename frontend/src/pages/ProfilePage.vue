@@ -104,8 +104,8 @@
           </div>
     </div>
         
-      
-      <div class="friend-accepted">
+<!--       
+    <div class="friend-accepted">
           <div>
               <h2>Accepted Friends</h2>
           </div>
@@ -116,22 +116,39 @@
               </li>
           </ul>
         
-     </div>
+    </div>
 
-     <div  class="friend-pending">
-          <div>
-              <h2>Pending Friends</h2>
-          </div>
+    <div  class="friend-pending">
+        <div>
+            <h2>Pending Friends</h2>
+        </div>
 
-          <ul v-for="(friendship, index) in friendships" :key="index">
-              <li class="friends" v-if="friendship.user==user.id && friendship.accepted == false">
-                  {{ friendship.username }} 
-                  <button @click="deleteFriendship(friendship.id)"> Delete </button>
-                  <button @click="acceptFriendship(friendship.id)"> Accept </button>
-              </li>
-          </ul>
-        
-     </div>
+        <ul v-for="(friendship, index) in friendships" :key="index">
+            <li class="friends" v-if="friendship.user==user.id && friendship.accepted == false">
+                {{ friendship.username }} 
+                <button @click="deleteFriendship(friendship.id)"> Delete </button>
+                <button @click="acceptFriendship(friendship.id)"> Accept </button>
+            </li>
+        </ul>
+      
+    </div> -->
+
+    <div>
+    <h2>Recommended Restaurants</h2>
+
+    <div v-if="recommendedRestaurants.length > 0">
+      <div v-for="(restaurant, index) in recommendedRestaurants" :key="index">
+        <h3>{{ restaurant.name }}</h3>
+        <p>Cuisine: {{ restaurant.cuisine }}</p>
+        <p>Rating: {{ restaurant.rating }}</p>
+        <p>Location: {{ restaurant.location }}</p>
+        <p>Seats Available: {{ restaurant.seats_available }}</p>
+      </div>
+    </div>
+    <div v-else>
+      <p>No recommendations available based on your preferences.</p>
+    </div>
+  </div>
 
     
   </div>
@@ -175,7 +192,9 @@
           
           chosenRestaurant: "",
           
-          chosenChosenCuisine: "",
+          chosenCuisine: "",
+          recommendedRestaurants: [],
+          allergies: [],
           
           };
       },
@@ -289,6 +308,11 @@
 
           const storeChosenCuisines = useChosenCuisinesStore();
           storeChosenCuisines.saveChosenCuisines(chosenCuisines);
+
+          await this.getUserPreferences();
+
+
+          
       },
       methods: {
           //console.log(user.userType)
@@ -300,6 +324,56 @@
               }
               //this.editPassword = !this.editPassword; // Toggle edit mode
           },
+
+          // Fetch the current user's chosen cuisines and allergies
+          async getUserPreferences() {
+            const user = this.userStore.user;
+            console.log('Updated Chosen Cuisines:', this.chosenCuisines);
+
+
+            // Ensure that chosenCuisine and allergies are defined, default to empty array if not
+            this.chosenCuisines = user.chosenCuisines || [];  // Default to empty array if undefined
+            this.allergys = user.allergys || [];  // Default to empty array if undefined
+
+            console.log("Chosen Cuisines:", this.chosenCuisines);
+            console.log("Allergies:", this.allergys);
+
+            // Now fetch the recommended restaurants based on preferences
+            await this.getRecommendedRestaurants();
+          },
+          // Fetch the recommended restaurants from the backend
+          async getRecommendedRestaurants() {
+            // Get the IDs for the chosen cuisines and allergies
+            const cuisineIds = this.chosenCuisines.map(cuisine => cuisine.id);  // Get the IDs of chosen cuisines
+            const allergyIds = this.allergys.map(allergy => allergy.id);  // Get the IDs of allergies
+
+            try {
+              const response = await fetch("http://localhost:8000/recommend_restaurants/", {
+                method: "POST",
+                headers: {
+                  'Authorization': `Bearer ${VueCookies.get('access_token')}`,
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': VueCookies.get('csrftoken'),
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                  cuisines: cuisineIds,  // Send cuisines' IDs in the request body
+                  allergys: allergyIds,  // Send allergies' IDs in the request body
+                }),
+              });
+
+              if (response.ok) {
+                const data = await response.json();
+                this.recommendedRestaurants = data.restaurants;  // Set the fetched recommended restaurants
+                console.log("Recommended Restaurants:", this.recommendedRestaurants);
+              } else {
+                console.error('Failed to fetch recommended restaurants');
+              }
+            } catch (error) {
+              console.error('Error fetching recommended restaurants:', error);
+            }
+          },
+        
           
           async saveField(field: string) {
              
@@ -573,7 +647,7 @@
             } else {
                 alert("Failed to add the chosen cuisine. Please try again.");
             }
-            },
+          },
 
 
       }, 
