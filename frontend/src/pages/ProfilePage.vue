@@ -1,14 +1,168 @@
 <template>
-  <div class="body">
-  <div v-if="this.user.user_type == 'Owner'"> 
-    <RouterLink  to="/restaurants">Add or view Restaurants</RouterLink>
-    <RouterLink  to="/confirms">View Reservations</RouterLink>
-  
+  <div class="profile-page">
 
+    <section class="hero">
+      <div class="hero-content">
+        <h1>Welcome, {{ user.first_name }}</h1>
+        <p class="subtitle">Manage your taste profile & discover new spots</p>
+      </div>
+      <div v-if="this.user.user_type == 'Owner'">
+        <nav class="hero-nav">
+          <RouterLink to="/restaurants" class="btn">Add / View Restaurants</RouterLink>
+          <RouterLink to="/confirms"    class="btn">View Reservations</RouterLink>
+        </nav>
+      </div>
+    </section>
+    <!-- MAIN GRID -->
+    <div class="grid-container">
+      <!-- PROFILE CARD -->
+      <div class="card profile-card">
+        <h2>Your Profile</h2>
+        <section class="profile-info">
+          <h2>Welcome {{ user.first_name }}</h2>
+
+          <!-- Username + Change link -->
+          <p class="field">
+            <strong>Username:</strong> {{ user.username }}
+            <button class="btn-link">
+              <a href="http://localhost:8000/updateUser/">Change Username</a>
+            </button>
+          </p>
+
+          <!-- First Name editable -->
+          <p class="field">
+            <strong>First Name:</strong>
+            <span v-if="!editFirstName">{{ user.first_name }}</span>
+            <span v-else>
+              <input v-model="editedUser.first_name" type="text" />
+            </span>
+            <button v-if="!editFirstName" @click="toggleEditField('FirstName')">Edit</button>
+            <button v-else @click="saveField('first_name')">Save</button>
+          </p>
+
+          <!-- Last Name editable -->
+          <p class="field">
+            <strong>Last Name:</strong>
+            <span v-if="!editLastName">{{ user.last_name }}</span>
+            <span v-else>
+              <input v-model="editedUser.last_name" type="text" />
+            </span>
+            <button v-if="!editLastName" @click="toggleEditField('LastName')">Edit</button>
+            <button v-else @click="saveField('last_name')">Save</button>
+          </p>
+
+          <!-- Email editable -->
+          <p class="field">
+            <strong>Email:</strong>
+            <span v-if="!editEmail">{{ user.email }}</span>
+            <span v-else>
+              <input v-model="editedUser.email" type="email" />
+            </span>
+            <button v-if="!editEmail" @click="toggleEditField('Email')">Edit</button>
+            <button v-else @click="saveField('email')">Save</button>
+          </p>
+
+          <!-- DOB editable -->
+          <p class="field">
+            <strong>Date of Birth:</strong>
+            <span v-if="!editDateOfBirth">{{ user.date_of_birth }}</span>
+            <span v-else>
+              <input v-model="editedUser.date_of_birth" type="date" />
+            </span>
+            <button v-if="!editDateOfBirth" @click="toggleEditField('DateOfBirth')">Edit</button>
+            <button v-else @click="saveField('date_of_birth')">Save</button>
+          </p>
+
+          <!-- Password change link -->
+          <p class="field">
+            <strong>Password:</strong> ********
+            <button class="btn-link">
+              <a href="http://localhost:8000/updatePass/">Change Password</a>
+            </button>
+          </p>
+
+          <!-- User type -->
+          <p class="field">
+            <strong>User type:</strong> {{ user.user_type }}
+          </p>
+        </section>
+      </div>
+       <!-- PREFERENCES CARD -->
+      <div class="card prefs-card">
+        <h2>Your Preferences</h2>
+        <div class="prefs-group">
+          <label>Cuisine:</label>
+          <select v-model="chosenChosenCuisine">
+            <option v-for="c in cuisines" :key="c.id">{{ c.name }}</option>
+          </select>
+          <button class="btn-sm" @click="addChosenCuisine">Save</button>
+        </div>
+        <ul class="tag-list">
+          <li v-for="c in chosenCuisines" :key="c.id">{{ c.name }}
+            <button @click="deleteChosenCuisine(c.id)" class="remove">×</button>
+          </li>
+        </ul>
+
+        <div class="prefs-group">
+          <label>Allergy:</label>
+          <select v-model="chosenChosenAllergy">
+            <option v-for="a in allergys" :key="a.id">{{ a.name }}</option>
+          </select>
+          <button class="btn-sm" @click="addChosenAllergy">Save</button>
+        </div>
+        <ul class="tag-list">
+          <li v-for="a in chosenAllergys" :key="a.id">{{ a.name }}
+            <button @click="deleteChosenAllergy(a.id)" class="remove">×</button>
+          </li>
+        </ul>
+      </div>
+      <!-- RECOMMENDATIONS CARD -->
+      <div class="card rec-card">
+        <h2>Recommended Restaurants</h2>
+        <div v-if="recommendedRestaurants.length>0">
+          <div v-for="(restaurant, index) in recommendedRestaurants" :key="index" class="restaurant-item">
+          <!-- <div
+            v-for="restaurant in recommendedRestaurants"
+            :key="r.id"
+            class="restaurant-item"
+          > -->
+            <h3>{{ restaurant.name }}</h3>
+            <p><strong>Cuisine:</strong> {{ restaurant.cuisine }}</p>
+            <p><strong>Allergens:</strong> {{ restaurant.allergys.join(', ') }}</p>
+            <p><strong>Rating:</strong> {{ restaurant.rating }} ★</p>
+            <p><strong>Location:</strong> {{ restaurant.location }}</p>
+            <p><strong>Seats:</strong> {{ restaurant.seats_available }}</p>
+          </div>
+        </div>
+        <p v-else class="empty-state">No recommendations yet.</p>
+      </div>
+    </div>
   </div>
-     <div id="profile-box">
-     
-        <h2>Welcome {{ user.first_name }}</h2>
+
+
+
+
+
+
+    <!-- <div class="restaurant">
+        <label for="restaurants">Choose a restaurant:</label>
+        <select id="restaurants" v-model="chosenRestaurant">
+            <option v-for="restaurant in restaurants">
+                {{ restaurant.name }}
+            </option>
+        </select>
+        <button @click="addChosen">Save Choice Here</button>
+        <div class="restaurants">
+                <h4>restaurants</h4>
+                  <ul v-for="(chosen, index) in chosens" :key="index">
+                  <li class="friends" v-if="chosen.user==user.id">
+                      {{ chosen.name }} <button @click="deleteChosen(chosen.id)"> Delete </button>
+                  </li>
+              </ul>
+              
+          </div>
+    </div>
+    <div id="profile-box">
             <p>
             Username: {{ user.username }}
             
@@ -65,26 +219,6 @@
           </p>
          
     </div>
-    
-    <div class="restaurant">
-        <label for="restaurants">Choose a restaurant:</label>
-        <select id="restaurants" v-model="chosenRestaurant">
-            <option v-for="restaurant in restaurants">
-                {{ restaurant.name }}
-            </option>
-        </select>
-        <button @click="addChosen">Save Choice Here</button>
-        <div class="restaurants">
-                <h4>restaurants</h4>
-                  <ul v-for="(chosen, index) in chosens" :key="index">
-                  <li class="friends" v-if="chosen.user==user.id">
-                      {{ chosen.name }} <button @click="deleteChosen(chosen.id)"> Delete </button>
-                  </li>
-              </ul>
-              
-          </div>
-    </div>
-
     <div class="cuisine">
         <label for="cuisines">Choose a cuisine:</label>
         <select id="cuisines" v-model="this.chosenChosenCuisine">
@@ -121,7 +255,7 @@
               </ul>
               
           </div>
-    </div>
+    </div> -->
         
   <!--       
       <div class="friend-accepted">
@@ -152,7 +286,7 @@
         
       </div> -->
 
-    <div>
+    <!-- <div>
     <h2>Recommended Restaurants</h2>
 
     <div v-if="recommendedRestaurants.length > 0">
@@ -172,7 +306,7 @@
 
     
   </div>
-  
+   -->
   
 </template>
 
@@ -844,186 +978,205 @@
 
 
 <style scoped>
-  /* General layout and body styling */
-  .body {
-    font-family: Arial, Helvetica, sans-serif;
+  /* 1) Base & Variables */
+  :root {
+    --bg-start: #0f0c29;
+    --bg-end:   #302b63;
+    --card-bg:  rgba(255, 255, 255, 0.05);
+    --accent:   #ff00c1;
+    --text:     #eee;
+    --muted:    #aaa;
+    --radius:   12px;
+  }
+  .profile-page {
+    font-family: 'Segoe UI', sans-serif;
+    color: var(--text);
+    background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+    min-height: 100vh;
+    padding: 2rem;
+  }
+
+  /* 2) Hero */
+  .hero {
+    display: flex; flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+  .hero-content h1 {
+    font-size: 2.5rem;
+    margin: 0;
+    letter-spacing: 1px;
+  }
+  .subtitle {
+    color: var(--muted);
+    margin-top: 0.5rem;
+  }
+  .hero-nav .btn {
+    margin-left: 1rem;
+  }
+
+  /* 3) Grid */
+  .grid-container {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto auto auto auto;
-    gap: 1rem 0.25rem;
-    background-color: #B4DABA; /* Light background */
-    padding: 2em;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
   }
 
-  /* Profile box */
-  #profile-box {
-    grid-column: 1;
-    grid-row: 1 / span 2;
-    background-color: #659A78; /* Olive green background */
-    padding: 2em;
-    border-radius: 1rem;
+  /* 4) Card */
+  .card {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .card h2 {
+    margin-top: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    padding-bottom: 0.5rem;
   }
 
-  /* Restaurant section */
-  #restaurant {
-    grid-column: 1;
-    grid-row: 3;
-    padding: 2rem;
-    background-color: #D9D9D9; /* Light gray */
-    border-radius: 1rem;
+  /* 5) Profile details */
+  .profile-card dl {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    row-gap: 0.75rem;
+    column-gap: 1rem;
+    margin: 1rem 0;
+  }
+  .profile-card dt {
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .profile-card dd {
+    margin: 0;
   }
 
-  /* Create restaurant section */
-  #create-restaurant {
-    grid-column: 1;
-    grid-row: 4;
-    background-color: rgb(243, 163, 163); /* Light pinkish background */
-    padding: 2rem;
-    border-radius: 1rem;
-  }
-
-  #create-restaurant h3 {
-    text-align: center;
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: #333;
-  }
-
-  #create-restaurant input,
-  #create-restaurant textarea {
-    width: 100%;
-    margin-bottom: 1.5rem;
-    padding: 1rem;
-    border: 1px solid #B4DABA;
-    border-radius: 1rem;
-    background-color: #fff;
-  }
-
-  /* Friend sections (accepted and pending) */
-  .friend-accepted,
-  .friend-pending {
-    background-color: rgb(243, 163, 163); /* Light pinkish background */
-    padding: 2em;
-    border-radius: 1rem;
-  }
-
-  .friend-accepted {
-    grid-column: 2;
-    grid-row: 1 / span 2;
-  }
-
-  .friend-pending {
-    grid-column: 2;
-    grid-row: 3 / span 2;
-  }
-
-  /* Button and link styles */
-  a,
-  button {
-    background-color: rgb(243, 163, 163); /* Light pinkish background */
-    color: white;
-    padding: 0.7rem 2rem;
-    font-size: 1rem;
+  /* 6) Buttons */
+  .btn,
+  .btn-sm {
+    background: linear-gradient(90deg, #ff0080, #ff8c00);
     border: none;
-    border-radius: 1rem;
+    padding: 0.65rem 1.2rem;
+    color: #fff;
+    font-weight: 600;
+    border-radius: var(--radius);
     cursor: pointer;
-    display: block;
-    margin: 0 auto;
-    text-decoration: none;
+    transition: transform .15s ease;
+  }
+  .btn:hover,
+  .btn-sm:hover {
+    transform: scale(1.05);
+  }
+  .btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+  .btn-outline {
+    background: transparent;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    margin-right: 0.5rem;
   }
 
-  a:hover,
-  button:hover {
-    background-color: #D9D9D9; /* Light gray */
-    color: #333;
+  /* 7) Preferences tags */
+  .prefs-group {
+    margin: 1rem 0;
+    display: flex; align-items: center;
+  }
+  .prefs-group label {
+    flex: 0 0 70px;
+  }
+  .prefs-group select {
+    flex: 1;
+    padding: 0.5rem;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: var(--radius);
+    color: var(--text);
+  }
+  .tag-list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0;
+    margin: 0.5rem 0;
+  }
+  .tag-list li {
+    background: rgba(255,255,255,0.15);
+    padding: 0.4rem 0.7rem;
+    border-radius: var(--radius);
+    display: flex; align-items: center;
+  }
+  .tag-list .remove {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    margin-left: 0.5rem;
+    cursor: pointer;
   }
 
-  /* Restaurant list */
-  .restaurants {
-    background-color: rgb(243, 163, 163); /* Light pinkish background */
-    padding: 2rem;
-    border-radius: 1rem;
-  }
-
-  .restaurants h2 {
-    text-align: center;
-    font-size: 2rem;
-    color: #333;
-  }
-
+  /* 8) Recommendations */
   .restaurant-item {
-    background-color: #f9f9f9;
+    background: rgba(255,255,255,0.1);
     padding: 1rem;
+    border-radius: var(--radius);
     margin-bottom: 1rem;
-    border-radius: 1rem;
-    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  .restaurant-item h3 {
+    margin: 0 0 0.5rem;
+  }
+  .empty-state {
+    color: var(--muted);
+    font-style: italic;
+    text-align: center;
+    margin-top: 1rem;
   }
 
-  .restaurant-header h3 {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #333;
+  /* 9) Responsive tweaks */
+  @media (max-width: 600px) {
+    .hero {
+      flex-direction: column;
+      text-align: center;
+    }
+    .hero-nav {
+      margin-top: 1rem;
+    }
   }
 
-  .restaurant-header p {
-    margin: 0.5rem 0;
-    color: #777;
+  /* PROFILE ROWS: text on left, button on right */
+  .profile-info .field {
+    display: flex;
+    align-items: center;   /* vertical‑center both pieces */
+    margin: 0.5rem 0;      /* vertical spacing between rows */
   }
 
-  /* Review section */
-  .review-item {
-    background-color: #f9f9f9;
-    margin-bottom: 1.5rem;
-    padding: 1rem;
-    border-radius: 1rem;
-    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+  /* let the text take up whatever room it needs, but no more */
+  .profile-info .field span {
+    flex: 0 1 auto;        /* don’t grow past content, can shrink if needed */
+    text-align: left;
   }
 
-  .review-header h3 {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #333;
+  /* shove the button to the extreme right */
+  .profile-info .field button {
+    flex: 0 0 auto;        /* button stays its own width */
+    margin-left: auto;     /* pushes it all the way right */
   }
-
-  .review-header p {
-    margin: 0.5rem 0;
-    color: #777;
-    font-size: 1rem;
-  }
-
-  .review-content {
-    font-size: 1.2rem;
-    line-height: 1.6;
-    color: #333;
-  }
-
-  /* Review actions (delete, etc.) */
-  .review-actions button {
-    background-color: #ff4e4e;
-    color: white;
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    cursor: pointer;
-    border-radius: 1rem;
+    .profile-info .field button {
+    background: linear-gradient(90deg, #ff0080, #ff8c00);
     border: none;
+    padding: 0.5rem 1rem;
+    color: #fff;
+    font-weight: 600;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: transform .15s ease;
+    margin-left: auto; /* keeps them lined up on the right */
+  }
+  .profile-info .field button:hover {
+    transform: scale(1.05);
   }
 
-  .review-actions button:hover {
-    background-color: #ff1c1c;
-  }
-
-  /* Additional link styling */
-  a {
-    text-decoration: none;
-    color: black;
-    background-color: #659A78;
-    padding: 0.5em;
-    border-radius: 1rem;
-  }
-
-  a:hover {
-    color: white;
-    background-color: #D9D9D9;
-  }
 </style>
 
