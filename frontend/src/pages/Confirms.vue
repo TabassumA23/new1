@@ -654,187 +654,109 @@
 
 
 <style scoped>
-    /* General Body Styling */
+    :root {
+    --bg-start: #0f0c29;
+    --bg-end:   #302b63;
+    --card-bg:  rgba(255,255,255,0.05);
+    --accent:   #ff00c1;
+    --text:     #eee;
+    --muted:    #aaa;
+    --radius:   12px;
+    }
+
+    /* Page container */
     .body {
-        font-family: Arial, Helvetica, sans-serif;
-        display: grid;
-        grid-template-columns: auto auto;
-        grid-template-rows: 10% 30% 20% 30% 10%;
-        gap: 1rem 0.25rem;
-        background-color: #F0F8FF; /* Light blue background for the page */
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    min-height: 100vh;
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+    font-family: 'Segoe UI', sans-serif;
+    color: var(--text);
     }
 
-    /* Profile Box Styling */
-    #profile-box {
-        grid-column: 1;
-        grid-row: 1/span 2;
-        background-color: #4F97C6; /* Medium blue for profile box */
-        padding: 2rem;
-        border-radius: 8px;
+    /* Reservations list wrapper */
+    .restaurant-blog {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
     }
 
-    /* Restaurant Section Styling */
-    #restaurant {
-        grid-column: 1;
-        grid-row: 3;
-        background-color: #B4DABA; /* Light blue for restaurant section */
-        padding: 2rem;
-        border-radius: 8px;
+    /* Section heading */
+    .restaurant-blog h2 {
+    margin: 0 0 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    padding-bottom: 0.5rem;
+    color: var(--text);
+    font-size: 1.8rem;
     }
 
-    /* Create Restaurant Section Styling */
-    #create-restaurant {
-        grid-column: 1;
-        grid-row: 4;
-        padding-top: 0.5rem;
-        background-color: #4F97C6; /* Medium blue background */
-        border-radius: 8px;
+    /* Individual reservation card */
+    .restaurant-item {
+    background: var(--card-bg);
+    margin: 1rem 0;
+    padding: 1rem;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
     }
 
-    #create-restaurant > h3 {
-        text-align: center;
-        background-color: #D9D9D9; /* Light gray for the heading */
+    .restaurant-header h3 {
+    margin: 0;
+    color: var(--accent);
+    font-size: 1.4rem;
     }
 
-    #create-restaurant > input {
-        margin-bottom: 1.5rem;
-        padding: 0.5rem;
-        border-radius: 8px;
+    .restaurant-header p {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0.25rem 0;
     }
 
-    /* Friend Section Styling (Accepted) */
-    .friend-accepted {
-        background-color: #D9D9D9; /* Light gray for accepted friends section */
-        grid-column: 2;
-        grid-row: 1/span 2;
-        padding-bottom: 2em;
-        border-radius: 8px;
+    .restaurant-content p {
+    margin: 0.5rem 0;
+    color: var(--text);
+    font-size: 1rem;
     }
 
-    /* Friend Section Styling (Pending) */
-    .friend-pending {
-        background-color: #D9D9D9; /* Light gray for pending friends section */
-        grid-column: 2;
-        grid-row: 3/span 2;
-        border-radius: 8px;
+    /* Status dropdown styling */
+    .restaurant-content select {
+    margin-left: 0.5rem;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: var(--radius);
+    color: var(--text);
+    padding: 0.4rem 0.6rem;
     }
 
-    /* General Div Styling for Sections */
-    .body > div {
-        background-color: #659A78; /* Olive green for sections */
-        margin: 2em;
-        padding: 2em;
-        border-radius: 8px;
+    /* Delete button */
+    .restaurant-actions {
+    text-align: right;
+    margin-top: 1rem;
     }
 
-    /* Link Styling */
-    a {
-        background-color: #659A78; /* Olive green for links */
-        margin: 0.5em;
-        text-decoration: none;
-        color: black;
-        padding: 0.2em;
-        border-radius: 5px;
-        transition: background-color 0.3s ease;
+    .restaurant-actions button {
+    background: #ff4e4e;
+    border: none;
+    border-radius: var(--radius);
+    color: #fff;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    }
+    .restaurant-actions button:hover {
+    background: #ff1c1c;
     }
 
-    a:hover, button:hover {
-        color: white;
-        background-color: #1D5673; /* Dark blue on hover for links and buttons */
+    /* Responsive */
+    @media (min-width: 600px) {
+    .body {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     }
-
-    /* Restaurant Section Header */
-    .restaurants {
-        background-color: #B4DABA; /* Light blue for the restaurants section */
+    .restaurant-item {
+        margin: 1rem;
     }
-
-    /* General Text Styling for h2, .friends, div > p */
-    h2, .friends, div > p {
-        background-color: #D9D9D9; /* Light gray for headings and paragraphs */
-        margin: 0.2em;
-        padding: 0.5rem;
-        border-radius: 8px;
-    }
-
-    h6 {
-        text-align: center;
-        font-size: 1rem;
-    }
-
-    /* List Item Styling */
-    li {
-        display: flex;
-    }
-
-    /* Button Styling */
-    button {
-        background-color: #B4DABA; /* Light blue for buttons */
-        font-size: 1rem;
-        margin-bottom: 0.5rem;
-        border: none;
-        padding: 0.5rem 2rem;
-        border-radius: 1rem;
-        cursor: pointer;
-    }
-
-    /* Review Blog Styling */
-    .review-blog {
-        font-family: Arial, Helvetica, sans-serif;
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 20px;
-    }
-
-    .review-item {
-        background-color: #f9f9f9;
-        padding: 15px;
-        margin-bottom: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .review-header {
-        border-bottom: 1px solid #ddd;
-        padding-bottom: 10px;
-        margin-bottom: 15px;
-    }
-
-    .review-header h3 {
-        margin: 0;
-        font-size: 24px;
-        font-weight: bold;
-        color: #1D5673; /* Dark blue for review title */
-    }
-
-    .review-header p {
-        margin: 5px 0;
-        font-size: 14px;
-        color: #777;
-    }
-
-    .review-content {
-        font-size: 16px;
-        line-height: 1.6;
-        color: #333;
-    }
-
-    .review-actions {
-        text-align: right;
-        margin-top: 10px;
-    }
-
-    .review-actions button {
-        background-color: #ff4e4e;
-        border: none;
-        color: white;
-        padding: 8px 15px;
-        font-size: 14px;
-        cursor: pointer;
-        border-radius: 4px;
-    }
-
-    .review-actions button:hover {
-        background-color: #ff1c1c;
     }
 </style>
 

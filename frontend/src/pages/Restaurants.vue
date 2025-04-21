@@ -1,9 +1,7 @@
 <template>
   <div class="body">
-    <div id="profile-box">
-      <h2>Welcome {{ user.first_name }}</h2>
-    </div>
     <div class="reservation-form">
+      <h2>Welcome {{ user.first_name }}</h2>
         <h2>Create a Restaurant</h2>
 
         <label for="restaurant-name">Restaurant name:</label>
@@ -111,6 +109,7 @@
     </div>
   
 </template>
+
 <script lang="ts">
   import { defineComponent } from "vue";
   import { User, Restaurant, Chosen, Cuisine, Allergy} from "../types/index";
@@ -518,182 +517,156 @@
 
 
 
+
 <style scoped>
-  /* General body and layout styles */
+  :root {
+    --bg-start: #0f0c29;
+    --bg-end:   #302b63;
+    --card-bg:  rgba(255,255,255,0.05);
+    --accent:   #ff00c1;
+    --text:     #eee;
+    --muted:    #aaa;
+    --radius:   12px;
+  }
+
+  /* Page grid & background */
   .body {
-    font-family: 'Arial', Helvetica, sans-serif;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto auto auto auto;
-    gap: 1rem 0.25rem;
-    background-color: #B4DABA; /* Light background for overall page */
-    padding: 2em;
+    gap: 1.5rem;
+    min-height: 100vh;
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+    font-family: 'Segoe UI', sans-serif;
+    color: var(--text);
   }
 
-  /* Profile box section */
+  /* Profile box */
   #profile-box {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
     grid-column: 1;
-    grid-row: 1 / span 2;
-    background-color: #659A78; /* Olive green background */
-    padding: 2em;
-    border-radius: 1rem;
   }
 
-  /* Reservation form section */
+  /* “Create Restaurant” form card */
   .reservation-form {
-    grid-column: 1;
-    grid-row: 3;
-    padding: 2rem;
-    background-color: #D9D9D9; /* Light gray background */
-    border-radius: 1rem;
-  }
-
-  .reservation-form h2 {
-    font-size: 1.8rem;
-    text-align: center;
-    color: #333;
-    margin-bottom: 1.5rem;
-  }
-
-  .reservation-form label {
-    display: block;
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
-    color: #555;
-  }
-
-  .reservation-form input,
-  .reservation-form select {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    grid-column: 2;
+    max-width: 480px;
     width: 100%;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    border: 1px solid #B4DABA;
-    border-radius: 1rem;
-    background-color: #fff;
-  }
-
-  /* Create a new restaurant section */
-  #create-restaurant {
-    grid-column: 1;
-    grid-row: 4;
-    background-color: #D9D9D9;
-    padding: 2rem;
-    border-radius: 1rem;
-  }
-
-  #create-restaurant h3 {
-    text-align: center;
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: #333;
-  }
-
-  /* Buttons styling */
-  button {
-    background-color: #659A78;
-    color: #fff;
-    padding: 0.7rem 2rem;
-    font-size: 1rem;
-    border: none;
-    border-radius: 1rem;
-    cursor: pointer;
-    display: block;
     margin: 0 auto;
   }
 
-  button:hover {
-    background-color: #B4DABA;
+  /* Section headings */
+  #profile-box h2,
+  .reservation-form h2 {
+    margin: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    padding-bottom: 0.5rem;
+    color: var(--text);
+    font-size: 1.8rem;
   }
 
-  /* Restaurant list styling */
-  .restaurants {
-    grid-column: 1;
-    grid-row: 5;
-    background-color: #B4DABA;
-    padding: 2rem;
-    border-radius: 1rem;
-  }
-
-  .restaurants h2 {
-    text-align: center;
-    font-size: 2rem;
-    color: #333;
-  }
-
-  .restaurant-item {
-    background-color: #f9f9f9;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    border-radius: 1rem;
-    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  .restaurant-header h3 {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #333;
-  }
-
-  .restaurant-header p {
-    margin: 0.5rem 0;
-    color: #777;
+  /* Form labels */
+  .reservation-form label {
+    color: var(--muted);
     font-size: 1rem;
+    margin-top: 1rem;
   }
 
-  /* Review section styles */
-  .review-item {
-    background-color: #f9f9f9;
-    margin-bottom: 1.5rem;
-    padding: 1rem;
-    border-radius: 1rem;
-    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  .review-header h3 {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #333;
-  }
-
-  .review-header p {
-    margin: 0.5rem 0;
-    color: #777;
-    font-size: 1rem;
-  }
-
-  .review-content {
-    font-size: 1.2rem;
-    line-height: 1.6;
-    color: #333;
-  }
-
-  /* Review actions (delete, etc.) */
-  .review-actions button {
-    background-color: #ff4e4e;
-    color: white;
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    cursor: pointer;
-    border-radius: 1rem;
+  /* Inputs & selects */
+  .reservation-form input,
+  .reservation-form select {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    background: rgba(255,255,255,0.1);
     border: none;
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 1rem;
+    box-sizing: border-box;
   }
 
-  .review-actions button:hover {
-    background-color: #ff1c1c;
+  /* Multi‑select scroll hint */
+  .reservation-form select[multiple] {
+    height: 6rem;
   }
 
-  /* Additional styles for links */
-  a {
-    background-color: #659A78;
-    margin: 0.5em;
-    text-decoration: none;
-    color: black;
-    padding: 0.2em;
-    border-radius: 1rem;
+  /* Neon gradient button */
+  .reservation-form button {
+    background: linear-gradient(90deg, #ff0080, #ff8c00);
+    border: none;
+    border-radius: var(--radius);
+    padding: 0.7rem 1.2rem;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform .15s ease;
+    margin-top: 1rem;
+  }
+  .reservation-form button:hover {
+    transform: scale(1.05);
   }
 
-  a:hover {
-    color: white;
+  /* List of existing restaurants */
+  .restaurant-item {
+    background: var(--card-bg);
+    padding: 1rem;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    margin: 1rem 0;
+    grid-column: 1 / span 2;
+  }
+
+  /* Restaurant headers */
+  .restaurant-header h3 {
+    margin: 0;
+    color: var(--accent);
+  }
+
+  /* Restaurant details */
+  .restaurant-content p {
+    color: var(--text);
+    margin: 0.5rem 0;
+  }
+
+  /* Delete button */
+  .restaurant-actions button {
+    background: #ff4e4e;
+    border: none;
+    border-radius: var(--radius);
+    color: #fff;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background .2s ease;
+  }
+  .restaurant-actions button:hover {
+    background: #ff1c1c;
+  }
+
+  /* Responsive: single column on narrow screens */
+  @media (max-width: 800px) {
+    .body {
+      grid-template-columns: 1fr;
+    }
+    .reservation-form {
+      grid-column: auto;
+    }
+    #profile-box {
+      grid-column: auto;
+    }
+    .restaurant-item {
+      grid-column: auto;
+    }
   }
 </style>
+
 

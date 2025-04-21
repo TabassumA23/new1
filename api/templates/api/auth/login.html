@@ -1,16 +1,18 @@
 {% extends "base.html" %}
-
 {% block content %}
-    <!-- Django Login Form. -->
-    <h3>For Returning Users: </h3>
-    <form id="login-form" action="" method="post">
+  <div class="login-wrapper">
+    <div class="card login-card">
+        <h1>Welcome to Yumyelp!</h1>
+      <h3>For Returning Users:</h3>
+      <form id="login-form" method="post">
         {% csrf_token %}
-        {{ form }}
-        <button id="submit-button" type="submit" value="Submit">Login</button>
-        <input type="hidden" name="next" value="{{ next }}">
-        <p>{{ message }}</p>
-    </form>
-    <!-- Direct New Users to Sign Up. -->
-    <p>New User?</p>
-    <button id="signup-button"><a href = "{% url 'user signup' %}">New User?  Sign Up Here</a></button>
+        {{ form.as_p }}
+        <button id="submit-button" type="submit">Login</button>
+      </form>
+    </div>
+
+    <button id="signup-button">
+      <a href="{% url 'user signup' %}">New User? Sign Up Here</a>
+    </button>
+  </div>
 {% endblock %}
