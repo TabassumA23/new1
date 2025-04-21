@@ -22,7 +22,7 @@
             </li>
         </ul>
     </div>
-</div> -->
+    </div> -->
 
 
       <!-- Form to Add a New review. -->
@@ -37,8 +37,8 @@
           <button type="submit" @click="createReview">Add Review</button>
       </div>
   </div>
-  <div class="review-blog">
-    <h2>All Reviews</h2>
+     <div class="review-blog">
+            <h2>All Reviews</h2>
 
     <div class="review-item" v-for="(review, index,) in reviews" :key="index">
         <div class="review-header">
@@ -56,7 +56,7 @@
         </div>
     </div>
 
-</div>
+    </div>
 
   </div>
   
@@ -244,189 +244,153 @@
           return { userStore , reviewsStore , usersStore};
       },
   });
-  </script>
+</script>
 
 
 <style scoped>
-    /* General Body Styling */
+    /* 1) Color variables */
+    :root {
+    --bg-start: #0f0c29;
+    --bg-end:   #302b63;
+    --card-bg:  rgba(255, 255, 255, 0.05);
+    --accent:   #ff00c1;
+    --text:     #eee;
+    --muted:    #aaa;
+    --radius:   12px;
+    }
+
+    /* 2) Page background & grid */
     .body {
-        font-family: Arial, Helvetica, sans-serif;
-        display: grid;
-        grid-template-columns: auto auto;
-        grid-template-rows: 10% 30% 20% 30% 10%;
-        gap: 1rem 0.25rem;
-        background-color: #F0F8FF; /* Light blue background */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    min-height: 100vh;
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+    font-family: 'Segoe UI', sans-serif;
+    color: var(--text);
     }
 
-    /* Profile Box */
+    /* 3) Profile box card */
     #profile-box {
-        grid-column: 1;
-        grid-row: 1/span 2;
-        background-color: #4F97C6; /* Medium blue for profile box */
-        padding: 2rem;
-        border-radius: 8px;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    padding: 1.5rem;
     }
 
-    /* Restaurant Section */
-    #restaurant {
-        grid-column: 1;
-        grid-row: 3;
-        background-color: #B4DABA; /* Light blue background */
-        padding: 2rem;
-        border-radius: 8px;
+    /* 4) Create‑review card */
+    #create-review {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
     }
 
-    /* Create Restaurant Section */
-    #create-restaurant {
-        grid-column: 1;
-        grid-row: 4;
-        padding-top: 0.5rem;
-        background-color: #4F97C6; /* Medium blue background */
-        border-radius: 8px;
-    }
-
-    #create-restaurant > h3 {
-        text-align: center;
-        background-color: #D9D9D9; /* Light gray for heading */
-    }
-
-    #create-restaurant > input {
-        margin-bottom: 1.5rem;
-        padding: 0.5rem;
-        border-radius: 8px;
-    }
-
-    /* Friend Section - Accepted */
-    .friend-accepted {
-        background-color: #D9D9D9; /* Light gray for friend accepted section */
-        grid-column: 2;
-        grid-row: 1/span 2;
-        padding-bottom: 2em;
-        border-radius: 8px;
-    }
-
-    /* Friend Section - Pending */
-    .friend-pending {
-        background-color: #D9D9D9; /* Light gray for friend pending section */
-        grid-column: 2;
-        grid-row: 3/span 2;
-        border-radius: 8px;
-    }
-
-    /* Styling for General Divs */
-    .body > div {
-        background-color: #659A78; /* Olive green background for general sections */
-        margin: 2em;
-        padding: 2em;
-        border-radius: 8px;
-    }
-
-    /* Link Styling */
-    a {
-        background-color: #659A78; /* Olive green for links */
-        margin: 0.5em;
-        text-decoration: none;
-        color: black;
-        padding: 0.2em;
-        border-radius: 5px;
-        transition: background-color 0.3s ease;
-    }
-
-    a:hover, button:hover {
-        color: white;
-        background-color: #1D5673; /* Dark blue for hover effect */
-    }
-
-    /* Restaurant Section Styling */
-    .restaurants {
-        background-color: #B4DABA; /* Light blue for restaurant section */
-    }
-
-    h2, .friends, div > p {
-        background-color: #D9D9D9; /* Light gray for headings and paragraphs */
-        margin: 0.2em;
-        padding: 0.5rem;
-        border-radius: 8px;
-    }
-
-    h6 {
-        text-align: center;
-        font-size: 1rem;
-    }
-
-    li {
-        display: flex;
-    }
-
-    /* Button Styling */
-    button {
-        background-color: #B4DABA; /* Light blue for buttons */
-        font-size: 1rem;
-        margin-bottom: 0.5rem;
-        border: none;
-        padding: 0.5rem 2rem;
-        border-radius: 1rem;
-        cursor: pointer;
-    }
-
-    /* Review Blog Styling */
+    /* 5) Review‑blog card */
     .review-blog {
-        font-family: Arial, Helvetica, sans-serif;
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 20px;
+    grid-column: 1 / span 2;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    padding: 1.5rem;
     }
 
+    /* 6) Headings */
+    #profile-box h2,
+    #create-review h3,
+    .review-blog h2 {
+    margin-top: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    padding-bottom: 0.5rem;
+    color: var(--text);
+    }
+
+    /* 7) Form inputs */
+    #create-review input,
+    #create-review textarea,
+    #create-review select {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: var(--radius);
+    color: var(--text);
+    }
+
+    /* 8) Buttons & links */
+    button,
+    a {
+    background: linear-gradient(90deg, #ff0080, #ff8c00);
+    border: none;
+    padding: 0.6rem 1.2rem;
+    color: #fff;
+    font-weight: 600;
+    border-radius: var(--radius);
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: transform .15s ease;
+    }
+
+    button:hover,
+    a:hover {
+    transform: scale(1.05);
+    }
+
+    /* 9) Review items */
     .review-item {
-        background-color: #f9f9f9;
-        padding: 15px;
-        margin-bottom: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background: rgba(255,255,255,0.1);
+    padding: 1rem;
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
     }
 
     .review-header {
-        border-bottom: 1px solid #ddd;
-        padding-bottom: 10px;
-        margin-bottom: 15px;
+    margin-bottom: 0.75rem;
     }
 
     .review-header h3 {
-        margin: 0;
-        font-size: 24px;
-        font-weight: bold;
-        color: #1D5673; /* Dark blue for header */
+    margin: 0;
+    color: var(--accent);
     }
 
     .review-header p {
-        margin: 5px 0;
-        font-size: 14px;
-        color: #777;
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0.25rem 0 0;
     }
 
     .review-content {
-        font-size: 16px;
-        line-height: 1.6;
-        color: #333;
+    color: var(--text);
+    line-height: 1.5;
     }
 
+    /* 10) Review‑actions */
     .review-actions {
-        text-align: right;
-        margin-top: 10px;
+    text-align: right;
     }
 
     .review-actions button {
-        background-color: #ff4e4e;
-        border: none;
-        color: white;
-        padding: 8px 15px;
-        font-size: 14px;
-        cursor: pointer;
-        border-radius: 4px;
+    background: #ff4e4e;
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
     }
 
     .review-actions button:hover {
-        background-color: #ff1c1c;
+    background: #ff1c1c;
+    }
+
+    /* 11) Responsive: stack on small */
+    @media (max-width: 800px) {
+    .body {
+        grid-template-columns: 1fr;
+    }
+    .review-blog {
+        grid-column: 1;
+    }
     }
 </style>
-

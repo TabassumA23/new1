@@ -21,7 +21,7 @@
                     </router-link>
                     <router-link
                         class="link"
-                        :to="{name: 'Restaurants'}"
+                        :to="{name: 'Reviews'}"
                     >
                       
                         Reviews
@@ -44,95 +44,80 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
-import { RouterView } from "vue-router";
+    import { defineComponent } from "vue";
+    import { RouterView } from "vue-router";
 
-export default defineComponent({
-    components: { RouterView },
-});
+    export default defineComponent({
+        components: { RouterView },
+    });
 
 </script>
-  <!--Styling for page and navbar mainly colour and positions-->
+
 <style scoped>
-    main {
-        background-color: #F0F8FF; 
-        font-family: Arial, Helvetica, sans-serif;
-        padding: 2rem;
+    :root {
+    --bg-color: #F0F8FF; /* match login page */
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --accent: #ff00c1;
+    --text: #fff;
+    --muted: #ddd;
+    --radius: 12px;
     }
 
+    /* Full-page wrapper */
+    main {
+    background-color: var(--bg-color);
+    min-height: 100vh;
+    padding: 2rem;
+    font-family: 'Segoe UI', sans-serif;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    }
+
+    /* Navbar card */
     .navbar {
-        display: flex;
-        justify-content: space-between;
-        background-color: #4F97C6; 
-        padding: 1rem;
-        border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card-bg);
+    padding: 1rem 2rem;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    margin-bottom: 2rem;
+    }
+
+    .navbar h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: var(--text);
     }
 
     .nav-parts {
-        display: flex;
-        align-items: center;
+    display: flex;
+    gap: 1rem;
     }
 
-    .nav-parts > .link,
-    a {
-        padding: 0.7em;
-        text-decoration: none;
-        color: white;
-        font-size: 1.1rem;
-        background-color: #1D5673; 
-        border-radius: 5px;
-        margin-right: 1rem;
-        transition: background-color 0.3s ease;
+    .nav-parts .link,
+    .nav-parts a {
+    background: linear-gradient(90deg, #ff0080, #ff8c00);
+    color: var(--text);
+    padding: 0.6rem 1rem;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: transform .15s ease;
     }
 
-    .nav-parts > .link:hover,
-    a:hover {
-        background-color: #B5D3E7; 
+    .nav-parts .link:hover,
+    .nav-parts a:hover {
+    transform: scale(1.05);
     }
 
-    .navbar h1 {
-        color: #1D5673;
-        font-size: 2rem;
+    /* RouterView container to fill remaining */
+    .flex-shrink-0 {
+    flex: 1;
     }
-
-    .main-content {
-        padding: 2rem;
-        background-color: white;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    button {
-        padding: 0.8rem 2rem;
-        background-color: #4F97C6; 
-        color: white;
-        font-size: 1rem;
-        border-radius: 5px;
-        border: none;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-        background-color: #1D5673; 
-    }
-
-    input, textarea {
-        padding: 1rem;
-        width: 100%;
-        border: 1px solid #B5D3E7; 
-        border-radius: 5px;
-        font-size: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    h3 {
-        color: #1D5673; 
-        font-size: 1.4rem;
-        margin-bottom: 1rem;
-    }
-
-   
-    
 </style>
+
+
+
 
