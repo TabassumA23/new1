@@ -2,50 +2,33 @@
   <div class="body">
     <div id="profile-box">
       <h2>Welcome {{ user.first_name }}</h2>
+    </div>
+    <div class="reservation-form">
+        <h2>Create a Restaurant</h2>
 
-      <!-- Form to Add a New restaurant. -->
-      <div id="create-restaurant">
-        <h3>Want to add a new restaurant to this website?</h3>
-        <h6>Double check spelling before submission!!</h6>
+        <label for="restaurant-name">Restaurant name:</label>
+        <input type="name" v-model="newRestaurant.name" />
 
-        <label for="name">Name of restaurant:</label><br />
-        <input
-          id="name"
-          v-model="newRestaurant.name"
-          type="text"
-          required
-          class="form-control"
-        /><br />
+        <label for="cuisine">Select Cuisine:</label>
+        <select id="cuisines" v-model="newRestaurant.cuisine">
+        <option v-for="cuisine in cuisines" :key="cuisine.id" :value="cuisine">
+            {{ cuisine.name }}
+        </option>
+        </select>
 
-        <label for="description">Brief restaurant Description:</label><br />
-        <textarea
-          id="description"
-          v-model="newRestaurant.description"
-          required
-          class="form-control"
-          rows="2"
-          cols="50"
-        ></textarea><br />
+         <label for="allergy">Select Allergy:</label>
+        <select id="allergies" v-model="newRestaurant.allergy">
+        <option v-for="allergy in allergys" :key="allergy.id" :value="allergy">
+            {{ allergy.name }}
+        </option>
+        </select>
 
-        <label for="rating">Rating:</label><br />
-        <input
-          id="rating"
-          v-model="newRestaurant.rating"
-          type="number"
-          min="1"
-          max="5"
-          required
-          class="form-control"
-        /><br />
+        <label for="rating">Rating:</label>
+        <input type="rating" v-model="newRestaurant.rating" />
 
-        <label for="seats_available">Seats Available:</label><br />
-        <input
-          id="seats_available"
-          v-model="newRestaurant.seats_available"
-          type="number"
-          required
-          class="form-control"
-        /><br />
+
+        <label for="seats-available">Seats Available:</label>
+        <input type="number" v-model="newRestaurant.seats_available" />
 
         <label for="location">Location:</label><br />
         <select
@@ -63,62 +46,78 @@
           <option value="Nottingham">Nottingham</option>
         </select><br />
 
-        <button type="submit" @click="createRestaurant">Save</button>
-      </div>
-    </div>
+        <!-- <label for="special-requests">Addition notes:</label>
+        <input type="special-requests" v-model="newReservation.special_requests" /> -->
 
- 
-  
-      <div class="restaurant-blog">
-        <h2>My restaurants</h2>
+        <button @click="createRestaurant">Create Restaurant</button>
+  </div>
 
-        <!-- Loop through only the restaurants created by the logged-in user -->
-        <div
-          class="restaurant-item"
-          v-for="(restaurant, index) in filteredRestaurants"
-          :key="index"
-        >
-          <div class="restaurant-header">
-            <h3>Name: {{ restaurant.name }}</h3>
-            <p>
-              <strong>By:</strong> {{ restaurant.user.first_name }}
-            </p>
-          </div>
+   <div
+        class="restaurant-item"
+        
+        v-for="(restaurant, index) in restaurants"
+        :key="index"
+        
+    >
+        <div class="restaurant-header">
+          <h3>restaurant: {{ restaurant.name }}</h3>
+          <p>
+            <!-- <strong>By:</strong> {{ reservation.user.id }}  -->
+            <!-- | <strong>Date:</strong> {{ formatDate(restaurant.date) }} -->
+          </p>
+        </div>
 
-          <div class="restaurant-content">
-            <p>Allergies: {{ restaurant.description }}</p>
-          </div>
+        <div class="restaurant-content">
+          <p>cuisine: {{ restaurant.cuisine }}</p>
+        </div>
 
-          <div class="restaurant-content">
-            <p>Rating: {{ restaurant.rating }}</p>
-          </div>
-          <div class="restaurant-content">
-            <p>Seats:{{ restaurant.seats_available }}</p>
-          </div>
-          <div class="restaurant-content">
-            <p>Location: {{ restaurant.location }}</p>
-          </div>
-          <div class="restaurant-actions" v-if="restaurant.user.id === user.id">
-            <button @click="deleteRestaurant(restaurant.id)">Delete restaurant</button>
-          </div>
+        <div class="restaurant-content">
+          <p>allergy: {{ restaurant.allergy }}</p>
+        </div>
+
+        <!-- <div class="restaurant-content" v-for="(restaurant, index) in restaurants" :key="index">
+            
+            <div v-if="restaurant.user.id === user.id">
+                <p>Status: {{ reservation.status }}
+                <select v-model="reservation.status" @change="updateStatus(reservation)">
+                    <option value="0">Pending</option>
+                    <option value="1">Confirmed</option>
+                </select>
+                </p>
+            </div>
+            
+        </div> -->
+
+        <div class="restaurant-content">
+          <p>rating: {{ restaurant.rating }}</p>
+        </div>
+
+        <div class="restaurant-content">
+          <p>location: {{ restaurant.location }}</p>
+        </div>
+
+        <div class="restaurant-content">
+          <p>seats available: {{ restaurant.seats_available }}</p>
+        </div>
+
+        <div class="restaurant-actions" v-if="restaurant.user.id === user.id">
+          <button @click="deleteRestaurant(restaurant.id)">Delete restaurant</button>
         </div>
       </div>
+    </div>
   
-  </div>
 </template>
 <script lang="ts">
   import { defineComponent } from "vue";
-  import { User, Restaurant, Friendship, Chosen,Cuisine, ChosenCuisine} from "../types/index";
+  import { User, Restaurant, Chosen, Cuisine, Allergy} from "../types/index";
   import { useUserStore } from "../stores/user";
   import { useUsersStore } from "../stores/users";
   import { useRestaurantsStore } from "../stores/restaurants";
-
   import { useCuisinesStore } from "../stores/cuisines";
+  import { useAllergysStore } from "../stores/allergys";
   import { useChosenStore } from "../stores/chosen";
   import { useChosensStore } from "../stores/chosens";
-  import { useChosenCuisineStore } from "../stores/chosenCuisine";
-  import { useChosenCuisinesStore } from "../stores/chosenCuisines";
-  import { useFriendshipsStore } from "../stores/friendships";
+
   import VueCookies from 'vue-cookies';
 
   
@@ -128,30 +127,16 @@
       data() {
           return {
           
-          editFirstName: false,
-          editLastName: false,
-          editEmail: false,
-          editDateOfBirth: false,
-          
-          editedUser: {
-              first_name: "",
-              last_name: "",
-              email: "",
-              date_of_birth: "",
-              
-          },
-
           newRestaurant: {
-            name: "",
-            description: "",
-            rating: 0,
-            seats_available: 0,
-            location: "London",
+          name: "",          // Will hold the selected restaurant object
+          cuisine: null,     // Will hold the reservation time
+          allergy: null,      // Will hold the number of people
+          rating: 0,     // Will hold any special requests (optional)
+          seats_available: 0,
+          location: "London"                // Will hold the reservation status (default to 'pending', 0)
           },
           chosenRestaurant: "",
-          
-          chosenChosenCuisine: "",
-          
+          restaurant: null,
           };
       },
       async mounted() {
@@ -216,34 +201,27 @@
               }
           }
          
-          // Fetching all restaurants from the backend
-          let response = await fetch(`http://localhost:8000/restaurants/`);
-          let restaurantData = await response.json();
+          // Fetching all cuisines from the backend
+          let response = await fetch(`http://localhost:8000/cuisines/`);
+          let cuisineData = await response.json();
         
 
           // Update the state with the fetched restaurant data
-          let madeRestaurants = restaurantData.restaurants as Restaurant[];
-          const restaurantsStore = useRestaurantsStore();
-          restaurantsStore.saveRestaurants(madeRestaurants); 
-          console.log(response)
-
-          // Fetching all cuisines from the backend
-          let res = await fetch(`http://localhost:8000/cuisines/`);
-          let cuisineData = await res.json();
-
-          // Update the state with the fetched cuisine data
           let madeCuisines = cuisineData.cuisines as Cuisine[];
           const cuisinesStore = useCuisinesStore();
           cuisinesStore.saveCuisines(madeCuisines); 
-          console.log(res)
+          console.log(response)
 
-          //fetch all the friendships
-          let responseFriendship = await fetch("http://localhost:8000/friendships/");
-          let dataFriendship = await responseFriendship.json();
-          let friendships = dataFriendship.friendships as Friendship[];
+          // Fetching all allergys from the backend
+          let responseC = await fetch(`http://localhost:8000/allergys/`);
+          let allergyData = await responseC.json();
+        
 
-          const storeFriendships = useFriendshipsStore();
-          storeFriendships.saveFriendships(friendships);
+          // Update the state with the fetched restaurant data
+          let madeAllergys = allergyData.allergys as Allergy[];
+          const allergysStore = useAllergysStore();
+          allergysStore.saveAllergys(madeAllergys); 
+          console.log(responseC)
 
           //fetch all the friendships
           let responseChosen = await fetch("http://localhost:8000/chosens/");
@@ -253,66 +231,127 @@
           const storeChosens = useChosensStore();
           storeChosens.saveChosens(chosens);
 
-          //fetch all the friendships
-          let responseChosenCuisine = await fetch("http://localhost:8000/chosenCuisines/");
-          let dataChosenCuisine = await responseChosenCuisine.json();
-          let chosenCuisines = dataChosenCuisine.chosenCuisines as ChosenCuisine[];
+          //  // Fetching all restaurants from the backend
+          //   const res = await fetch('http://localhost:8000/restaurants/');
+          //   const data = await res.json();
+          //   this.restaurants = data.restaurants;  // Make sure the backend sends an array of restaurants
 
-          const storeChosenCuisines = useChosenCuisinesStore();
-          storeChosenCuisines.saveChosenCuisines(chosenCuisines);
+          // Fetching all restaurants from the backend
+          let responseR = await fetch(`http://localhost:8000/restaurants/`);
+          let restaurantData = await responseR.json();
+        
+
+          // Update the state with the fetched restaurant data
+          let madeRestaurants = restaurantData.restaurants as Restaurant[];
+          const restaurantsStore = useRestaurantsStore();
+          restaurantsStore.saveRestaurants(madeRestaurants); 
+          console.log(responseR)
+
       },
       methods: {
-          toggleEditField(field: string) {
-            console.log(typeof field)
-              this[`edit${field}`] = !this[`edit${field}`];
-              if (this[`edit${field}`]) {
-                  this.editedUser[field.toLowerCase()] = this.user[field.toLowerCase()];
-              }
-              //this.editPassword = !this.editPassword; // Toggle edit mode
-          },
           
+          
+          async saveField(field: string) {
+             
+              try {
+                  
+                  const payload = {
+                      [field.toLowerCase()]: this.editedUser[field.toLowerCase()],
+                  };
+                  console.log(payload)
+                  const response = await fetch(`http://localhost:8000/user/${this.user.id}/`, {
+                      method: "PUT",
+                      headers: {
+                          'Authorization': `Bearer ${VueCookies.get('access_token')}`,
+                          'Content-Type': 'application/json',
+                          'X-CSRFToken': VueCookies.get('csrftoken'),
+                      },
+                      credentials: 'include',
+                      body: JSON.stringify(payload),
+                  });
+              
+                  console.log("CSRF Token:", this.userStore.csrf);
 
-         async createRestaurant() {
+                  if (!response.ok) {
+                      throw new Error("Failed to update field");
+                  }
+
+                  const updatedUser = await response.json();
+                  console.log(updatedUser)
+                  this.userStore = this.userStore.saveUsers(updatedUser); // Update the user state in the store
+                  window.location.reload();
+                  alert(`${field} updated successfully!`);
+              } catch (error) {
+                  console.error(error);
+                  alert(`Failed to update ${field}.`);
+              }
+          },
+        
+
+
+         /* Creating a New review */
+        async createRestaurant() {
             const restaurantsStore = useRestaurantsStore();
             const userId = this.userStore.user.id;
-            const newRestaurant = this.newRestaurant;
+
+            // Validate if the restaurant is selected correctly
+            // if (!this.newRestaurant.cusine || !this.newRestaurant.cuisine.id) {
+            //     alert("Please select a valid cusine.");
+            //     return;
+            // }
+
+            // Validate if the reservation time is set correctly
+            // if (!this.newReservation.reservation_time) {
+            //     alert("Please select a valid reservation time.");
+            //     return;
+            // }
+
             const payload = {
+                cuisine_id: this.newRestaurant.cuisine.id, 
+                allergy_id: this.newRestaurant.allergy.id,
                 name: this.newRestaurant.name,
-                description: this.newRestaurant.description,
-                rating: this.newRestaurant.rating,
                 seats_available: this.newRestaurant.seats_available,
+                rating: this.newRestaurant.rating,
                 location: this.newRestaurant.location,
-                user_id: userId
+                user_id: userId,
             };
-            
+
             console.log(payload); 
-            console.log(userId);  
-            
-            
+            console.log(userId);
 
-            const restaurantResponse = await fetch('http://localhost:8000/restaurants/', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${VueCookies.get('access_token')}`,
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': VueCookies.get('csrftoken'),
-                },
-                credentials: 'include',
-                body: JSON.stringify(payload),
-            });
+            try {
+                const restaurantResponse = await fetch('http://localhost:8000/restaurants/', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${VueCookies.get('access_token')}`,
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': VueCookies.get('csrftoken'),
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(payload),
+                });
 
-            const responseText = await restaurantResponse.text();  // Log raw response for debugging
-            console.log(responseText);
+                //const responseText = await reservationResponse.text();  // Log raw response for debugging
+               // console.log(responseText);
 
-            // Add the newly created review to the Pinia store
-            // const data = await reviewResponse.json();
-            // let createdReview = data.review;
-            // reviewsStore.addReview(createdReview);
-            window.location.reload();
-            alert('restaurant added successfully!');
+                //if (reservationResponse.ok) {
+                    const data = await restaurantResponse.json();
+                    const createdRestaurant = data.restaurant;  // Ensure that the response has reservation data
+                    restaurantsStore.addRestaurant(createdRestaurant);  // Add to the Pinia store
+                    window.location.reload();
+                    alert('Restaurant added successfully!');
+               //} else {
+                    //alert('Failed to create reservation');
+                //}
+            } catch (error) {
+                console.error('Error creating restaurant:', error);
+                alert('Failed to create restaurant');
+            }
         },
+
+
         async deleteRestaurant(restaurantId: number) {
-            // Check if the logged-in user is the one who wrote the review
+            // Check if the logged-in user is the one who wrote the reservation
             const restaurantToDelete = this.restaurants.find(restaurant => restaurant.id === restaurantId);
             if (!restaurantToDelete || restaurantToDelete.user.id !== this.user.id) {
                 alert("You cannot delete this restaurant. Only the author can delete it.");
@@ -329,20 +368,20 @@
                     },
                     credentials: 'include',
                 });
-                window.location.reload(); 
+
                 if (response.ok) {
-                    // Remove the deleted review from the list
+                    // Remove the deleted reservation from the list
                     this.restaurants = this.restaurants.filter(restaurant => restaurant.id !== restaurantId);
-                    alert('Revrestaurantiew deleted successfully!');
+                    alert('Restaurant deleted successfully!');
+                    window.location.reload();
                 } else {
                     alert('Failed to delete the restaurant.');
                 }
             } catch (error) {
                 console.error('Error deleting restaurant:', error);
-                alert('Failed to delete the revirestaurantew.');
+                alert('Failed to delete the restaurant.');
             }
         },
-          
           //deletes the friendships between users and friend whether pending or accepted
           async deleteChosen(chosenId: number) {
        
@@ -430,156 +469,11 @@
                 alert("Failed to add the chosen restaurant. Please try again.");
             }
             },
-           // Accepts the pending friendship between user and friend it then makes an accepted friendship between friend and user
-           //This means the friendship is symmetrical 
-           async acceptFriendship(friendshipId: number) {
-              try {
-                  const acceptResponse = await fetch(`http://localhost:8000/friendship/${friendshipId}/`, {
-                      method: "PUT",
-                      headers: {
-                          "Authorization": `Bearer ${VueCookies.get("access_token")}`,
-                          "Content-Type": "application/json",
-                          "X-CSRFToken": VueCookies.get("csrftoken"),
-                      },
-                      credentials: "include",
-                  });
+           
+          
+          
 
-                  if (!acceptResponse.ok) {
-                      throw new Error("Failed to accept friendship.");
-                  }
-
-                  const dataAccept = await acceptResponse.json();
-                  const newAccept = dataAccept.friendship as Friendship;
-
-                  // Update the friendship in the store
-                  const friendshipsStore = useFriendshipsStore();
-                  friendshipsStore.addFriendship(newAccept);
-                  window.location.reload();
-                  alert(`Accepted successfully!`);
-              } catch (error) {
-                  console.error("Error accepting friendship:", error);
-                  alert("Failed to accept friendship. Please try again.");
-              }
-          },
-          //rejects the friendships between users and friend whether pending or accepted
-          async deleteFriendship(friendshipId: number) {
-            console.log(friendshipId)
-            try {
-              const response = await fetch(`http://localhost:8000/friendship/${friendshipId}/`, {
-                method: "DELETE",
-                headers: {
-                  "Authorization": `Bearer ${VueCookies.get("access_token")}`,
-                  "Content-Type": "application/json",
-                  "X-CSRFToken": VueCookies.get("csrftoken"),
-                },
-                credentials: "include",
-              });
-
-              if (!response.ok) {
-                throw new Error("Failed to delete friendship");
-              }
-
-              //Remove the deleted friendship from the store
-              const friendshipsStore = useFriendshipsStore();
-              friendshipsStore.removeFriendship(friendshipId);
-
-              window.location.reload();
-              alert("Friendship deleted successfully!");
-            } catch (error) {
-              console.error("Error deleting friendship:", error);
-              alert("Failed to delete friendship. Please try again.");
-            }
-          },
-          //deletes the friendships between users and friend whether pending or accepted
-          async deleteChosenCuisine(chosenCuisineId: number) {
-       
-            try {
-              const response = await fetch(`http://localhost:8000/chosenCuisine/${chosenCuisineId}/`, {
-                method: "DELETE",
-                headers: {
-                  "Authorization": `Bearer ${VueCookies.get("access_token")}`,
-                  "Content-Type": "application/json",
-                  "X-CSRFToken": VueCookies.get("csrftoken"),
-                },
-                credentials: "include",
-              });
-
-              if (!response.ok) {
-                throw new Error("Failed to delete chosen cuisine");
-              }
-
-              //Remove the deleted friendship from the store
-              const chosenCuisinesStore = useChosenCuisinesStore();
-              //chosenCuisinesStore.removeChosenCuisine(chosenCuisineId);
-
-              window.location.reload();
-              alert("Chosen cuisine deleted successfully!");
-            } catch (error) {
-              console.error("Error deleting chosen cuisine:", error);
-              alert("Failed to delete chosen cuisine. Please try again.");
-            }
-          },
-
-          async addChosenCuisine() {
-            if (this.chosenChosenCuisine === "") {
-                alert("Invalid cuisine Choice.");
-                return;
-            }
-
-            const chosenCuisinesStore = useChosenCuisinesStore();
-            const cuisinesStore = useCuisinesStore();
-            const chosenChosenCuisineLower = this.chosenChosenCuisine.toLowerCase();
-
-            // Check if the logged-in user has already chosen this cusine
-            let alreadyChosenCuisineByUser = chosenCuisinesStore.chosenCuisines.some(chosenCuisine => chosenCuisine.user === this.user.id && chosenCuisine.name.toLowerCase() === chosenChosenCuisineLower);
-            
-            if (alreadyChosenCuisineByUser) {
-                alert("You have already chosen this cuisine.");
-                return;
-            }
-
-            // Find the cuisine from the cuisine store
-            let foundCuisine = cuisinesStore.getCuisineByName(this.chosenChosenCuisine);
-            if (!foundCuisine) {
-                alert("cuisine not found.");
-                return;
-            }
-
-            const foundCuisineId = foundCuisine.id;
-
-            // Prepare the payload for creating a new chosen cuisine
-            const payload = {
-                user_id: this.user.id,
-                cuisine_id: foundCuisineId,
-            };
-
-            // Send POST request to create a chosen cuisine
-            const chosenCuisineResponse = await fetch("http://localhost:8000/chosenCuisines/", {
-                method: "POST",
-                headers: {
-                Authorization: `Bearer ${VueCookies.get("access_token")}`,
-                "Content-Type": "application/json",
-                "X-CSRFToken": VueCookies.get("csrftoken"),
-                },
-                credentials: "include",
-                body: JSON.stringify(payload),
-            });
-
-            // If the response is successful, add the new chosen restaurant to the store
-            if (chosenCuisineResponse.ok) {
-                const dataC = await chosenCuisineResponse.json();
-                const createdChosenCuisine = dataC.chosenCuisine as ChosenCuisine;
-                //chosenCuisinesStore.addChosenCuisine(createdChosenCuisine);
-
-                window.location.reload(); // Refresh the page to reflect the changes
-                alert("Chosen cuisine added successfully!");
-            } else {
-                alert("Failed to add the chosen cuisine. Please try again.");
-            }
-            },
-
-
-      }, 
+     }, 
       computed: {
           user() {
               const userStore = useUserStore;
@@ -589,233 +483,213 @@
               const restaurantsStore = useRestaurantsStore;
               return this.restaurantsStore.restaurants; // Bind to the fetched cuisine data from Pinia store
           },
-          
           cuisines(): Cuisine[]{
               const cuisinesStore = useCuisinesStore;
               return this.cuisinesStore.cuisines; // Bind to the fetched cuisine data from Pinia store
           },
-          friendships(){
-              const friendshipsStore = useFriendshipsStore;
-              return this.friendshipsStore.friendships;
+          allergys(): Allergy[]{
+              const allergysStore = useAllergysStore;
+              return this.allergysStore.allergys; // Bind to the fetched cuisine data from Pinia store
           },
+          
           chosens(){
               const chosensStore = useChosensStore;
               return this.chosensStore.chosens;
           },
-          chosenCuisines(){
-              const chosenCuisinesStore = useChosenCuisinesStore;
-              return this.chosenCuisinesStore.chosenCuisines;
-          },
-                filteredRestaurants() {
-            return this.restaurants.filter(restaurant => restaurant.user.id === this.user.id);
-        },
-        filteredReservations() {
-          // First, filter the reservations based on the user's restaurants
-          return this.reservations.filter(reservation => {
-            return this.filteredRestaurants.some(restaurant => restaurant.id === reservation.restaurant.id);
-          });
-        },
     
       },
       setup() {
           const userStore = useUserStore();
           const restaurantsStore = useRestaurantsStore();
+          const allergysStore = useAllergysStore();
           const cuisinesStore = useCuisinesStore();
-          const friendshipsStore = useFriendshipsStore();
           const usersStore = useUsersStore();
           const chosensStore = useChosensStore();
-          const chosenCuisinesStore = useChosenCuisinesStore();
-          return { userStore , restaurantsStore , friendshipsStore, usersStore, chosensStore, chosenCuisinesStore, cuisinesStore};
+          
+          return { userStore , restaurantsStore , usersStore, chosensStore, cuisinesStore, allergysStore};
       },
   });
-  </script>
+</script>
+
+
 
 
 <style scoped>
+  /* General body and layout styles */
+  .body {
+    font-family: 'Arial', Helvetica, sans-serif;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto auto auto;
+    gap: 1rem 0.25rem;
+    background-color: #B4DABA; /* Light background for overall page */
+    padding: 2em;
+  }
 
+  /* Profile box section */
+  #profile-box {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    background-color: #659A78; /* Olive green background */
+    padding: 2em;
+    border-radius: 1rem;
+  }
 
-<style scoped>
-    /* General Body Styling */
-    .body {
-        font-family: Arial, Helvetica, sans-serif;
-        display: grid;
-        grid-template-columns: auto auto;
-        grid-template-rows: 10% 30% 20% 30% 10%;
-        gap: 1rem 0.25rem;
-        background-color: #F0F8FF; /* Light blue background for the page */
-    }
+  /* Reservation form section */
+  .reservation-form {
+    grid-column: 1;
+    grid-row: 3;
+    padding: 2rem;
+    background-color: #D9D9D9; /* Light gray background */
+    border-radius: 1rem;
+  }
 
-    /* Profile Box Styling */
-    #profile-box {
-        grid-column: 1;
-        grid-row: 1/span 2;
-        background-color: #4F97C6; /* Medium blue for profile box */
-        padding: 2rem;
-        border-radius: 8px;
-    }
+  .reservation-form h2 {
+    font-size: 1.8rem;
+    text-align: center;
+    color: #333;
+    margin-bottom: 1.5rem;
+  }
 
-    /* Restaurant Section Styling */
-    #restaurant {
-        grid-column: 1;
-        grid-row: 3;
-        background-color: #B4DABA; /* Light blue for restaurant section */
-        padding: 2rem;
-        border-radius: 8px;
-    }
+  .reservation-form label {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    color: #555;
+  }
 
-    /* Create Restaurant Section Styling */
-    #create-restaurant {
-        grid-column: 1;
-        grid-row: 4;
-        padding-top: 0.5rem;
-        background-color: #4F97C6; /* Medium blue background */
-        border-radius: 8px;
-    }
+  .reservation-form input,
+  .reservation-form select {
+    width: 100%;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #B4DABA;
+    border-radius: 1rem;
+    background-color: #fff;
+  }
 
-    #create-restaurant > h3 {
-        text-align: center;
-        background-color: #D9D9D9; /* Light gray for the heading */
-    }
+  /* Create a new restaurant section */
+  #create-restaurant {
+    grid-column: 1;
+    grid-row: 4;
+    background-color: #D9D9D9;
+    padding: 2rem;
+    border-radius: 1rem;
+  }
 
-    #create-restaurant > input {
-        margin-bottom: 1.5rem;
-        padding: 0.5rem;
-        border-radius: 8px;
-    }
+  #create-restaurant h3 {
+    text-align: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: #333;
+  }
 
-    /* Friend Section Styling (Accepted) */
-    .friend-accepted {
-        background-color: #D9D9D9; /* Light gray for accepted friends section */
-        grid-column: 2;
-        grid-row: 1/span 2;
-        padding-bottom: 2em;
-        border-radius: 8px;
-    }
+  /* Buttons styling */
+  button {
+    background-color: #659A78;
+    color: #fff;
+    padding: 0.7rem 2rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 1rem;
+    cursor: pointer;
+    display: block;
+    margin: 0 auto;
+  }
 
-    /* Friend Section Styling (Pending) */
-    .friend-pending {
-        background-color: #D9D9D9; /* Light gray for pending friends section */
-        grid-column: 2;
-        grid-row: 3/span 2;
-        border-radius: 8px;
-    }
+  button:hover {
+    background-color: #B4DABA;
+  }
 
-    /* General Div Styling for Sections */
-    .body > div {
-        background-color: #659A78; /* Olive green for sections */
-        margin: 2em;
-        padding: 2em;
-        border-radius: 8px;
-    }
+  /* Restaurant list styling */
+  .restaurants {
+    grid-column: 1;
+    grid-row: 5;
+    background-color: #B4DABA;
+    padding: 2rem;
+    border-radius: 1rem;
+  }
 
-    /* Link Styling */
-    a {
-        background-color: #659A78; /* Olive green for links */
-        margin: 0.5em;
-        text-decoration: none;
-        color: black;
-        padding: 0.2em;
-        border-radius: 5px;
-        transition: background-color 0.3s ease;
-    }
+  .restaurants h2 {
+    text-align: center;
+    font-size: 2rem;
+    color: #333;
+  }
 
-    a:hover, button:hover {
-        color: white;
-        background-color: #1D5673; /* Dark blue on hover for links and buttons */
-    }
+  .restaurant-item {
+    background-color: #f9f9f9;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+  }
 
-    /* Restaurant Section Header */
-    .restaurants {
-        background-color: #B4DABA; /* Light blue for the restaurants section */
-    }
+  .restaurant-header h3 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+  }
 
-    /* General Text Styling for h2, .friends, div > p */
-    h2, .friends, div > p {
-        background-color: #D9D9D9; /* Light gray for headings and paragraphs */
-        margin: 0.2em;
-        padding: 0.5rem;
-        border-radius: 8px;
-    }
+  .restaurant-header p {
+    margin: 0.5rem 0;
+    color: #777;
+    font-size: 1rem;
+  }
 
-    h6 {
-        text-align: center;
-        font-size: 1rem;
-    }
+  /* Review section styles */
+  .review-item {
+    background-color: #f9f9f9;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    border-radius: 1rem;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+  }
 
-    /* List Item Styling */
-    li {
-        display: flex;
-    }
+  .review-header h3 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+  }
 
-    /* Button Styling */
-    button {
-        background-color: #B4DABA; /* Light blue for buttons */
-        font-size: 1rem;
-        margin-bottom: 0.5rem;
-        border: none;
-        padding: 0.5rem 2rem;
-        border-radius: 1rem;
-        cursor: pointer;
-    }
+  .review-header p {
+    margin: 0.5rem 0;
+    color: #777;
+    font-size: 1rem;
+  }
 
-    /* Review Blog Styling */
-    .review-blog {
-        font-family: Arial, Helvetica, sans-serif;
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 20px;
-    }
+  .review-content {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    color: #333;
+  }
 
-    .review-item {
-        background-color: #f9f9f9;
-        padding: 15px;
-        margin-bottom: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
+  /* Review actions (delete, etc.) */
+  .review-actions button {
+    background-color: #ff4e4e;
+    color: white;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 1rem;
+    border: none;
+  }
 
-    .review-header {
-        border-bottom: 1px solid #ddd;
-        padding-bottom: 10px;
-        margin-bottom: 15px;
-    }
+  .review-actions button:hover {
+    background-color: #ff1c1c;
+  }
 
-    .review-header h3 {
-        margin: 0;
-        font-size: 24px;
-        font-weight: bold;
-        color: #1D5673; /* Dark blue for review title */
-    }
+  /* Additional styles for links */
+  a {
+    background-color: #659A78;
+    margin: 0.5em;
+    text-decoration: none;
+    color: black;
+    padding: 0.2em;
+    border-radius: 1rem;
+  }
 
-    .review-header p {
-        margin: 5px 0;
-        font-size: 14px;
-        color: #777;
-    }
-
-    .review-content {
-        font-size: 16px;
-        line-height: 1.6;
-        color: #333;
-    }
-
-    .review-actions {
-        text-align: right;
-        margin-top: 10px;
-    }
-
-    .review-actions button {
-        background-color: #ff4e4e;
-        border: none;
-        color: white;
-        padding: 8px 15px;
-        font-size: 14px;
-        cursor: pointer;
-        border-radius: 4px;
-    }
-
-    .review-actions button:hover {
-        background-color: #ff1c1c;
-    }
+  a:hover {
+    color: white;
+  }
 </style>
 

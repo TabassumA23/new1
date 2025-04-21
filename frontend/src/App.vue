@@ -3,7 +3,7 @@
         <!--Nav bar for every page -->
         <div class="navbar">
        
-                <h2>HobbyMate</h2>
+                <h2>YumYelp</h2>
                 <div class="nav-parts">
                       <!--Go to home page / profile page-->
                     <router-link

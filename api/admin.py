@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 
-from .models import User, Restaurant, Cuisine, Review, Reservation
+from .models import User, Restaurant, Cuisine, Review, Reservation, Allergy
 
 '''Register the friendship through model to the admin panel'''
 
@@ -30,10 +30,15 @@ class UserAdmin(admin.ModelAdmin):
 @admin.register(Restaurant)
 class RestaurantAdmin(admin.ModelAdmin):
     '''Register the restaurant model to the admin panel'''
-    list_display = ('name', 'description', 'rating', 'seats_available', 'location')
+    list_display = ('name','rating', 'seats_available', 'location')
 
 @admin.register(Cuisine)
 class CuisineAdmin(admin.ModelAdmin):
+    '''Register the cuisine model to the admin panel'''
+    list_display = ('name','description')
+
+@admin.register(Allergy)
+class AllergyAdmin(admin.ModelAdmin):
     '''Register the cuisine model to the admin panel'''
     list_display = ('name', 'description')
 
@@ -47,6 +52,6 @@ class ReservationAdmin(admin.ModelAdmin):
     '''Register the reservation model to the admin panel'''
     list_display = ('restaurant', 'reservation_time', 'number_of_people', 'status', 'special_requests')
     list_filter = ('status',)
-    search_fields = ('restaurant__name', 'status')  # Allows searching by restaurant name and status
+    search_fields = ('restaurant__name', 'status')  
 
 

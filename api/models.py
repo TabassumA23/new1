@@ -33,18 +33,14 @@ class PageView(models.Model):
 
     def __str__(self):
         return f"Page view count: {self.count}"
-
-
-class Restaurant(models.Model):
+    
+class Allergy(models.Model):
     '''
-    Class for the restaurant
+    Class for the allergy
     '''
     name = models.CharField(max_length=100)
     description = models.TextField(max_length=100)
-    rating = models.IntegerField(default=0)
-    seats_available = models.IntegerField(default=0)
-    location = models.TextField(max_length=100)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    
     
     def __str__(self):
         return self.name
@@ -55,27 +51,20 @@ class Restaurant(models.Model):
     def as_dict(self):
         return {
             'id': self.id,
-            # Obtains URL pattern for individual restaurant
-            'api': reverse('restaurant api', args=[self.id]),
+            # Obtains URL pattern for individual cuisine
+            'api': reverse('allergy api', args=[self.id]),
             'name': self.name,
             'description': self.description,
-            'rating': self.rating,
-            'seats_available': self.seats_available,
-            'location' : self.location,
-            'user': {
-                'first_name': self.user.first_name,
-                'last_name': self.user.last_name,
-                'id': self.user.id,
-            }
+            
         }
-
-
+    
 class Cuisine(models.Model):
     '''
     Class for the cusine
     '''
     name = models.CharField(max_length=100)
     description = models.TextField(max_length=100)
+    
     
     def __str__(self):
         return self.name
@@ -90,7 +79,48 @@ class Cuisine(models.Model):
             'api': reverse('cuisine api', args=[self.id]),
             'name': self.name,
             'description': self.description,
+            
         }
+class Restaurant(models.Model):
+    '''
+    Class for the restaurant
+    '''
+    name = models.CharField(max_length=100)
+    cuisine = models.ForeignKey(Cuisine, on_delete=models.CASCADE) 
+    allergy = models.ForeignKey(Allergy, on_delete=models.CASCADE)
+    rating = models.IntegerField(default=0)
+    seats_available = models.IntegerField(default=0)
+    location = models.TextField(max_length=100)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    
+
+    def __str__(self):
+        return self.name
+    
+    '''
+    Dictionary
+    '''
+    def as_dict(self):
+        return {
+            'id': self.id,
+            # Obtains URL pattern for individual restaurant
+            'api': reverse('restaurant api', args=[self.id]),
+            'name': self.name,
+            'cuisine': self.cuisine.name,
+            'allergy':self.allergy.name,
+            'rating': self.rating,
+            'seats_available': self.seats_available,
+            'location' : self.location,
+            'user': {
+                'first_name': self.user.first_name,
+                'last_name': self.user.last_name,
+                'id': self.user.id,
+            }
+            
+        }
+
+
+
     
 # Enum for user types
 class UserType(models.TextChoices):

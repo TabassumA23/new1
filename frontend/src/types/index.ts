@@ -30,6 +30,11 @@ export interface Cuisine {
     api: string;
     name: string;
 }
+export interface Allergy {
+    id: number;
+    api: string;
+    name: string;
+}
 
 export interface Friendship{
     id: number;

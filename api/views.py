@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 
-from .models import Chosen, Restaurant, User, Friendship, ChosenCuisine, Cuisine, Review, Reservation
+from .models import Chosen, Restaurant, User, Friendship, ChosenCuisine, Cuisine, Review, Reservation, Allergy
 from .forms import LoginForm, SignUpForm, UpdatePassForm, UpdateUserForm
 
 # Authenticate login before Vue SPA redirect
@@ -550,6 +550,57 @@ def reservation_api(request: HttpRequest, reservation_id: int) -> JsonResponse:
     # GET reservation data
     return JsonResponse(reservation.as_dict())
 
+
+
+# APIs for cuisine model below
+def allergys_api(request: HttpRequest) -> JsonResponse:
+    """API endpoint for the Cuisine"""
+
+    # POST method which is the create method
+    if request.method == 'POST':
+        # Create a new cuisine
+        POST = json.loads(request.body)
+        allergy = Allergy.objects.create(
+            name=POST['name'],
+            
+        )
+        return JsonResponse(allergy.as_dict())
+
+    # GET method which allows the user to view all hobbies
+    return JsonResponse({
+        'allergys': [
+            allergy.as_dict()
+            for allergy in Allergy.objects.all()
+        ]
+    })
+
+def allergy_api(request: HttpRequest, allergy_id: int) -> JsonResponse:
+    """API endpoint for a single cuisine"""
+    try:
+        allergy = Allergy.objects.get(id=allergy_id)
+    except Allergy.DoesNotExist:
+        return JsonResponse({"error": "allergy not found."}, status=404)
+
+    # PUT method to update cuisine
+    if request.method == 'PUT':
+        try:
+            PUT = json.loads(request.body)
+            allergy.name = PUT.get("name", allergy.name)
+            allergy.description = PUT.get("description", allergy.description)
+            allergy.save()
+            return JsonResponse(allergy.as_dict())
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    # DELETE method to delete cuisine
+    if request.method == 'DELETE':
+        allergy.delete()
+        return JsonResponse({}, status=204)  # 204 No Content
+
+    # GET cuisine data
+    return JsonResponse(allergy.as_dict())
+
+
 # APIs for restaurant model below
 def restaurants_api(request: HttpRequest) -> JsonResponse:
     """API endpoint for the Restaurant"""
@@ -559,15 +610,21 @@ def restaurants_api(request: HttpRequest) -> JsonResponse:
         POST = json.loads(request.body)
         # Create a new restaurant
         user_id = POST.get('user_id')
+        cuisine_id = POST.get('cuisine_id')
+        allergy_id = POST.get('allergy_id')
         user = User.objects.get(id = user_id)
+        cuisine = Cuisine.objects.get(id =cuisine_id)
+        allergy = Allergy.objects.get(id= allergy_id)
         POST = json.loads(request.body)
+        
         restaurant = Restaurant.objects.create(
             name=POST['name'],
-            description=POST['description'],
+            cuisine= cuisine,
+            allergy= allergy,
             rating=POST['rating'],
             seats_available=POST['seats_available'],
             location=POST['location'],
-            user=user,  # Use the user_id from the request
+            user=user,  
         )
         return JsonResponse(restaurant.as_dict())
     # If GET method is used, return all reviews with user details
@@ -607,7 +664,6 @@ def restaurant_api(request: HttpRequest, restaurant_id: int) -> JsonResponse:
         try:
             PUT = json.loads(request.body)
             restaurant.name = PUT.get("name", restaurant.name)
-            restaurant.description = PUT.get("description", restaurant.description)
             restaurant.rating = PUT.get("rating", restaurant.rating)
             restaurant.seats_available = PUT.get("seats_available", restaurant.seats_available)
             restaurant.location = PUT.get("location", restaurant.location)
