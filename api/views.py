@@ -474,10 +474,13 @@ def reviews_api(request: HttpRequest) -> JsonResponse:
     if request.method == 'POST':
         try:
             POST = json.loads(request.body)
+            restaurant = Restaurant.objects.get(id=POST['restaurant_id'])
             user_id = POST['user_id']
             # Use 'description' instead of 'review' to match the model
             review = Review.objects.create(
-                name=POST['name'],
+                name=POST['name'], 
+                restaurant = restaurant,
+                rating=POST['rating'], 
                 description=POST['description'],  # Use 'description' field here
                 user=User.objects.get(id=user_id),  # Use the user_id from the request
             )
@@ -488,21 +491,29 @@ def reviews_api(request: HttpRequest) -> JsonResponse:
             return JsonResponse({'error': 'User not found'}, status=404)
 
     # If GET method is used, return all reviews with user details
-    reviews = Review.objects.all()
-    reviews_data = []
-    for review in reviews:
-        reviews_data.append({
-            'id': review.id,
-            'name': review.name,
-            'description': review.description,  
-            'date': review.date,
-            'user': {
-                'first_name': review.user.first_name,
-                'last_name': review.user.last_name,
-                'id': review.user.id,
-            },
-        })
-    return JsonResponse({'reviews': reviews_data})
+    # reviews = Review.objects.all()
+    # reviews_data = []
+    # for review in reviews:
+    #     reviews_data.append({
+    #         'id': review.id,
+    #         'name': review.name,
+    #         'restaurant': review.restaurant,
+    #         'rating': review.rating,
+    #         'description': review.description,  
+    #         'date': review.date,
+    #         'user': {
+    #             'first_name': review.user.first_name,
+    #             'last_name': review.user.last_name,
+    #             'id': review.user.id,
+    #         },
+    #     })
+    # return JsonResponse({'reviews': reviews_data})
+    return JsonResponse({
+        'reviews': [
+            review.as_dict()
+            for review in Review.objects.all()
+        ]
+    })
 
 def review_api(request: HttpRequest, review_id: int) -> JsonResponse:
     """API endpoint for a single review"""
@@ -516,6 +527,7 @@ def review_api(request: HttpRequest, review_id: int) -> JsonResponse:
         try:
             PUT = json.loads(request.body)
             review.name = PUT.get("name", review.name)
+            review.rating = PUT.get("rating", review.rating)
             review.description = PUT.get("description", review.description)
             review.save()
             return JsonResponse(review.as_dict())

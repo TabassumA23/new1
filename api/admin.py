@@ -45,7 +45,7 @@ class AllergyAdmin(admin.ModelAdmin):
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
     '''Register the cuisine model to the admin panel'''
-    list_display = ('name', 'description', 'user')
+    list_display = ( 'description', 'user')
 
 @admin.register(Reservation)
 class ReservationAdmin(admin.ModelAdmin):

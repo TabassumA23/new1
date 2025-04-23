@@ -245,13 +245,15 @@ class Review(models.Model):
     '''
     Class for the review
     '''
-    name = models.CharField(max_length=255)  # Add a name field
+    name = models.CharField(max_length=255, blank=True) 
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+    rating = models.IntegerField() 
     description = models.TextField(max_length=500)
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # Foreign key to User model
     date = models.DateTimeField(default=timezone.now)  
     
     def __str__(self):
-        return self.name
+        return self.restaurant.name
     
     '''
     Dictionary
@@ -260,6 +262,8 @@ class Review(models.Model):
         return {
             'id': self.id,
             'name': self.name,
+            'restaurant': self.restaurant.name,
+            'rating': self.rating,
             'description': self.description,
             'date': self.date,
             'user': {
@@ -273,7 +277,7 @@ class Reservation(models.Model):
     '''
     Class for the Reservation
     '''
-    # Define status choices
+    
     PENDING = 0
     CONFIRMED = 1
     STATUS_CHOICES = [
@@ -281,7 +285,7 @@ class Reservation(models.Model):
         (CONFIRMED, 'Confirmed'),
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)  # Link to Restaurant model
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)  
     reservation_time = models.DateTimeField()
     number_of_people = models.IntegerField(default=0,validators=[MinValueValidator(0)])
     status = models.IntegerField(choices=STATUS_CHOICES, default=PENDING)

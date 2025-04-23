@@ -1,49 +1,35 @@
 <template>
     <div class="body">
-        <div id="profile-box">
+        <div id="create-review">
             <h2>Welcome {{ user.first_name }}</h2>
-           
-    
-    <!-- <div class="review">
-    <label for="reviews">Choose a review:</label>
-    <select id="reviews" v-model="chosenReview">
-        <option v-for="review in reviews" :key="review.id">
-            {{ review.name }}: {{ review.review }}
-        </option>
-    </select>
-    <button @click="addReviewChoice">Save Review Choice Here</button>
-    
-    <div class="reviews">
-        <h4>Reviews</h4>
-        <ul v-for="(review, index) in reviews" :key="index">
-            <li class="review-item" v-if="review.user == user.id">
-                {{ review.name }}: {{ review.review }} 
-                <button @click="deleteReview(review.id)"> Delete </button>
-            </li>
-        </ul>
-    </div>
-    </div> -->
-
-
       <!-- Form to Add a New review. -->
-      <div id="create-review">
+      
           <h3>Want to add a new review to this website?</h3>
           <h6>Double check spelling before submission!!</h6>
-          <label for="name">Name of Review:</label><br>
-          <input id="name" v-model="newReview.name" type="text" required=true class="form-control"/><br>
+          <label for="review">Title for review:</label><br>
+            <textarea id="name" v-model="newReview.name" required class="form-control" rows="2" cols="50"></textarea><br>
+         <label for="restaurant">Select Restaurant:</label>
+            <select id="restaurants" v-model="newReview.restaurant">
+            <option v-for="restaurant in restaurants" :key="restaurant.id" :value="restaurant">
+                {{ restaurant.name }}
+            </option>
+            </select>
+        <label for="review">Rating:</label><br>
+            <textarea id="description" v-model="newReview.rating" required class="form-control" rows="2" cols="50"></textarea><br>
+
           <label for="review">Brief review Description:</label><br>
         <textarea id="description" v-model="newReview.description" required class="form-control" rows="2" cols="50"></textarea><br>
 
           <button type="submit" @click="createReview">Add Review</button>
       </div>
-  </div>
+ 
      <div class="review-blog">
             <h2>All Reviews</h2>
 
     <div class="review-item" v-for="(review, index,) in reviews" :key="index">
         <div class="review-header">
             <h3>{{ review.name }}</h3> <!-- Title of the review -->
-           <p><strong>By:</strong> {{ review.user.id }} {{ review.user.first_name }} {{ review.user.last_name }} | <strong>Date:</strong> {{ formatDate(review.date) }}</p>
+           <p><strong>By:</strong> {{ review.user.first_name }} {{ review.user.last_name }} | <strong>Date:</strong> {{ formatDate(review.date) }}</p>
 
         </div>
         
@@ -65,9 +51,10 @@
 
 <script lang="ts">
   import { defineComponent } from "vue";
-  import { User, Review} from "../types/index";
+  import { User, Review, Restaurant} from "../types/index";
   import { useUserStore } from "../stores/user";
   import { useUsersStore } from "../stores/users";
+  import { useRestaurantsStore } from "../stores/restaurants";
   import { useReviewsStore } from "../stores/reviews";
   import VueCookies from 'vue-cookies';
 
@@ -78,7 +65,7 @@
       data() {
           return {
           newReview: {
-              name: "",
+              restaurant: "",
               description: "",
               
           },
@@ -146,9 +133,20 @@
                   }
               }
           }
+                // Fetching all restaurants from the backend
+            let response = await fetch(`http://localhost:8000/restaurants/`);
+            let restaurantData = await response.json();
+            
+
+            // Update the state with the fetched restaurant data
+            let madeRestaurants = restaurantData.restaurants as Restaurant[];
+            const restaurantsStore = useRestaurantsStore();
+            restaurantsStore.saveRestaurants(madeRestaurants); 
+            console.log(response)
+
             // Fetching all reviews from the backend
-            const response = await fetch('http://localhost:8000/reviews/');
-            const data = await response.json();
+            const resp = await fetch('http://localhost:8000/reviews/');
+            const data = await resp.json();
             this.reviews = data.reviews;  // Make sure the backend sends an array of reviews
       },
       methods: {
@@ -164,34 +162,41 @@
             const newReview = this.newReview;
             const payload = {
                 name: this.newReview.name,
+                restaurant_id: this.newReview.restaurant.id,
+                rating: this.newReview.rating,
                 description: this.newReview.description,  
+                date: this.newReview.date,
                 user_id: userId,
             };
             
             console.log(payload); 
             console.log(userId);  
             
+            try {
+                const reviewResponse = await fetch('http://localhost:8000/reviews/', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${VueCookies.get('access_token')}`,
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': VueCookies.get('csrftoken'),
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(payload),
+                });
 
-            const reviewResponse = await fetch('http://localhost:8000/reviews/', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${VueCookies.get('access_token')}`,
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': VueCookies.get('csrftoken'),
-                },
-                credentials: 'include',
-                body: JSON.stringify(payload),
-            });
+                const responseText = await reviewResponse.text();  // Log raw response for debugging
+                console.log(responseText);
 
-            const responseText = await reviewResponse.text();  // Log raw response for debugging
-            console.log(responseText);
-
-            // Add the newly created review to the Pinia store
-            // const data = await reviewResponse.json();
-            // let createdReview = data.review;
-            // reviewsStore.addReview(createdReview);
-            window.location.reload();
-            alert('Review added successfully!');
+                // Add the newly created review to the Pinia store
+                // const data = await reviewResponse.json();
+                // let createdReview = data.review;
+                // reviewsStore.addReview(createdReview);
+                window.location.reload();
+                alert('Review added successfully!');
+            } catch (error) {
+                    console.error('Error creating reservation:', error);
+                    alert('Failed to create reservation');
+            }
         },
         async deleteReview(reviewId: number) {
             // Check if the logged-in user is the one who wrote the review
@@ -235,13 +240,18 @@
               const reviewsStore = useReviewsStore;
               return this.reviewsStore.reviews; // Bind to the fetched cuisine data from Pinia store
           },
+          restaurants(): Restaurant[]{
+              const restaurantsStore = useRestaurantsStore;
+              return this.restaurantsStore.restaurants; // Bind to the fetched cuisine data from Pinia store
+          },
     
       },
       setup() {
           const userStore = useUserStore();
           const reviewsStore = useReviewsStore();
+          const restaurantsStore = useRestaurantsStore();
           const usersStore = useUsersStore();
-          return { userStore , reviewsStore , usersStore};
+          return { userStore , reviewsStore , usersStore, restaurantsStore};
       },
   });
 </script>
