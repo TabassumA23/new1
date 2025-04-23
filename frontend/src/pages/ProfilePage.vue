@@ -836,6 +836,25 @@
 
 
 <style scoped>
+  textarea,
+  input {
+    border: 2px solid #ff8c00; /* Or whatever accent color matches your theme */
+    outline: none;
+    background: rgba(255, 255, 255, 0.07); /* subtle contrast but not white */
+    color: #fff;
+    font-size: 1rem;
+    padding: 0.75rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    width: 100%;
+  }
+
+  textarea:focus,
+  input:focus {
+    border-color: #ff00c1; /* highlight border on focus */
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 0, 193, 0.2); /* soft glow */
+  }
   /* 1) Base & Variables */
   :root {
     --bg-start: #0f0c29;

@@ -367,11 +367,37 @@
 
 
 <style scoped>
-  /* 1) Base & Variables */
+  textarea,
+  input {
+    border: 2px solid #ff8c00; /* Or whatever accent color matches your theme */
+    outline: none;
+    background: rgba(255, 255, 255, 0.07); /* subtle contrast but not white */
+    color: #fff;
+    font-size: 1rem;
+    padding: 0.75rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    width: 100%;
+  }
+
+  textarea:focus,
+  input:focus {
+    border-color: #ff00c1; /* highlight border on focus */
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 0, 193, 0.2); /* soft glow */
+  }
+  
+
+  .body {
+  background: linear-gradient(135deg,   #302b63;, #302b63);
+  padding: 2rem;
+  min-height: 100vh;
+}
+
   :root {
     --bg-start: #0f0c29;
     --bg-end:   #302b63;
-    --card-bg:  rgba(255, 255, 255, 0.05);
+    --card-bg:  rgba(255,255,255,0.05);
     --accent:   #ff00c1;
     --text:     #eee;
     --muted:    #aaa;
@@ -572,62 +598,62 @@
   background: linear-gradient(135deg, #0f0c29, #302b63);
   min-height: 100vh;
   padding: 2rem;
-}
+  }
 
-.wishlist-card {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  margin-bottom: 2rem;
-}
+  .wishlist-card {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    margin-bottom: 2rem;
+  }
 
-input {
-  width: 100%;
-  padding: 1rem;
-  border-radius: 10px;
-  border: none;
-  margin-bottom: 1rem;
-  font-size: 1rem;
-}
+  input {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 10px;
+    border: none;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+  }
 
-button {
-  background: linear-gradient(90deg, #ff0080, #ff8c00);
-  border: none;
-  padding: 0.75rem 1.5rem;
-  color: #fff;
-  font-weight: 600;
-  border-radius: 10px;
-  cursor: pointer;
-}
+  button {
+    background: linear-gradient(90deg, #ff0080, #ff8c00);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    color: #fff;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+  }
 
-button:hover {
-  transform: scale(1.05);
-}
+  button:hover {
+    transform: scale(1.05);
+  }
 
-.wishlist-list {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-}
+  .wishlist-list {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
 
-ul {
-  list-style: none;
-  padding: 0;
-}
+  ul {
+    list-style: none;
+    padding: 0;
+  }
 
-li {
-  background: rgba(255,255,255,0.1);
-  margin: 0.5rem 0;
-  padding: 0.75rem;
-  border-radius: 10px;
-}
+  li {
+    background: rgba(255,255,255,0.1);
+    margin: 0.5rem 0;
+    padding: 0.75rem;
+    border-radius: 10px;
+  }
 
-span {
-  font-size: 0.85rem;
-  color: #aaa;
-  margin-left: 1rem;
-}
+  span {
+    font-size: 0.85rem;
+    color: #aaa;
+    margin-left: 1rem;
+  }
 </style>
 

@@ -62,70 +62,66 @@
 </script>
 
 <style scoped>
-    :root {
-    --bg-color: #F0F8FF; /* match login page */
-    --card-bg: rgba(255, 255, 255, 0.05);
-    --accent: #ff00c1;
-    --text: #fff;
-    --muted: #ddd;
-    --radius: 12px;
-    }
+:root {
+  --bg-color:rgb(38, 125, 201); /* match login page */
+  --card-bg: rgba(255, 255, 255, 0.05);
+  --accent: #ff00c1;
+  --text: #fff;
+  --muted: #ddd;
+  --radius: 12px;
+}
 
-    /* Full-page wrapper */
-    main {
-    background-color: var(--bg-color);
-    min-height: 100vh;
-    padding: 2rem;
-    font-family: 'Segoe UI', sans-serif;
-    color: var(--text);
-    display: flex;
-    flex-direction: column;
-    }
+main {
+  background-color: var(--bg-color);
+  min-height: 100vh;
+  padding: 2rem;
+  font-family: 'Segoe UI', sans-serif;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+}
 
-    /* Navbar card */
-    .navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--card-bg);
-    padding: 1rem 2rem;
-    border-radius: var(--radius);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    margin-bottom: 2rem;
-    }
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--card-bg);
+  padding: 1rem 2rem;
+  border-radius: var(--radius);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  margin-bottom: 2rem;
+}
 
-    .navbar h2 {
-    margin: 0;
-    font-size: 1.8rem;
-    color: var(--text);
-    }
+.navbar h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: var(--text);
+}
 
-    .nav-parts {
-    display: flex;
-    gap: 1rem;
-    }
+.nav-parts {
+  display: flex;
+  gap: 1rem;
+}
 
-    .nav-parts .link,
-    .nav-parts a {
-    background: linear-gradient(90deg, #ff0080, #ff8c00);
-    color: var(--text);
-    padding: 0.6rem 1rem;
-    border-radius: var(--radius);
-    text-decoration: none;
-    transition: transform .15s ease;
-    }
+.nav-parts .link,
+.nav-parts a {
+  background: linear-gradient(90deg, #ff0080, #ff8c00);
+  color: var(--text);
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius);
+  text-decoration: none;
+  transition: transform 0.15s ease;
+}
 
-    .nav-parts .link:hover,
-    .nav-parts a:hover {
-    transform: scale(1.05);
-    }
+.nav-parts .link:hover,
+.nav-parts a:hover {
+  transform: scale(1.05);
+}
 
-    /* RouterView container to fill remaining */
-    .flex-shrink-0 {
-    flex: 1;
-    }
+.flex-shrink-0 {
+  flex: 1;
+}
 </style>
-
 
 
 
