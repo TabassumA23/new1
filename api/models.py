@@ -248,6 +248,9 @@ class Review(models.Model):
     name = models.CharField(max_length=255, blank=True) 
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
     rating = models.IntegerField() 
+    food_rating = models.IntegerField() 
+    service_rating = models.IntegerField() 
+    ambience_rating = models.IntegerField() 
     description = models.TextField(max_length=500)
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # Foreign key to User model
     date = models.DateTimeField(default=timezone.now)  
@@ -317,3 +320,43 @@ class Reservation(models.Model):
             }
         }
 
+class Wishlist(models.Model):
+    name = models.CharField(max_length=100)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_wishlists')
+    
+    def __str__(self):
+        return self.name
+    def as_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "owner": self.owner.id,
+            "username": self.owner.username,
+            "user": {
+                    "id": self.owner.id,
+                    "first_name": self.owner.first_name,
+                    "last_name": self.owner.last_name,
+                },
+        }
+
+
+class WishlistItem(models.Model):
+    wishlist = models.ForeignKey(Wishlist, on_delete=models.CASCADE, related_name="items")
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+
+    def as_dict(self):
+        return {
+            "id": self.id,
+            "wishlist_id": self.wishlist.id,
+            "restaurant": self.restaurant.name,
+        }
+
+class WishlistShare(models.Model):
+    wishlist = models.ForeignKey(Wishlist, on_delete=models.CASCADE, related_name='shared_with')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    can_edit = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('wishlist', 'user')
+    def __str__(self):
+        return f"{self.user.username} access to {self.wishlist.name}"

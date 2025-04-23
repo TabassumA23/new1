@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 
-from .models import User, Restaurant, Cuisine, Review, Reservation, Allergy
+from .models import User, Restaurant, Cuisine, Review, Reservation, Allergy, Wishlist
 
 '''Register the friendship through model to the admin panel'''
 
@@ -54,4 +54,8 @@ class ReservationAdmin(admin.ModelAdmin):
     list_filter = ('status',)
     search_fields = ('restaurant__name', 'status')  
 
+@admin.register(Wishlist)
+class WishlistAdmin(admin.ModelAdmin):
+    '''Register the cuisine model to the admin panel'''
+    list_display = ( 'name', 'owner')
 

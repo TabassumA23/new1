@@ -25,6 +25,14 @@ export interface Review {
     description: string;
 }
 
+export interface Wishlist {
+    id: number;
+    api: string;
+    user: number;
+    name: string;
+    description: string;
+}
+
 export interface Cuisine {
     id: number;
     api: string;

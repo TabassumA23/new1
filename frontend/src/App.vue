@@ -34,6 +34,14 @@
                         Reservations
                     </router-link>
 
+                    <!-- wishlists page-->
+                    <router-link
+                        class="link"
+                        :to="{name: 'Wishlists'}"
+                    >
+                        Wishlists
+                    </router-link>
+
                     <!-- Logout -->
                     <a href= 'http://localhost:8000/logout/'>Log Out</a>
                 </div>

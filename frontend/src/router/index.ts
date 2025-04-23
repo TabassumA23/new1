@@ -10,7 +10,8 @@ import FindFriends from "../pages/FindFriends.vue";
 import Reviews from "../pages/Reviews.vue";
 import Reservations from "../pages/Reservations.vue";
 import Restaurants from "../pages/Restaurants.vue";
-import Confirms from "../pages/Confirms.vue"
+import Confirms from "../pages/Confirms.vue";
+import Wishlists from "../pages/Wishlists.vue";
 
 let base = (import.meta.env.MODE == 'development') ? import.meta.env.BASE_URL : ''
 
@@ -46,6 +47,11 @@ const router = createRouter({
     path: "/reservations",
     name: "Reservations",
     component: Reservations,
+  },
+  {
+    path: "/wishlists",
+    name: "Wishlists",
+    component: Wishlists,
   },
 ]
 })

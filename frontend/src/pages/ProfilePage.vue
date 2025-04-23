@@ -136,142 +136,20 @@
         </div>
         <p v-else class="empty-state">No recommendations yet.</p>
       </div>
-    </div>
-  </div>
-
-
-
-
-
-
-    <!-- <div class="restaurant">
-        <label for="restaurants">Choose a restaurant:</label>
-        <select id="restaurants" v-model="chosenRestaurant">
-            <option v-for="restaurant in restaurants">
-                {{ restaurant.name }}
-            </option>
-        </select>
-        <button @click="addChosen">Save Choice Here</button>
-        <div class="restaurants">
-                <h4>restaurants</h4>
-                  <ul v-for="(chosen, index) in chosens" :key="index">
-                  <li class="friends" v-if="chosen.user==user.id">
-                      {{ chosen.name }} <button @click="deleteChosen(chosen.id)"> Delete </button>
-                  </li>
-              </ul>
-              
-          </div>
-    </div>
-    <div id="profile-box">
-            <p>
-            Username: {{ user.username }}
-            
-            
-            <button> <a href="http://localhost:8000/updateUser/"> Change Username </a> </button>
-            
-            </p>
-        
-          <p>
-              <span v-if="!editFirstName">First Name: {{ user.first_name }}</span>
-                  <span v-else>
-                      First Name:
-                      <input v-model="editedUser.first_name" type="text" />
-                  </span>
-                  <button v-if="!editFirstName" @click="toggleEditField('FirstName')">Edit</button>
-                  <button v-else @click="saveField('first_name')">Save</button>
-          </p>
-          
-          <p>
-              <span v-if="!editLastName">Last Name: {{ user.last_name }}</span>
-                  <span v-else>
-                      Last Name:
-                      <input v-model="editedUser.last_name" type="text" />
-                  </span>
-                  <button v-if="!editLastName" @click="toggleEditField('LastName')">Edit</button>
-                  <button v-else @click="saveField('last_name')">Save</button>
-          </p>
-          <p>
-              <span v-if="!editEmail">Email: {{ user.email }}</span>
-              <span v-else>
-                  Email:
-                  <input v-model="editedUser.email" type="email" />
-              </span>
-              <button v-if="!editEmail" @click="toggleEditField('Email')">Edit</button>
-              <button v-else @click="saveField('email')">Save</button>
-          </p>
-          <p>
-          <span v-if="!editDateOfBirth">Date of Birth: {{ user.date_of_birth }}</span>
-              <span v-else>
-                  {{ user.date_of_birth }}
-                  <input v-model="editedUser.date_of_birth" type="date" />
-              </span>
-              <button v-if="!editDateOfBirth" @click="toggleEditField('DateOfBirth')">Edit</button>
-              <button v-else @click="saveField('date_of_birth')">Save</button>
-          </p>
-          <p>
-                <span v-if="!editPassword">Password: ********</span>
-            
-                <button> <a href="http://localhost:8000/updatePass/"> Change Password </a> </button>
-                
-          </p>
-          <p>
-              <span >User type: {{ user.user_type }}</span>
-          </p>
-         
-    </div>
-    <div class="cuisine">
-        <label for="cuisines">Choose a cuisine:</label>
-        <select id="cuisines" v-model="this.chosenChosenCuisine">
-            <option v-for="cuisine in cuisines">
-                {{ cuisine.name }}
-            </option>
-        </select>
-        <button @click="addChosenCuisine">Save Choice Here</button>
-        <div class="cuisines">
-                <h4>cuisines</h4>
-                  <ul v-for="(chosenCuisine, index) in chosenCuisines" :key="index">
-                  <li class="friends" v-if="chosenCuisine.user==user.id">
-                      {{ chosenCuisine.name }} <button @click="deleteChosenCuisine(chosenCuisine.id)"> Delete </button>
-                  </li>
-              </ul>
-              
-          </div>
-    </div>
-
-    <div class="allergy">
-        <label for="allergys">Choose a allergy:</label>
-        <select id="allergys" v-model="this.chosenChosenAllergy">
-            <option v-for="allergy in allergys">
-                {{ allergy.name }}
-            </option>
-        </select>
-        <button @click="addChosenAllergy">Save Choice Here</button>
-        <div class="allergys">
-                <h4>Allergies</h4>
-                  <ul v-for="(chosenAllergy, index) in chosenAllergys" :key="index">
-                  <li class="friends" v-if="chosenAllergy.user==user.id">
-                      {{ chosenAllergy.name }} <button @click="deleteChosenAllergy(chosenAllergy.id)"> Delete </button>
-                  </li>
-              </ul>
-              
-          </div>
-    </div> -->
-        
-  <!--       
       <div class="friend-accepted">
-            <div>
-                <h2>Accepted Friends</h2>
-            </div>
+          <div>
+              <h2>Accepted Friends</h2>
+          </div>
 
-            <ul v-for="(friendship, index) in friendships" :key="index">
-                <li class="friends" v-if="friendship.user==user.id && friendship.accepted == true">
-                    {{ friendship.username }} <button @click="deleteFriendship(friendship.id)"> Delete </button>
-                </li>
-            </ul>
-          
-      </div>
+          <ul v-for="(friendship, index) in friendships" :key="index">
+              <li class="friends" v-if="friendship.user==user.id && friendship.accepted == true">
+                  {{ friendship.username }} <button @click="deleteFriendship(friendship.id)"> Delete </button>
+              </li>
+          </ul>
+        
+     </div>
 
-      <div  class="friend-pending">
+     <div  class="friend-pending">
           <div>
               <h2>Pending Friends</h2>
           </div>
@@ -284,30 +162,10 @@
               </li>
           </ul>
         
-      </div> -->
+     </div>
 
-    <!-- <div>
-    <h2>Recommended Restaurants</h2>
-
-    <div v-if="recommendedRestaurants.length > 0">
-      <div v-for="(restaurant, index) in recommendedRestaurants" :key="index">
-        <h3>{{ restaurant.name }}</h3>
-        <p>Cuisine: {{ restaurant.cuisine }}</p>
-        <p>Allergens: {{ restaurant.allergys }}</p>
-        <p>Rating: {{ restaurant.rating }}</p>
-        <p>Location: {{ restaurant.location }}</p>
-        <p>Seats Available: {{ restaurant.seats_available }}</p>
-      </div>
-    </div>
-    <div v-else>
-      <p>No recommendations available based on your preferences.</p>
     </div>
   </div>
-
-    
-  </div>
-   -->
-  
 </template>
 
 <script lang="ts">

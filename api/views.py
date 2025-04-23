@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 
-from .models import Chosen, Restaurant, User, Friendship, ChosenCuisine, Cuisine, Review, Reservation, Allergy,ChosenAllergy
+from .models import Chosen, Restaurant, User, Friendship, ChosenCuisine, Cuisine, Review, Reservation, Allergy,ChosenAllergy, Wishlist,WishlistItem,WishlistShare
 from .forms import LoginForm, SignUpForm, UpdatePassForm, UpdateUserForm
 
 # Authenticate login before Vue SPA redirect
@@ -773,3 +773,83 @@ def recommend_restaurants(request):
         
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
+
+def wishlist_share(request, wishlist_id):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        wishlist = Wishlist.objects.get(id=wishlist_id)
+        friend = User.objects.get(id=data["friend_id"])
+        can_edit = data.get("can_edit", False)
+
+        # Create or update share
+        share, created = WishlistShare.objects.update_or_create(
+            wishlist=wishlist,
+            user=friend,
+            defaults={"can_edit": can_edit},
+        )
+        return JsonResponse({
+            "shared_with": friend.username,
+            "wishlist": wishlist.name,
+            "can_edit": can_edit
+        })
+def wishlist_list_create(request):
+    if request.method == "GET":
+        wishlists = Wishlist.objects.all()
+        return JsonResponse({"wishlists": [w.as_dict() for w in wishlists]})
+    
+    if request.method == "POST":
+        data = json.loads(request.body)
+        user = User.objects.get(id=data["user_id"])
+        wishlist = Wishlist.objects.create(name=data["name"], user=user)
+        return JsonResponse({"wishlist": wishlist.as_dict()})
+
+# APIs for restaurant model below
+def wishlists_api(request: HttpRequest) -> JsonResponse:
+    """API endpoint for the wishlist"""
+
+    if request.method == 'POST':
+        try:
+            POST = json.loads(request.body)
+            
+            owner_id = POST['owner']
+            wishlist = Wishlist.objects.create(
+                name=POST['name'],
+                owner=User.objects.get(id=owner_id)
+            )
+            return JsonResponse(wishlist.as_dict())
+        except KeyError as e:
+            return JsonResponse({'error': f'Missing required field: {str(e)}'}, status=400)
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+    return JsonResponse({
+        'wishlists': [
+            wishlist.as_dict()
+            for wishlist in Wishlist.objects.all()
+        ]
+    })
+
+def wishlist_api(request: HttpRequest, wishlist_id: int) -> JsonResponse:
+    """API endpoint for a single wishlist"""
+    try:
+        wishlist = Wishlist.objects.get(id=wishlist_id)
+    except Wishlist.DoesNotExist:
+        return JsonResponse({"error": "wishlist not found."}, status=404)
+
+    # PUT method to update restaurant
+    if request.method == 'PUT':
+        try:
+            PUT = json.loads(request.body)
+            wishlist.name = PUT.get("name", wishlist.name)
+            wishlist.owner = PUT.get("owner", wishlist.owner)
+            wishlist.save()
+            return JsonResponse(wishlist.as_dict())
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    # DELETE method to delete restaurant
+    if request.method == 'DELETE':
+        wishlist.delete()
+        return JsonResponse({}, status=204)  # 204 No Content
+
+    # GET restaurant data
+    return JsonResponse(wishlist.as_dict())
