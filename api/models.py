@@ -302,7 +302,10 @@ class Reservation(models.Model):
             'id': self.id,
             # Obtains URL pattern for individual restaurant
             'api': reverse('reservation api', args=[self.id]),
-            'restaurant': self.restaurant.name,
+            'restaurant':  {
+                'name': self.restaurant.name,
+                'id': self.restaurant.id,
+            },
             'special_requests': self.special_requests,
             'number_of_people': self.number_of_people,
             'status': dict(self.STATUS_CHOICES).get(self.status),

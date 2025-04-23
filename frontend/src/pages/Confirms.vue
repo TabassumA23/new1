@@ -11,9 +11,9 @@
         
     >
         <div class="restaurant-header">
-          <h3>restaurant: {{ reservation.restaurant }}</h3>
+          <h3>restaurant: {{ reservation.restaurant.name }}</h3>
           <p>
-            <!-- <strong>By:</strong> {{ reservation.user.id }}  -->
+            <strong>By:</strong> {{ reservation.user.id }}  
             <!-- | <strong>Date:</strong> {{ formatDate(restaurant.date) }} -->
           </p>
         </div>
@@ -26,17 +26,15 @@
           <p>number_of_people: {{ reservation.number_of_people }}</p>
         </div>
 
-        <div class="restaurant-content" v-for="(restaurant, index) in restaurants" :key="index">
-            <!-- Loop through reservations for each restaurant -->
-            <div v-if="restaurant.user.id === user.id">
-                <p>Status: {{ reservation.status }}
+        <div class="restaurant-content">
+            <div v-if="getRestaurantOwnerId(reservation.restaurant.id) === user.id">
+                <p>Status: {{ reservation.status }}</p>
+           
                 <select v-model="reservation.status" @change="updateStatus(reservation)">
-                    <option value="0">Pending</option>
-                    <option value="1">Confirmed</option>
+                <option value="0">Pending</option>
+                <option value="1">Confirmed</option>
                 </select>
-                </p>
             </div>
-            
         </div>
 
         <div class="restaurant-content">
@@ -218,7 +216,11 @@
           storeChosenCuisines.saveChosenCuisines(chosenCuisines);
       },
       methods: {
-          toggleEditField(field: string) {
+            getRestaurantOwnerId(restaurantId) {
+                const restaurant = this.restaurants.find(r => r.id === restaurantId);
+                return restaurant && restaurant.user ? restaurant.user.id : null;
+            },
+            toggleEditField(field: string) {
             console.log(typeof field)
               this[`edit${field}`] = !this[`edit${field}`];
               if (this[`edit${field}`]) {
