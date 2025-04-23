@@ -12,6 +12,7 @@ import Reservations from "../pages/Reservations.vue";
 import Restaurants from "../pages/Restaurants.vue";
 import Confirms from "../pages/Confirms.vue";
 import Wishlists from "../pages/Wishlists.vue";
+import WishlistItems from "../pages/WishlistItems.vue";
 
 let base = (import.meta.env.MODE == 'development') ? import.meta.env.BASE_URL : ''
 
@@ -37,6 +38,11 @@ const router = createRouter({
     path: "/restaurants",
     name: "Restaurants",
     component: Restaurants,
+  },
+  {
+    path: "/wishlistItems",
+    name: "WishlistItems",
+    component: WishlistItems,
   },
   {
     path: "/reviews",

@@ -19,7 +19,7 @@ from django.urls import include, path
 from django.http import HttpResponse
 from . import views
 
-from .views import login_user, logout_user, signup_user, reviews_api, review_api, restaurants_api, restaurant_api, users_api, user_api, friendship_api, friendships_api, chosens_api, chosen_api, update_password, update_username, chosenCuisines_api, chosenCuisine_api, cuisines_api, cuisine_api, reservation_api, reservations_api, allergy_api, allergys_api, recommend_restaurants, chosenAllergys_api, chosenAllergy_api, wishlist_api, wishlists_api
+from .views import login_user, logout_user, signup_user, reviews_api, review_api, restaurants_api, restaurant_api, users_api, user_api, friendship_api, friendships_api, chosens_api, chosen_api, update_password, update_username, chosenCuisines_api, chosenCuisine_api, cuisines_api, cuisine_api, reservation_api, reservations_api, allergy_api, allergys_api, recommend_restaurants, chosenAllergys_api, chosenAllergy_api, wishlist_api, wishlists_api,wishlist_items_api, wishlistItems_api,wishlistItem_api
 
 # Listing route URLs to views.
 urlpatterns = [
@@ -56,8 +56,14 @@ urlpatterns = [
 
     # path('wishlists/', views.wishlist_list_create, name='wishlist_list_create'),
     # path('wishlist/<int:wishlist_id>/share/', views.wishlist_share, name='wishlist_share'),
+    path('wishlistItems/', wishlistItems_api, name='wishlistItems api'),
+    path('wishlistItem/<int:wishlistItem_id>/', wishlistItem_api, name='wishlistItem api'),
+    
 
     path('wishlists/', wishlists_api, name='wishlists api'),
     path('wishlist/<int:wishlist_id>/', wishlist_api, name='wishlist api'),
+    path('wishlist/<int:wishlist_id>/items/', wishlist_items_api),
+
+    
     
 ]

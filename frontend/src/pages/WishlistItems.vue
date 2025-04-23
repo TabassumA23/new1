@@ -1,61 +1,53 @@
 <template>
     <div class="body">
-      <div id="create-review">
+        <div id="create-review">
             <h2>Welcome {{ user.first_name }}</h2>
-          <!-- Form to Add a New review. -->
+      <!-- Form to Add a New review. -->
       
-          <h3>Want to add a new wishlist to this website?</h3>
-          <h6>Double check spelling before submission!!</h6>
-          <label for="wishlist">Title for Wishlist:</label><br>
-            <textarea id="name" v-model="newWishlist.name" required class="form-control" rows="2" cols="50"></textarea><br>
-
-          <button type="submit" @click="createWishlist">Add Wishlist</button>
-      </div>
+          <h3>Want to add a new restaurant to your wishlist ?</h3>
+          <label for="wishlist">Select Wishlist:</label>
+            <select id="wishlists" v-model="newWishlistItem.wishlist">
+            <option v-for="wishlist in wishlists" :key="wishlist.id" :value="wishlist">
+                {{ wishlist.name }}
+            </option>
+            </select>
+          <label for="restaurant">Select Restaurant:</label>
+            <select id="restaurants" v-model="newWishlistItem.restaurant">
+            <option v-for="restaurant in restaurants" :key="restaurant.id" :value="restaurant">
+                {{ restaurant.name }}
+            </option>
+            </select>
+           <button type="submit" @click="createWishlistItem">Add WishlistItem</button>
      <div class="review-blog">
-            <h2>All Wishlists</h2>
-      <div class="wishlist-item" v-for="(wishlist, index,) in wishlists" :key="index">
+     <br></br>
+    <div>
+      <h2>All Wishlists</h2>
+      <div class="wishlist-item" v-for="(wishlistItem, index,) in wishlistItems" :key="index">
           <div class="wishlist-header">
-              <h3>{{ wishlist.name }}</h3>
-              <p>by {{ wishlist.user.first_name }} {{ wishlist.user.last_name }}</p>
-              <div>
-                <nav class="hero-nav">
-                  <RouterLink to="/wishlistItems" class="btn">Add content to wishlist</RouterLink>
-                  
-                </nav>
-              </div>
-              <div class="wishlist-actions">
-                <button @click="viewWishlist(wishlist.id)">View Wishlist</button>
-              </div>
-
-            
+              <h3>{{ wishlistItem.wishlist }}</h3>
+              <h3>{{ wishlistItem.restaurant }}</h3>
+              <!-- <p>by {{ wishlist.user.first_name }} {{ wishlist.user.last_name }}</p> -->
           </div>
-          <div class="wishlist-actions" v-if="wishlist.user.id === user.id">
-              <button @click="deleteWishlist(wishlist.id)">Delete Wishlist</button>
+          <div class="wishlist-actions" v-if="wishlistItem.owner.id === user.id">
+              <button @click="deleteWishlistItem(wishlistItem.id)">Delete WishlistItem</button>
           </div>
       </div>
+    </div>
+    </div>
 
-    </div>
-    <div>
-      <h3>Wishlist Contents:</h3>
-      <ul>
-        <li v-for="item in selectedWishlistItems" :key="item.id">
-          {{ item.restaurant }}
-        </li>
-      </ul>
-    </div>
   </div>
   
-  
+</div>  
 </template>
-
 
 <script lang="ts">
   import { defineComponent } from "vue";
-  import { User, Wishlist, Restaurant} from "../types/index";
+  import { User, Wishlist,WishlistItem, Restaurant} from "../types/index";
   import { useUserStore } from "../stores/user";
   import { useUsersStore } from "../stores/users";
   import { useRestaurantsStore } from "../stores/restaurants";
   import { useWishlistsStore } from "../stores/wishlists";
+  import { useWishlistItemsStore } from "../stores/wishlistItems";
   import VueCookies from 'vue-cookies';
 
   
@@ -64,13 +56,11 @@
   export default defineComponent({
       data() {
           return {
-            newWishlist: {
-                name: "",
-              
-                
+            newWishlistItem: {
+                restaurant: "",  
+                wishlist:"",
             },
-            wishlists: [],
-            selectedWishlistItems: [],
+            wishlistItems: [],
           
           };
       },
@@ -146,46 +136,47 @@
             restaurantsStore.saveRestaurants(madeRestaurants); 
             console.log(response)
 
+                // Fetching all restaurants from the backend
+            let responseW = await fetch(`http://localhost:8000/wishlists/`);
+            let wishlistData = await responseW.json();
+            
+
+            // Update the state with the fetched restaurant data
+            let madeWishlists = wishlistData.wishlists as Wishlist[];
+            const wishlistsStore = useWishlistsStore();
+            wishlistsStore.saveWishlists(madeWishlists); 
+            console.log(responseW)
+
+            
+
             // Fetching all reviews from the backend
-            const resp = await fetch('http://localhost:8000/wishlists/');
+            const resp = await fetch('http://localhost:8000/wishlistItems/');
             const data = await resp.json();
-            this.wishlists = data.wishlists;
-            this.selectedWishlistItems = data.items;  
+            this.wishlistItems = data.wishlistItems;  // Make sure the backend sends an array of reviews
       },
       methods: {
         formatDate(date) {
             const d = new Date(date);
             return d.toLocaleDateString();  // This will display only the date in the format 'MM/DD/YYYY'
         },
-        async viewWishlist(wishlistId: number) {
-          try {
-            const response = await fetch(`http://localhost:8000/wishlist/${wishlistId}/items/`);
-            const data = await response.json();
-            console.log("Wishlist contents:", data.items);
-            this.selectedWishlistItems = data.items;  // Optionally store and show in UI
-          } catch (error) {
-            console.error("Error fetching wishlist items:", error);
-            alert("Failed to load wishlist contents.");
-          }
-        },
-
         
           /* Creating a New review */
-        async createWishlist() {
-            const wishlistsStore = useWishlistsStore();
+        async createWishlistItem() {
+            const wishlistItemsStore = useWishlistItemsStore();
             const userId = this.userStore.user.id;
-            const newWishlist = this.newWishlist;
+            const newWishlistItem = this.newWishlistItem;
             const payload = {
-                name: this.newWishlist.name,
-                owner: userId,
-                
+              wishlist_id: this.newWishlistItem.wishlist.id,
+              restaurant_id: this.newWishlistItem.restaurant.id,
+              owner: this.userStore.user.id,
             };
+
             
             console.log(payload); 
             
             
             try {
-              const wishlistResponse = await fetch('http://localhost:8000/wishlists/', {
+              const wishlistItemResponse = await fetch('http://localhost:8000/wishlistItems/', {
                 method: 'POST',
                 headers: {
                   'Authorization': `Bearer ${VueCookies.get('access_token')}`,
@@ -196,32 +187,32 @@
                 body: JSON.stringify(payload),
               });
 
-              if (!wishlistResponse.ok) {
-                const errorText = await wishlistResponse.text();
-                console.error("Server error response:", errorText);  // SHOW this in console
+              if (!wishlistItemResponse.ok) {
+                const errorText = await wishlistItemResponse.text();
+                console.error("Server error response:", errorText);  
                 throw new Error(errorText);
               }
 
-              const data = await wishlistResponse.json();
-              wishlistsStore.addWishlist(data.wishlist);
+              const data = await wishlistItemResponse.json();
+              wishlistItemsStore.addWishlistItem(data.wishlistItem);
               window.location.reload();
-              alert('Wishlist added successfully!');
+              alert('WishlistItem added successfully!');
             } catch (error) {
-              console.error('Error creating Wishlist:', error);
-              alert('Failed to create Wishlist');
+              console.error('Error creating WishlistItem:', error);
+              alert('Failed to create WishlistItem');
             }
 
         },
-        async deleteWishlist(wishlistId: number) {
+        async deleteWishlistItem(wishlistItemId: number) {
             // Check if the logged-in user is the one who wrote the wishlist
-            const wishlistToDelete = this.wishlists.find(wishlist => wishlist.id === wishlistId);
-            if (!wishlistToDelete || wishlistToDelete.user.id !== this.user.id) {
-                alert("You cannot delete this wishlist. Only the author can delete it.");
+            const wishlistItemToDelete = this.wishlistItems.find(wishlistItem => wishlistItem.id === wishlistItemId);
+            if (!wishlistItemToDelete || wishlistItemToDelete.owner.id !== this.user.id) {
+                alert("You cannot delete this wishlistItem. Only the author can delete it.");
                 return; 
             }
 
             try {
-                const response = await fetch(`http://localhost:8000/wishlist/${wishlistId}/`, {
+                const response = await fetch(`http://localhost:8000/wishlistItem/${wishlistItemId}/`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${VueCookies.get('access_token')}`,
@@ -233,14 +224,14 @@
 
                 if (response.ok) {
                     // Remove the deleted review from the list
-                    this.wishlists = this.wishlists.filter(wishlist => wishlist.id !== wishlistId);
-                    alert('wishlist deleted successfully!');
+                    this.wishlistItems = this.wishlistItems.filter(wishlistItem => wishlistItem.id !== wishlistItemId);
+                    alert('wishlistItem deleted successfully!');
                 } else {
-                    alert('Failed to delete the wishlist.');
+                    alert('Failed to delete the wishlistItem.');
                 }
             } catch (error) {
-                console.error('Error deleting wishlist:', error);
-                alert('Failed to delete the wishlist.');
+                console.error('Error deleting wishlistItem:', error);
+                alert('Failed to delete the wishlistItem.');
             }
         },
 
@@ -258,14 +249,18 @@
               const restaurantsStore = useRestaurantsStore;
               return this.restaurantsStore.restaurants; // Bind to the fetched cuisine data from Pinia store
           },
-    
+          wishlistItems(): WishlistItem[]{
+              const wishlistItemsStore = useWishlistItemsStore;
+              return this.wishlistItemsStore.wishlistItems; // Bind to the fetched cuisine data from Pinia store
+          },
       },
       setup() {
           const userStore = useUserStore();
           const wishlistsStore = useWishlistsStore();
           const restaurantsStore = useRestaurantsStore();
           const usersStore = useUsersStore();
-          return { userStore , wishlistsStore , usersStore, restaurantsStore};
+          const wishlistItemsStore = useWishlistItemsStore();
+          return { userStore , wishlistsStore , usersStore, restaurantsStore, wishlistItemsStore};
       },
   });
 </script>
@@ -478,62 +473,6 @@
   background: linear-gradient(135deg, #0f0c29, #302b63);
   min-height: 100vh;
   padding: 2rem;
-}
-
-.wishlist-card {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  margin-bottom: 2rem;
-}
-
-input {
-  width: 100%;
-  padding: 1rem;
-  border-radius: 10px;
-  border: none;
-  margin-bottom: 1rem;
-  font-size: 1rem;
-}
-
-button {
-  background: linear-gradient(90deg, #ff0080, #ff8c00);
-  border: none;
-  padding: 0.75rem 1.5rem;
-  color: #fff;
-  font-weight: 600;
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-button:hover {
-  transform: scale(1.05);
-}
-
-.wishlist-list {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-}
-
-ul {
-  list-style: none;
-  padding: 0;
-}
-
-li {
-  background: rgba(255,255,255,0.1);
-  margin: 0.5rem 0;
-  padding: 0.75rem;
-  border-radius: 10px;
-}
-
-span {
-  font-size: 0.85rem;
-  color: #aaa;
-  margin-left: 1rem;
-}
+ }
 </style>
 

@@ -32,6 +32,13 @@ export interface Wishlist {
     name: string;
     description: string;
 }
+export interface WishlistItem {
+    id: number;
+    api: string;
+    user: number;
+    name: string;
+    description: string;
+}
 
 export interface Cuisine {
     id: number;

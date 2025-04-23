@@ -341,14 +341,21 @@ class Wishlist(models.Model):
 
 
 class WishlistItem(models.Model):
-    wishlist = models.ForeignKey(Wishlist, on_delete=models.CASCADE, related_name="items")
+    wishlist = models.ForeignKey(Wishlist, on_delete=models.CASCADE)
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    
 
     def as_dict(self):
         return {
             "id": self.id,
             "wishlist_id": self.wishlist.id,
             "restaurant": self.restaurant.name,
+            "owner": {
+                'first_name': self.owner.first_name,
+                'last_name': self.owner.last_name,
+                'id': self.owner.id,
+            }
         }
 
 class WishlistShare(models.Model):

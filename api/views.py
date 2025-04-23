@@ -774,34 +774,6 @@ def recommend_restaurants(request):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
 
-def wishlist_share(request, wishlist_id):
-    if request.method == "POST":
-        data = json.loads(request.body)
-        wishlist = Wishlist.objects.get(id=wishlist_id)
-        friend = User.objects.get(id=data["friend_id"])
-        can_edit = data.get("can_edit", False)
-
-        # Create or update share
-        share, created = WishlistShare.objects.update_or_create(
-            wishlist=wishlist,
-            user=friend,
-            defaults={"can_edit": can_edit},
-        )
-        return JsonResponse({
-            "shared_with": friend.username,
-            "wishlist": wishlist.name,
-            "can_edit": can_edit
-        })
-def wishlist_list_create(request):
-    if request.method == "GET":
-        wishlists = Wishlist.objects.all()
-        return JsonResponse({"wishlists": [w.as_dict() for w in wishlists]})
-    
-    if request.method == "POST":
-        data = json.loads(request.body)
-        user = User.objects.get(id=data["user_id"])
-        wishlist = Wishlist.objects.create(name=data["name"], user=user)
-        return JsonResponse({"wishlist": wishlist.as_dict()})
 
 # APIs for restaurant model below
 def wishlists_api(request: HttpRequest) -> JsonResponse:
@@ -853,3 +825,71 @@ def wishlist_api(request: HttpRequest, wishlist_id: int) -> JsonResponse:
 
     # GET restaurant data
     return JsonResponse(wishlist.as_dict())
+
+
+
+# For wishlist items
+def wishlistItems_api(request: HttpRequest) -> JsonResponse:
+    if request.method == 'POST':
+        try:
+            POST = json.loads(request.body)
+
+            wishlist_id = POST['wishlist_id']
+            restaurant_id = POST['restaurant_id']
+            owner_id = POST['owner']
+
+            wishlist_item = WishlistItem.objects.create(
+                wishlist=Wishlist.objects.get(id=wishlist_id),
+                restaurant=Restaurant.objects.get(id=restaurant_id),
+                owner=User.objects.get(id=owner_id)
+            )
+            return JsonResponse(wishlist_item.as_dict(), status=201)
+        except KeyError as e:
+            return JsonResponse({'error': f'Missing required field: {str(e)}'}, status=400)
+        except (User.DoesNotExist, Wishlist.DoesNotExist, Restaurant.DoesNotExist) as e:
+            return JsonResponse({'error': str(e)}, status=404)
+
+    # GET method
+    return JsonResponse({
+        'wishlistItems': [
+            item.as_dict()
+            for item in WishlistItem.objects.all()
+        ]
+    })
+
+
+def wishlistItem_api(request: HttpRequest, wishlistItem_id: int) -> JsonResponse:
+    try:
+        wishlistItem = WishlistItem.objects.get(id=wishlistItem_id)
+    except WishlistItem.DoesNotExist:
+        return JsonResponse({"error": "wishlist item not found."}, status=404)
+
+    if request.method == 'PUT':
+        try:
+            PUT = json.loads(request.body)
+            if 'restaurant_id' in PUT:
+                wishlistItem.restaurant = Restaurant.objects.get(id=PUT['restaurant_id'])
+            if 'wishlist_id' in PUT:
+                wishlistItem.wishlist = Wishlist.objects.get(id=PUT['wishlist_id'])
+            if 'owner' in PUT:
+                wishlistItem.owner = User.objects.get(id=PUT['owner'])
+            wishlistItem.save()
+            return JsonResponse(wishlistItem.as_dict())
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    if request.method == 'DELETE':
+        wishlistItem.delete()
+        return JsonResponse({}, status=204)
+
+    return JsonResponse(wishlistItem.as_dict())
+
+
+def wishlist_items_api(request, wishlist_id):
+    if request.method == 'GET':
+        items = WishlistItem.objects.filter(wishlist_id=wishlist_id)
+        return JsonResponse({
+            "items": [item.as_dict() for item in items]
+        })
+    
+

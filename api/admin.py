@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 
-from .models import User, Restaurant, Cuisine, Review, Reservation, Allergy, Wishlist
+from .models import User, Restaurant, Cuisine, Review, Reservation, Allergy, Wishlist, WishlistItem
 
 '''Register the friendship through model to the admin panel'''
 
@@ -58,4 +58,9 @@ class ReservationAdmin(admin.ModelAdmin):
 class WishlistAdmin(admin.ModelAdmin):
     '''Register the cuisine model to the admin panel'''
     list_display = ( 'name', 'owner')
+
+@admin.register(WishlistItem)
+class WishlistItemAdmin(admin.ModelAdmin):
+    '''Register the cuisine model to the admin panel'''
+    list_display = ( 'wishlist', 'restaurant')
 
