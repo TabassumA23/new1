@@ -1,64 +1,84 @@
 <template>
     <div class="body">
-
-    
       <div id="create-review">
-          <h2>Welcome {{ user.first_name }}</h2>
+            <h2>Welcome {{ user.first_name }}</h2>
           <!-- Form to Add a New review. -->
-            <div>
-        
-          <h3>Want to add a new wishlist to this website?</h3>
+      
+          <!-- <h3>Want to add a new wishlist to this website?</h3>
           <h6>Double check spelling before submission!!</h6>
           <label for="wishlist">Title for Wishlist:</label><br>
             <textarea id="name" v-model="newWishlist.name" required class="form-control" rows="2" cols="50"></textarea><br>
 
-          <button type="submit" @click="createWishlist">Add Wishlist</button>
+          <button type="submit" @click="createWishlist">Add Wishlist</button> -->
       </div>
-        <nav class="hero-nav">
-          <RouterLink to="/shares" class="btn">Share wishlist with a friend</RouterLink>
-        </nav>
+     <!-- <div class="review-blog">
+            <h2>All Wishlists</h2>
+      <div class="wishlist-item" v-for="(wishlist, index,) in wishlists" :key="index">
+          <div class="wishlist-header">
+              <h3>{{ wishlist.name }}</h3>
+              <p>by {{ wishlist.user.first_name }} {{ wishlist.user.last_name }}</p>
+              
+              <div class="wishlist-actions">
+                <button @click="viewWishlist(wishlist.id)">View Wishlist</button>
+              </div>
+
+            
+          </div>
+          <div class="wishlist-actions" v-if="wishlist.user.id === user.id">
+              <button @click="deleteWishlist(wishlist.id)">Delete Wishlist</button>
+          </div>
       </div>
       <div>
+        <nav class="hero-nav">
+          <RouterLink to="/wishlistItems" class="btn">Add content to wishlist</RouterLink>
+          
+        </nav>
+      </div>
+
+    </div> -->
+    <!-- <div>
+      <h3>Wishlist Contents:</h3>
+      <ul>
+        <li v-for="item in selectedWishlistItems" :key="item.id">
+          {{ item.restaurant }}
+        </li>
+      </ul>
+    </div> -->
+
+    <!-- <div>
       <nav class="hero-nav">
-        <RouterLink to="/wishlistItems" class="btn">Add content to wishlist</RouterLink> 
+        <RouterLink to="/shares" class="btn">Share wishlist with a friend</RouterLink>
       </nav>
-    </div>
-        
-     <div class="review-blog">
-      
-
-    </div>
-    
-
-    
+    </div> -->
     <div class="wishlist-item" v-for="(wishlist, index) in wishlists" :key="index">
       <div class="wishlist-header">
         <h3>{{ wishlist.name }}</h3>
         <p>by {{ wishlist.user.first_name }} {{ wishlist.user.last_name }}</p>
-        <!-- Only show contents for the selected wishlist -->
-        <div v-if="selectedWishlist && wishlist.id === selectedWishlist.id">
-          <h3>Wishlist Contents:</h3>
-          <ul>
-            <li v-for="item in selectedWishlistItems" :key="item.id">
-              {{ item.restaurant }}
-            </li>
-          </ul>
-        </div>
 
         <div class="wishlist-actions">
           <button @click="viewWishlist(wishlist.id)">View Wishlist</button>
         </div>
-        <div class="wishlist-actions" v-if="wishlist.user.id === user.id">
-          <button @click="deleteWishlist(wishlist.id)">Delete Wishlist</button>
-        </div>
       </div>
-    
-        
-      
+      <!-- Only show share section for the selected wishlist -->
+      <div v-if="selectedWishlist && wishlist.id === selectedWishlist.id">
+        <label>Share with friends:</label>
+        <select v-model="friendsToShare" multiple>
+          <option
+            v-for="friend in acceptedFriends"
+            :key="friend.id"
+            :value="friend.id"
+          >
+            {{ friend.username }}
+          </option>
+        </select>
+
+        <button @click="shareWishlist(selectedWishlist.id)">Share</button>
+      </div>
     </div>
 
 
-      
+    
+
       
 
       <h2>Wishlists Shared With Me</h2>
@@ -566,68 +586,68 @@
   .profile-info .field button:hover {
     transform: scale(1.05);
   }
- .wishlist-page {
-  font-family: 'Segoe UI', sans-serif;
-  color: #eee;
-  background: linear-gradient(135deg, #0f0c29, #302b63);
-  min-height: 100vh;
-  padding: 2rem;
-}
+    .wishlist-page {
+    font-family: 'Segoe UI', sans-serif;
+    color: #eee;
+    background: linear-gradient(135deg, #0f0c29, #302b63);
+    min-height: 100vh;
+    padding: 2rem;
+    }
 
-.wishlist-card {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  margin-bottom: 2rem;
-}
+    .wishlist-card {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    margin-bottom: 2rem;
+    }
 
-input {
-  width: 100%;
-  padding: 1rem;
-  border-radius: 10px;
-  border: none;
-  margin-bottom: 1rem;
-  font-size: 1rem;
-}
+    input {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 10px;
+    border: none;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    }
 
-button {
-  background: linear-gradient(90deg, #ff0080, #ff8c00);
-  border: none;
-  padding: 0.75rem 1.5rem;
-  color: #fff;
-  font-weight: 600;
-  border-radius: 10px;
-  cursor: pointer;
-}
+    button {
+    background: linear-gradient(90deg, #ff0080, #ff8c00);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    color: #fff;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    }
 
-button:hover {
-  transform: scale(1.05);
-}
+    button:hover {
+    transform: scale(1.05);
+    }
 
-.wishlist-list {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-}
+    .wishlist-list {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
 
-ul {
-  list-style: none;
-  padding: 0;
-}
+    ul {
+    list-style: none;
+    padding: 0;
+    }
 
-li {
-  background: rgba(255,255,255,0.1);
-  margin: 0.5rem 0;
-  padding: 0.75rem;
-  border-radius: 10px;
-}
+    li {
+    background: rgba(255,255,255,0.1);
+    margin: 0.5rem 0;
+    padding: 0.75rem;
+    border-radius: 10px;
+    }
 
-span {
-  font-size: 0.85rem;
-  color: #aaa;
-  margin-left: 1rem;
-}
+    span {
+    font-size: 0.85rem;
+    color: #aaa;
+    margin-left: 1rem;
+    }
 </style>
 

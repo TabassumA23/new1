@@ -893,3 +893,52 @@ def wishlist_items_api(request, wishlist_id):
         })
     
 
+def share_wishlist(request, wishlist_id):
+    try:
+        wishlist = Wishlist.objects.get(id=wishlist_id)
+    except Wishlist.DoesNotExist:
+        return JsonResponse({"error": "Wishlist not found"}, status=404)
+
+    if request.method == 'PUT':
+        data = json.loads(request.body)
+        friend_ids = data.get("shared_with", [])
+        users = User.objects.filter(id__in=friend_ids)
+        wishlist.shared_with.set(users)
+        wishlist.save()
+        return JsonResponse(wishlist.as_dict())
+
+    return JsonResponse({"error": "Method not allowed"}, status=405)
+
+
+
+
+def share_wishlist(request, wishlist_id):
+    try:
+        data = json.loads(request.body)
+        shared_user_ids = data.get("shared_with", [])
+        wishlist = Wishlist.objects.get(id=wishlist_id)
+        
+        for user_id in shared_user_ids:
+            user = User.objects.get(id=user_id)
+            wishlist.shared_with.add(user)
+
+        return JsonResponse({"message": "Wishlist shared successfully."}, status=200)
+    except Wishlist.DoesNotExist:
+        return JsonResponse({"error": "Wishlist not found."}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
+def shared_wishlists(request, user_id):
+    shares = WishlistShare.objects.filter(user__id=user_id)
+    shared_wishlist_data = [s.wishlist.as_dict() for s in shares]
+    return JsonResponse({"shared_wishlists": shared_wishlist_data})
+
+def get_shared_wishlists(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        wishlists = user.shared_list.all()
+        return JsonResponse({
+            "shared_wishlists": [w.as_dict() for w in wishlists]
+        })
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found."}, status=404)
