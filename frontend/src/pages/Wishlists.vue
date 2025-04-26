@@ -379,9 +379,8 @@
       setup() {
           const userStore = useUserStore();
           const wishlistsStore = useWishlistsStore();
-          const restaurantsStore = useRestaurantsStore();
           const usersStore = useUsersStore();
-          return { userStore , wishlistsStore , usersStore, restaurantsStore};
+          return { userStore , wishlistsStore , usersStore};
       },
   });
 </script>
