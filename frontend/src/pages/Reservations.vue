@@ -148,7 +148,7 @@
           async saveField(field: string) {
              
               try {
-                  
+                  const { cookies } = useCookies();
                   const payload = {
                       [field.toLowerCase()]: this.editedUser[field.toLowerCase()],
                   };
@@ -156,9 +156,9 @@
                   const response = await fetch(`http://localhost:8000/user/${this.user.id}/`, {
                       method: "PUT",
                       headers: {
-                          'Authorization': `Bearer ${VueCookies.get('access_token')}`,
+                          'Authorization': `Bearer ${cookies.get('access_token')}`,
                           'Content-Type': 'application/json',
-                          'X-CSRFToken': VueCookies.get('csrftoken'),
+                          'X-CSRFToken': cookies.get('csrftoken'),
                       },
                       credentials: 'include',
                       body: JSON.stringify(payload),
@@ -213,12 +213,13 @@
             console.log(userId);
 
             try {
+                const { cookies } = useCookies();
                 const reservationResponse = await fetch('http://localhost:8000/reservations/', {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${VueCookies.get('access_token')}`,
+                        'Authorization': `Bearer ${cookies.get('access_token')}`,
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': VueCookies.get('csrftoken'),
+                        'X-CSRFToken': cookies.get('csrftoken'),
                     },
                     credentials: 'include',
                     body: JSON.stringify(payload),
@@ -252,12 +253,13 @@
             }
 
             try {
+                const { cookies } = useCookies();
                 const response = await fetch(`http://localhost:8000/reservation/${reservationId}/`, {
                     method: 'DELETE',
                     headers: {
-                        'Authorization': `Bearer ${VueCookies.get('access_token')}`,
+                        'Authorization': `Bearer ${cookies.get('access_token')}`,
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': VueCookies.get('csrftoken'),
+                        'X-CSRFToken': cookies.get('csrftoken'),
                     },
                     credentials: 'include',
                 });
@@ -278,12 +280,13 @@
           async deleteChosen(chosenId: number) {
        
             try {
+                const { cookies } = useCookies();
               const response = await fetch(`http://localhost:8000/chosen/${chosenId}/`, {
                 method: "DELETE",
                 headers: {
-                  "Authorization": `Bearer ${VueCookies.get("access_token")}`,
+                  "Authorization": `Bearer ${cookies.get("access_token")}`,
                   "Content-Type": "application/json",
-                  "X-CSRFToken": VueCookies.get("csrftoken"),
+                  "X-CSRFToken": cookies.get("csrftoken"),
                 },
                 credentials: "include",
               });
@@ -330,7 +333,7 @@
             }
 
             const foundRestaurantId = foundRestaurant.id;
-
+            const { cookies } = useCookies();
             // Prepare the payload for creating a new chosen restaurant
             const payload = {
                 user_id: this.user.id,
@@ -341,9 +344,9 @@
             const chosenResponse = await fetch("http://localhost:8000/chosens/", {
                 method: "POST",
                 headers: {
-                Authorization: `Bearer ${VueCookies.get("access_token")}`,
+                Authorization: `Bearer ${cookies.get("access_token")}`,
                 "Content-Type": "application/json",
-                "X-CSRFToken": VueCookies.get("csrftoken"),
+                "X-CSRFToken": cookies.get("csrftoken"),
                 },
                 credentials: "include",
                 body: JSON.stringify(payload),

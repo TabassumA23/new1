@@ -137,7 +137,7 @@
   import { useChosenCuisinesStore } from "../stores/chosenCuisines";
   import { useFriendshipsStore } from "../stores/friendships";
   import { useRecommendationsStore } from "../stores/recommendations";
-  import VueCookies from 'vue-cookies';
+  import { useCookies } from 'vue3-cookies';
 
   
 
@@ -344,12 +344,13 @@
               .filter(a => a.user === this.user.id)
               .map(a => a.allergy)
             try {
+              const { cookies } = useCookies();
               const response = await fetch("http://localhost:8000/recommend_restaurants/", {
                 method: "POST",
                 headers: {
-                  'Authorization': `Bearer ${VueCookies.get('access_token')}`,
+                  'Authorization': `Bearer ${cookies.get('access_token')}`,
                   'Content-Type': 'application/json',
-                  'X-CSRFToken': VueCookies.get('csrftoken'),
+                  'X-CSRFToken': cookies.get('csrftoken'),
                 },
                 credentials: 'include',
                 body: JSON.stringify({
@@ -376,7 +377,7 @@
           async saveField(field: string) {
              
               try {
-                  
+                  const { cookies } = useCookies();
                   const payload = {
                       [field.toLowerCase()]: this.editedUser[field.toLowerCase()],
                   };
@@ -384,9 +385,9 @@
                   const response = await fetch(`http://localhost:8000/user/${this.user.id}/`, {
                       method: "PUT",
                       headers: {
-                          'Authorization': `Bearer ${VueCookies.get('access_token')}`,
+                          'Authorization': `Bearer ${cookies.get('access_token')}`,
                           'Content-Type': 'application/json',
-                          'X-CSRFToken': VueCookies.get('csrftoken'),
+                          'X-CSRFToken': cookies.get('csrftoken'),
                       },
                       credentials: 'include',
                       body: JSON.stringify(payload),
@@ -416,12 +417,13 @@
           async deleteChosen(chosenId: number) {
        
             try {
+              const { cookies } = useCookies();
               const response = await fetch(`http://localhost:8000/chosen/${chosenId}/`, {
                 method: "DELETE",
                 headers: {
-                  "Authorization": `Bearer ${VueCookies.get("access_token")}`,
+                  "Authorization": `Bearer ${cookies.get("access_token")}`,
                   "Content-Type": "application/json",
-                  "X-CSRFToken": VueCookies.get("csrftoken"),
+                  "X-CSRFToken": cookies.get("csrftoken"),
                 },
                 credentials: "include",
               });
@@ -468,7 +470,7 @@
             }
 
             const foundRestaurantId = foundRestaurant.id;
-
+            const { cookies } = useCookies();
             // Prepare the payload for creating a new chosen restaurant
             const payload = {
                 user_id: this.user.id,
@@ -479,9 +481,9 @@
             const chosenResponse = await fetch("http://localhost:8000/chosens/", {
                 method: "POST",
                 headers: {
-                Authorization: `Bearer ${VueCookies.get("access_token")}`,
+                Authorization: `Bearer ${cookies.get("access_token")}`,
                 "Content-Type": "application/json",
-                "X-CSRFToken": VueCookies.get("csrftoken"),
+                "X-CSRFToken": cookies.get("csrftoken"),
                 },
                 credentials: "include",
                 body: JSON.stringify(payload),
@@ -503,12 +505,13 @@
            //This means the friendship is symmetrical 
            async acceptFriendship(friendshipId: number) {
               try {
+                const { cookies } = useCookies();
                   const acceptResponse = await fetch(`http://localhost:8000/friendship/${friendshipId}/`, {
                       method: "PUT",
                       headers: {
-                          "Authorization": `Bearer ${VueCookies.get("access_token")}`,
+                          "Authorization": `Bearer ${cookies.get("access_token")}`,
                           "Content-Type": "application/json",
-                          "X-CSRFToken": VueCookies.get("csrftoken"),
+                          "X-CSRFToken": cookies.get("csrftoken"),
                       },
                       credentials: "include",
                   });
@@ -534,12 +537,13 @@
           async deleteFriendship(friendshipId: number) {
             console.log(friendshipId)
             try {
+              const { cookies } = useCookies();
               const response = await fetch(`http://localhost:8000/friendship/${friendshipId}/`, {
                 method: "DELETE",
                 headers: {
-                  "Authorization": `Bearer ${VueCookies.get("access_token")}`,
+                  "Authorization": `Bearer ${cookies.get("access_token")}`,
                   "Content-Type": "application/json",
-                  "X-CSRFToken": VueCookies.get("csrftoken"),
+                  "X-CSRFToken": cookies.get("csrftoken"),
                 },
                 credentials: "include",
               });
@@ -563,12 +567,13 @@
           async deleteChosenCuisine(chosenCuisineId: number) {
        
             try {
+              const { cookies } = useCookies();
               const response = await fetch(`http://localhost:8000/chosenCuisine/${chosenCuisineId}/`, {
                 method: "DELETE",
                 headers: {
-                  "Authorization": `Bearer ${VueCookies.get("access_token")}`,
+                  "Authorization": `Bearer ${cookies.get("access_token")}`,
                   "Content-Type": "application/json",
-                  "X-CSRFToken": VueCookies.get("csrftoken"),
+                  "X-CSRFToken": cookies.get("csrftoken"),
                 },
                 credentials: "include",
               });
@@ -621,14 +626,14 @@
                 user_id: this.user.id,
                 cuisine_id: foundCuisineId,
             };
-
+            const { cookies } = useCookies();
             // Send POST request to create a chosen cuisine
             const chosenCuisineResponse = await fetch("http://localhost:8000/chosenCuisines/", {
                 method: "POST",
                 headers: {
-                Authorization: `Bearer ${VueCookies.get("access_token")}`,
+                Authorization: `Bearer ${cookies.get("access_token")}`,
                 "Content-Type": "application/json",
-                "X-CSRFToken": VueCookies.get("csrftoken"),
+                "X-CSRFToken": cookies.get("csrftoken"),
                 },
                 credentials: "include",
                 body: JSON.stringify(payload),
@@ -652,12 +657,13 @@
           async deleteChosenAllergy(chosenAllergyId: number) {
        
             try {
+              const { cookies } = useCookies();
               const response = await fetch(`http://localhost:8000/chosenAllergy/${chosenAllergyId}/`, {
                 method: "DELETE",
                 headers: {
-                  "Authorization": `Bearer ${VueCookies.get("access_token")}`,
+                  "Authorization": `Bearer ${cookies.get("access_token")}`,
                   "Content-Type": "application/json",
-                  "X-CSRFToken": VueCookies.get("csrftoken"),
+                  "X-CSRFToken": cookies.get("csrftoken"),
                 },
                 credentials: "include",
               });
@@ -710,14 +716,14 @@
                 user_id: this.user.id,
                 allergy_id: foundAllergyId,
             };
-
+            const { cookies } = useCookies();
             // Send POST request to create a chosen Allergy
             const chosenAllergyResponse = await fetch("http://localhost:8000/chosenAllergys/", {
                 method: "POST",
                 headers: {
-                Authorization: `Bearer ${VueCookies.get("access_token")}`,
+                Authorization: `Bearer ${cookies.get("access_token")}`,
                 "Content-Type": "application/json",
-                "X-CSRFToken": VueCookies.get("csrftoken"),
+                "X-CSRFToken": cookies.get("csrftoken"),
                 },
                 credentials: "include",
                 body: JSON.stringify(payload),
