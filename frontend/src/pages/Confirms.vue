@@ -60,14 +60,11 @@
   import { useUsersStore } from "../stores/users";
   import { useRestaurantsStore } from "../stores/restaurants";
   import { useReservationsStore } from "../stores/reservations";
-  import {useCookies} from 'vue3-cookies';
+  import { useCookies } from 'vue3-cookies';
+
   export default defineComponent({
     data() {
         return {
-        // chosenRestaurant: "",
-        // chosenReservation: "",
-        // reservation: null,
-        reservation: [],
         currentPage: 1,
         perPage: 5
         };
@@ -230,11 +227,11 @@
         return userStore.user;
       },
       restaurants(): Restaurant[]{
-        const restaurantsStore = useRestaurantsStore;
+        const restaurantsStore = useRestaurantsStore();
         return this.restaurantsStore.restaurants; // Bind to the fetched cuisine data from Pinia store
       },
       reservations(): Reservation[]{
-        const reservationsStore = useReservationsStore;
+        const reservationsStore = useReservationsStore();
         return this.reservationsStore.reservations; // Bind to the fetched cuisine data from Pinia store
       },
       totalPages() {
