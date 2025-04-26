@@ -93,16 +93,11 @@
   import { useAllergysStore } from "../stores/allergys";
   import { useChosenStore } from "../stores/chosen";
   import { useChosensStore } from "../stores/chosens";
-
-  import VueCookies from 'vue-cookies';
-
-  
-
+  import { useCookies } from 'vue3-cookies';  
 
   export default defineComponent({
       data() {
           return {
-          
           newRestaurant: {
           name: "",          // Will hold the selected restaurant object
           cuisine: null,     // Will hold the reservation time
@@ -232,280 +227,154 @@
       methods: {
         cuisineName(restaurant) {
           return restaurant.cuisine && restaurant.cuisine.name
-            ? restaurant.cuisine.name
-            : restaurant.cuisine;
+          ? restaurant.cuisine.name
+          : restaurant.cuisine;
         },
         allergyName(allergy) {
           return allergy && allergy.name ? allergy.name : allergy;
+        },                
+        async saveField(field: string) {
+          try {
+            const { cookies } = useCookies();
+            const payload = {
+                [field.toLowerCase()]: this.editedUser[field.toLowerCase()],
+            };
+            console.log(payload)
+            const response = await fetch(`http://localhost:8000/user/${this.user.id}/`, {
+              method: "PUT",
+              headers: {
+                'Authorization': `Bearer ${cookies.get('access_token')}`,
+                'Content-Type': 'application/json',
+                'X-CSRFToken': cookies.get('csrftoken'),
+              },
+              credentials: 'include',
+              body: JSON.stringify(payload),
+            });       
+            console.log("CSRF Token:", this.userStore.csrf);
+            if (!response.ok) {
+              throw new Error("Failed to update field");
+            }
+            const updatedUser = await response.json();
+            console.log(updatedUser)
+            this.userStore = this.userStore.saveUsers(updatedUser); // Update the user state in the store
+            window.location.reload();
+            alert(`${field} updated successfully!`);
+          } catch (error) {
+            console.error(error);
+            alert(`Failed to update ${field}.`);
+          }
         },
-          
-          
-          async saveField(field: string) {
-             
-              try {
-                  
-                  const payload = {
-                      [field.toLowerCase()]: this.editedUser[field.toLowerCase()],
-                  };
-                  console.log(payload)
-                  const response = await fetch(`http://localhost:8000/user/${this.user.id}/`, {
-                      method: "PUT",
-                      headers: {
-                          'Authorization': `Bearer ${VueCookies.get('access_token')}`,
-                          'Content-Type': 'application/json',
-                          'X-CSRFToken': VueCookies.get('csrftoken'),
-                      },
-                      credentials: 'include',
-                      body: JSON.stringify(payload),
-                  });
-              
-                  console.log("CSRF Token:", this.userStore.csrf);
-
-                  if (!response.ok) {
-                      throw new Error("Failed to update field");
-                  }
-
-                  const updatedUser = await response.json();
-                  console.log(updatedUser)
-                  this.userStore = this.userStore.saveUsers(updatedUser); // Update the user state in the store
-                  window.location.reload();
-                  alert(`${field} updated successfully!`);
-              } catch (error) {
-                  console.error(error);
-                  alert(`Failed to update ${field}.`);
-              }
-          },
-        
-
-
          /* Creating a New review */
         async createRestaurant() {
-            const restaurantsStore = useRestaurantsStore();
-            const userId = this.userStore.user.id;
-
-            // Validate if the restaurant is selected correctly
-            // if (!this.newRestaurant.cusine || !this.newRestaurant.cuisine.id) {
-            //     alert("Please select a valid cusine.");
-            //     return;
-            // }
-
-            // Validate if the reservation time is set correctly
-            // if (!this.newReservation.reservation_time) {
-            //     alert("Please select a valid reservation time.");
-            //     return;
-            // }
-
-            const payload = {
-                cuisine_id: this.newRestaurant.cuisine.id, 
-                allergy_ids: this.newRestaurant.allergy, 
-                name: this.newRestaurant.name,
-                seats_available: this.newRestaurant.seats_available,
-                rating: this.newRestaurant.rating,
-                location: this.newRestaurant.location,
-                user_id: userId,
-            };
-
-            console.log(payload); 
-            console.log(userId);
-
-            try {
-                const restaurantResponse = await fetch('http://localhost:8000/restaurants/', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${VueCookies.get('access_token')}`,
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': VueCookies.get('csrftoken'),
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify(payload),
-                });
-
-                //const responseText = await reservationResponse.text();  // Log raw response for debugging
-               // console.log(responseText);
-
-                //if (reservationResponse.ok) {
-                    const data = await restaurantResponse.json();
-                    const createdRestaurant = data.restaurant;  // Ensure that the response has reservation data
-                    restaurantsStore.addRestaurant(createdRestaurant);  // Add to the Pinia store
-                    window.location.reload();
-                    alert('Restaurant added successfully!');
-               //} else {
-                    //alert('Failed to create reservation');
-                //}
-            } catch (error) {
-                console.error('Error creating restaurant:', error);
-                alert('Failed to create restaurant');
-            }
-        },
-
-
-        async deleteRestaurant(restaurantId: number) {
-            // Check if the logged-in user is the one who wrote the reservation
-            const restaurantToDelete = this.restaurants.find(restaurant => restaurant.id === restaurantId);
-            if (!restaurantToDelete || restaurantToDelete.user.id !== this.user.id) {
-                alert("You cannot delete this restaurant. Only the author can delete it.");
-                return; // Prevent deletion
-            }
-
-            try {
-                const response = await fetch(`http://localhost:8000/restaurant/${restaurantId}/`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${VueCookies.get('access_token')}`,
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': VueCookies.get('csrftoken'),
-                    },
-                    credentials: 'include',
-                });
-
-                if (response.ok) {
-                    // Remove the deleted reservation from the list
-                    this.restaurants = this.restaurants.filter(restaurant => restaurant.id !== restaurantId);
-                    alert('Restaurant deleted successfully!');
-                    window.location.reload();
-                } else {
-                    alert('Failed to delete the restaurant.');
-                }
-            } catch (error) {
-                console.error('Error deleting restaurant:', error);
-                alert('Failed to delete the restaurant.');
-            }
-        },
-          //deletes the friendships between users and friend whether pending or accepted
-          async deleteChosen(chosenId: number) {
-       
-            try {
-              const response = await fetch(`http://localhost:8000/chosen/${chosenId}/`, {
-                method: "DELETE",
-                headers: {
-                  "Authorization": `Bearer ${VueCookies.get("access_token")}`,
-                  "Content-Type": "application/json",
-                  "X-CSRFToken": VueCookies.get("csrftoken"),
-                },
-                credentials: "include",
-              });
-
-              if (!response.ok) {
-                throw new Error("Failed to delete chosen restaurant");
-              }
-
-              //Remove the deleted friendship from the store
-              const chosensStore = useChosensStore();
-              chosensStore.removeChosen(chosenId);
-
-              window.location.reload();
-              alert("Chosen restaurant deleted successfully!");
-            } catch (error) {
-              console.error("Error deleting chosen restaurant:", error);
-              alert("Failed to delete chosen restaurant. Please try again.");
-            }
-          },
-
-          async addChosen() {
-            if (this.chosenRestaurant === "") {
-                alert("Invalid restaurant Choice.");
-                return;
-            }
-
-            const chosensStore = useChosensStore();
-            const restaurantsStore = useRestaurantsStore();
-            const chosenRestaurantLower = this.chosenRestaurant.toLowerCase();
-
-            // Check if the logged-in user has already chosen this restaurant
-            let alreadyChosenByUser = chosensStore.chosens.some(chosen => chosen.user === this.user.id && chosen.name.toLowerCase() === chosenRestaurantLower);
-            
-            if (alreadyChosenByUser) {
-                alert("You have already chosen this restaurant.");
-                return;
-            }
-
-            // Find the restaurant from the restaurant store
-            let foundRestaurant = restaurantsStore.getRestaurantByName(this.chosenRestaurant);
-            if (!foundRestaurant) {
-                alert("restaurant not found.");
-                return;
-            }
-
-            const foundRestaurantId = foundRestaurant.id;
-
-            // Prepare the payload for creating a new chosen restaurant
-            const payload = {
-                user_id: this.user.id,
-                restaurant_id: foundRestaurantId,
-            };
-
-            // Send POST request to create a chosen restaurant
-            const chosenResponse = await fetch("http://localhost:8000/chosens/", {
-                method: "POST",
-                headers: {
-                Authorization: `Bearer ${VueCookies.get("access_token")}`,
-                "Content-Type": "application/json",
-                "X-CSRFToken": VueCookies.get("csrftoken"),
-                },
-                credentials: "include",
-                body: JSON.stringify(payload),
+          const restaurantsStore = useRestaurantsStore();
+          const userId = this.userStore.user.id;
+          const payload = {
+            cuisine_id: this.newRestaurant.cuisine.id, 
+            allergy_ids: this.newRestaurant.allergy, 
+            name: this.newRestaurant.name,
+            seats_available: this.newRestaurant.seats_available,
+            rating: this.newRestaurant.rating,
+            location: this.newRestaurant.location,
+            user_id: userId,
+          };
+          console.log(payload); 
+          console.log(userId);
+          try {
+            const { cookies } = useCookies();
+            const restaurantResponse = await fetch('http://localhost:8000/restaurants/', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${cookies.get('access_token')}`,
+                'Content-Type': 'application/json',
+                'X-CSRFToken': cookies.get('csrftoken'),
+              },
+              credentials: 'include',
+              body: JSON.stringify(payload),
             });
-
-            // If the response is successful, add the new chosen restaurant to the store
-            if (chosenResponse.ok) {
-                const data = await chosenResponse.json();
-                const createdChosen = data.chosen as Chosen;
-                chosensStore.addChosen(createdChosen);
-
-                window.location.reload(); // Refresh the page to reflect the changes
-                alert("Chosen restaurant added successfully!");
-            } else {
-                alert("Failed to add the chosen restaurant. Please try again.");
-            }
-            },
-           
-          
-          
-
-     }, 
-     
-      computed: {
-          user(): User | undefined {
-            const userStore = useUserStore();
-            return userStore.user;
-        },
-          restaurants(): Restaurant[]{
-              const restaurantsStore = useRestaurantsStore;
-              return this.restaurantsStore.restaurants; // Bind to the fetched cuisine data from Pinia store
-          },
-          cuisines(): Cuisine[]{
-              const cuisinesStore = useCuisinesStore;
-              return this.cuisinesStore.cuisines; // Bind to the fetched cuisine data from Pinia store
-          },
-          allergys(): Allergy[]{
-              const allergysStore = useAllergysStore;
-              return this.allergysStore.allergys; // Bind to the fetched cuisine data from Pinia store
-          },
-          
-          chosens(){
-              const chosensStore = useChosensStore;
-              return this.chosensStore.chosens;
-          },
-          filteredRestaurants() {
-            return this.restaurants.filter(r => {
-              const matchesName = r.name.toLowerCase().includes(this.filterName.toLowerCase());
-              const cName = this.cuisineName(r);
-              const matchesCuisine = this.filterCuisine ? cName === this.filterCuisine : true;
-              const allergyList = r.allergys.map(a => this.allergyName(a));
-              const matchesAllergy = this.filterAllergy ? allergyList.includes(this.filterAllergy) : true;
-              return matchesName && matchesCuisine && matchesAllergy;
-            });
-          },
-          // Total pages based on filtered results
-          totalPages() {
-            return Math.ceil(this.filteredRestaurants.length / this.perPage) || 1;
-          },
-          // Slice filtered results for current page
-          paginatedRestaurants() {
-            const start = (this.currentPage - 1) * this.perPage;
-            return this.filteredRestaurants.slice(start, start + this.perPage);
+            const data = await restaurantResponse.json();
+            const createdRestaurant = data.restaurant;  // Ensure that the response has reservation data
+            restaurantsStore.addRestaurant(createdRestaurant);  // Add to the Pinia store
+            window.location.reload();
+            alert('Restaurant added successfully!');
+          } catch (error) {
+            console.error('Error creating restaurant:', error);
+            alert('Failed to create restaurant');
           }
-    
+        },
+        async deleteRestaurant(restaurantId: number) {
+          // Check if the logged-in user is the one who wrote the reservation
+          const restaurantToDelete = this.restaurants.find(restaurant => restaurant.id === restaurantId);
+          if (!restaurantToDelete || restaurantToDelete.user.id !== this.user.id) {
+            alert("You cannot delete this restaurant. Only the author can delete it.");
+            return; // Prevent deletion
+          }
+          try {
+            const { cookies } = useCookies();
+            const response = await fetch(`http://localhost:8000/restaurant/${restaurantId}/`, {
+              method: 'DELETE',
+              headers: {
+                'Authorization': `Bearer ${cookies.get('access_token')}`,
+                'Content-Type': 'application/json',
+                'X-CSRFToken': cookies.get('csrftoken'),
+              },
+              credentials: 'include',
+            });
+
+            if (response.ok) {
+              // Remove the deleted reservation from the list
+              this.restaurants = this.restaurants.filter(restaurant => restaurant.id !== restaurantId);
+              alert('Restaurant deleted successfully!');
+              window.location.reload();
+            } else {
+              alert('Failed to delete the restaurant.');
+            }
+          } catch (error) {
+            console.error('Error deleting restaurant:', error);
+            alert('Failed to delete the restaurant.');
+          }
+        },
+      },
+      computed: {
+        user(): User | undefined {
+          const userStore = useUserStore();
+          return userStore.user;
+        },
+        restaurants(): Restaurant[]{
+          const restaurantsStore = useRestaurantsStore;
+          return this.restaurantsStore.restaurants; // Bind to the fetched cuisine data from Pinia store
+        },
+        cuisines(): Cuisine[]{
+          const cuisinesStore = useCuisinesStore;
+          return this.cuisinesStore.cuisines; // Bind to the fetched cuisine data from Pinia store
+        },
+        allergys(): Allergy[]{
+          const allergysStore = useAllergysStore;
+          return this.allergysStore.allergys; // Bind to the fetched cuisine data from Pinia store
+        },
+        
+        chosens(){
+          const chosensStore = useChosensStore;
+          return this.chosensStore.chosens;
+        },
+        filteredRestaurants() {
+          return this.restaurants.filter(r => {
+            const matchesName = r.name.toLowerCase().includes(this.filterName.toLowerCase());
+            const cName = this.cuisineName(r);
+            const matchesCuisine = this.filterCuisine ? cName === this.filterCuisine : true;
+            const allergyList = r.allergys.map(a => this.allergyName(a));
+            const matchesAllergy = this.filterAllergy ? allergyList.includes(this.filterAllergy) : true;
+            return matchesName && matchesCuisine && matchesAllergy;
+          });
+        },
+        // Total pages based on filtered results
+        totalPages() {
+          return Math.ceil(this.filteredRestaurants.length / this.perPage) || 1;
+        },
+        // Slice filtered results for current page
+        paginatedRestaurants() {
+          const start = (this.currentPage - 1) * this.perPage;
+          return this.filteredRestaurants.slice(start, start + this.perPage);
+        }
       },
       watch: {
         filterName() { this.currentPage = 1; },
@@ -513,14 +382,14 @@
         filterAllergy() { this.currentPage = 1; }
       },
       setup() {
-          const userStore = useUserStore();
-          const restaurantsStore = useRestaurantsStore();
-          const allergysStore = useAllergysStore();
-          const cuisinesStore = useCuisinesStore();
-          const usersStore = useUsersStore();
-          const chosensStore = useChosensStore();
-          
-          return { userStore , restaurantsStore , usersStore, chosensStore, cuisinesStore, allergysStore};
+        const userStore = useUserStore();
+        const restaurantsStore = useRestaurantsStore();
+        const allergysStore = useAllergysStore();
+        const cuisinesStore = useCuisinesStore();
+        const usersStore = useUsersStore();
+        const chosensStore = useChosensStore();
+        
+        return { userStore , restaurantsStore , usersStore, chosensStore, cuisinesStore, allergysStore};
       },
   });
 </script>

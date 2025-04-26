@@ -68,223 +68,213 @@
   import { useUsersStore } from "../stores/users";
   import { useRestaurantsStore } from "../stores/restaurants";
   import { useReviewsStore } from "../stores/reviews";
-  import VueCookies from 'vue-cookies';
-
-  
-
+  import { useCookies } from 'vue3-cookies';
 
   export default defineComponent({
-      data() {
-        return {
-            reviews: [],
-            searchRestaurant: "",
-            currentPage: 1,
-            itemsPerPage: 4,
-            newReview: {
-            name: "",
-            restaurant: null,
-            rating: "",
-            description: ""
-            }
-        };
-      },
-      async mounted() {
-          // Fetching csrf token using session cookie information on mount
-          const sessionCookie = (document.cookie).split(';');
-          let currentSessionid: string = ''
-          console.log(sessionCookie)
-          // Checking in UserStore with CSRF token
-          for (let cookie of sessionCookie) {
-              cookie = cookie.trim();
-              console.log(cookie)
-              if (cookie.startsWith("sessionid" + "=")) {
-                  currentSessionid = cookie.substring("sessionid".length + 1);
-              }
-          }
-          
-          const previousSessionid : string | null = window.sessionStorage.getItem("session_id")
-          // Loading values from user store if sessionId matches
-          if(currentSessionid == previousSessionid){
-              const userId = Number(window.sessionStorage.getItem("user_id"));
-              try {
-                  const userCookie = await this.userStore.fetchUserReturn(Number(window.sessionStorage.getItem("user_id")));
-                  console.log("Fetched User:", userCookie);
-              } catch (error) {
-                  console.error("Error fetching user:", error);
-              }
-          
-              console.log('checked sesh')
-          }
-          else{
-              // Extracting user id from url query
-              const params = new URLSearchParams(window.location.search);
-              const userId: number = parseInt(params.get("u") || "0");
-              console.log(userId)
-              // Fetch user data using url query information on mount
-              let user = await this.userStore.fetchUserReturn(userId);
-              console.log(user)
-              this.userStore.user = user;
-              // Set session variable
-              sessionStorage.setItem("user_id", userId.toString());
-              
-              // Fetching csrf token using session cookie information on mount
-              const session_cookie = (document.cookie).split(';');
-              console.log(session_cookie)
-
-              //Update user state in UserStore with CSRF token
-              for (let cookie of session_cookie) {
-                  cookie = cookie.trim();
-                  console.log(cookie)
-                  if (cookie.startsWith("csrftoken" + "=")) {
-                      this.userStore.setCsrfToken(cookie.substring("csrftoken".length + 1));
-
-                      console.log(this.userStore.csrf)
-                  }
-                  //Update sessionStorage state in UserStore with CSRF token
-                  console.log(cookie)
-                  if (cookie.startsWith("sessionid" + "=")) {
-                     // Set session variable
-                     let sessionId = cookie.substring("csrftoken".length + 1);
-                     sessionStorage.setItem("session_id", sessionId);
-                  }
-              }
-          }
-                // Fetching all restaurants from the backend
-            let response = await fetch(`http://localhost:8000/restaurants/`);
-            let restaurantData = await response.json();
-            
-
-            // Update the state with the fetched restaurant data
-            let madeRestaurants = restaurantData.restaurants as Restaurant[];
-            const restaurantsStore = useRestaurantsStore();
-            restaurantsStore.saveRestaurants(madeRestaurants); 
-            console.log(response)
-
-            // Fetching all reviews from the backend
-            const resp = await fetch('http://localhost:8000/reviews/');
-            const data = await resp.json();
-            this.reviews = data.reviews;  // Make sure the backend sends an array of reviews
-      },
-      methods: {
-        formatDate(date) {
-            const d = new Date(date);
-            return d.toLocaleDateString();  // This will display only the date in the format 'MM/DD/YYYY'
-        },
-        
-          /* Creating a New review */
-        async createReview() {
-            const reviewsStore = useReviewsStore();
-            const userId = this.userStore.user.id;
-            const newReview = this.newReview;
-            const payload = {
-                name: this.newReview.name,
-                restaurant_id: this.newReview.restaurant.id,
-                rating: this.newReview.rating,
-                food_rating: this.newReview.food_rating,
-                service_rating:this.newReview.service_rating,
-                ambience_rating:this.newReview.ambience_rating,
-                description: this.newReview.description,  
-                date: this.newReview.date,
-                user_id: userId,
-            };
-            
-            console.log(payload); 
-            console.log(userId);  
-            
-            try {
-                const reviewResponse = await fetch('http://localhost:8000/reviews/', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${VueCookies.get('access_token')}`,
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': VueCookies.get('csrftoken'),
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify(payload),
-                });
-
-                const responseText = await reviewResponse.text();  // Log raw response for debugging
-                console.log(responseText);
-
-                // Add the newly created review to the Pinia store
-                // const data = await reviewResponse.json();
-                // let createdReview = data.review;
-                // reviewsStore.addReview(createdReview);
-                window.location.reload();
-                alert('Review added successfully!');
-            } catch (error) {
-                    console.error('Error creating reservation:', error);
-                    alert('Failed to create reservation');
-            }
-        },
-        async deleteReview(reviewId: number) {
-            // Check if the logged-in user is the one who wrote the review
-            const reviewToDelete = this.reviews.find(review => review.id === reviewId);
-            if (!reviewToDelete || reviewToDelete.user.id !== this.user.id) {
-                alert("You cannot delete this review. Only the author can delete it.");
-                return; // Prevent deletion
-            }
-
-            try {
-                const response = await fetch(`http://localhost:8000/review/${reviewId}/`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${VueCookies.get('access_token')}`,
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': VueCookies.get('csrftoken'),
-                    },
-                    credentials: 'include',
-                });
-
-                if (response.ok) {
-                    // Remove the deleted review from the list
-                    this.reviews = this.reviews.filter(review => review.id !== reviewId);
-                    alert('Review deleted successfully!');
-                } else {
-                    alert('Failed to delete the review.');
-                }
-            } catch (error) {
-                console.error('Error deleting review:', error);
-                alert('Failed to delete the review.');
-            }
-        },
-
-      }, 
-      computed: {
-        user(): User | undefined {
-          const userStore = useUserStore();
-          return userStore.user;
-      },
-        reviews(): Review[]{
-            const reviewsStore = useReviewsStore;
-            return this.reviewsStore.reviews; // Bind to the fetched cuisine data from Pinia store
-        },
-        restaurants(): Restaurant[]{
-            const restaurantsStore = useRestaurantsStore;
-            return this.restaurantsStore.restaurants; // Bind to the fetched cuisine data from Pinia store
-        },
-        filteredReviews() {
-            if (!this.searchRestaurant) return this.reviews;
-            return this.reviews.filter(review =>
-            review.restaurant.toLowerCase().includes(this.searchRestaurant.toLowerCase())
-            );
-        },
-        paginatedReviews() {
-            const start = (this.currentPage - 1) * this.itemsPerPage;
-            const end = start + this.itemsPerPage;
-            return this.filteredReviews.slice(start, end);
-        },
-        totalPages() {
-            return Math.ceil(this.filteredReviews.length / this.itemsPerPage);
-        },
+    data() {
+      return {
+        reviews: [],
+        searchRestaurant: "",
+        currentPage: 1,
+        itemsPerPage: 4,
+        newReview: {
+        name: "",
+        restaurant: null,
+        rating: "",
+        description: ""
+        }
+      };
+    },
+    async mounted() {
+      // Fetching csrf token using session cookie information on mount
+      const sessionCookie = (document.cookie).split(';');
+      let currentSessionid: string = ''
+      console.log(sessionCookie)
+      // Checking in UserStore with CSRF token
+      for (let cookie of sessionCookie) {
+        cookie = cookie.trim();
+        console.log(cookie)
+        if (cookie.startsWith("sessionid" + "=")) {
+          currentSessionid = cookie.substring("sessionid".length + 1);
+        }
+      }
+      
+      const previousSessionid : string | null = window.sessionStorage.getItem("session_id")
+      // Loading values from user store if sessionId matches
+      if(currentSessionid == previousSessionid){
+        const userId = Number(window.sessionStorage.getItem("user_id"));
+        try {
+          const userCookie = await this.userStore.fetchUserReturn(Number(window.sessionStorage.getItem("user_id")));
+          console.log("Fetched User:", userCookie);
+        } catch (error) {
+          console.error("Error fetching user:", error);
+        }
     
+        console.log('checked sesh')
+      }
+      else{
+        // Extracting user id from url query
+        const params = new URLSearchParams(window.location.search);
+        const userId: number = parseInt(params.get("u") || "0");
+        console.log(userId)
+        // Fetch user data using url query information on mount
+        let user = await this.userStore.fetchUserReturn(userId);
+        console.log(user)
+        this.userStore.user = user;
+        // Set session variable
+        sessionStorage.setItem("user_id", userId.toString());
+        
+        // Fetching csrf token using session cookie information on mount
+        const session_cookie = (document.cookie).split(';');
+        console.log(session_cookie)
+
+        //Update user state in UserStore with CSRF token
+        for (let cookie of session_cookie) {
+          cookie = cookie.trim();
+          console.log(cookie)
+          if (cookie.startsWith("csrftoken" + "=")) {
+            this.userStore.setCsrfToken(cookie.substring("csrftoken".length + 1));
+            console.log(this.userStore.csrf)
+          }
+          //Update sessionStorage state in UserStore with CSRF token
+          console.log(cookie)
+          if (cookie.startsWith("sessionid" + "=")) {
+            // Set session variable
+            let sessionId = cookie.substring("csrftoken".length + 1);
+            sessionStorage.setItem("session_id", sessionId);
+          }
+        }
+      }
+      // Fetching all restaurants from the backend
+      let response = await fetch(`http://localhost:8000/restaurants/`);
+      let restaurantData = await response.json();
+      
+
+      // Update the state with the fetched restaurant data
+      let madeRestaurants = restaurantData.restaurants as Restaurant[];
+      const restaurantsStore = useRestaurantsStore();
+      restaurantsStore.saveRestaurants(madeRestaurants); 
+      console.log(response)
+
+      // Fetching all reviews from the backend
+      const resp = await fetch('http://localhost:8000/reviews/');
+      const data = await resp.json();
+      this.reviews = data.reviews;  // Make sure the backend sends an array of reviews
+    },
+    methods: {
+      formatDate(date) {
+          const d = new Date(date);
+          return d.toLocaleDateString();  // This will display only the date in the format 'MM/DD/YYYY'
       },
+      /* Creating a New review */
+      async createReview() {
+        const reviewsStore = useReviewsStore();
+        const userId = this.userStore.user.id;
+        const newReview = this.newReview;
+        const payload = {
+          name: this.newReview.name,
+          restaurant_id: this.newReview.restaurant.id,
+          rating: this.newReview.rating,
+          food_rating: this.newReview.food_rating,
+          service_rating:this.newReview.service_rating,
+          ambience_rating:this.newReview.ambience_rating,
+          description: this.newReview.description,  
+          date: this.newReview.date,
+          user_id: userId,
+        };
+        console.log(payload); 
+        console.log(userId);  
+        
+        try {
+          const { cookies } = useCookies();
+          const reviewResponse = await fetch('http://localhost:8000/reviews/', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${cookies.get('access_token')}`,
+              'Content-Type': 'application/json',
+              'X-CSRFToken': cookies.get('csrftoken'),
+            },
+            credentials: 'include',
+            body: JSON.stringify(payload),
+          });
+
+          const responseText = await reviewResponse.text();  // Log raw response for debugging
+          console.log(responseText);
+
+          window.location.reload();
+          alert('Review added successfully!');
+        } catch (error) {
+          console.error('Error creating reservation:', error);
+          alert('Failed to create reservation');
+        }
+      },
+      async deleteReview(reviewId: number) {
+        // Check if the logged-in user is the one who wrote the review
+        const reviewToDelete = this.reviews.find(review => review.id === reviewId);
+        if (!reviewToDelete || reviewToDelete.user.id !== this.user.id) {
+          alert("You cannot delete this review. Only the author can delete it.");
+          return; // Prevent deletion
+        }
+        try {
+          const { cookies } = useCookies();
+          const response = await fetch(`http://localhost:8000/review/${reviewId}/`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${cookies.get('access_token')}`,
+              'Content-Type': 'application/json',
+              'X-CSRFToken': cookies.get('csrftoken'),
+            },
+            credentials: 'include',
+          });
+
+          if (response.ok) {
+            // Remove the deleted review from the list
+            this.reviews = this.reviews.filter(review => review.id !== reviewId);
+            alert('Review deleted successfully!');
+          } else {
+            alert('Failed to delete the review.');
+          }
+        } catch (error) {
+          console.error('Error deleting review:', error);
+          alert('Failed to delete the review.');
+        }
+      },
+    }, 
+    computed: {
+      user(): User | undefined {
+        const userStore = useUserStore();
+        return userStore.user;
+      },
+      reviews(): Review[]{
+        const reviewsStore = useReviewsStore;
+        return this.reviewsStore.reviews; // Bind to the fetched cuisine data from Pinia store
+      },
+      restaurants(): Restaurant[]{
+        const restaurantsStore = useRestaurantsStore;
+        return this.restaurantsStore.restaurants; // Bind to the fetched cuisine data from Pinia store
+      },
+      filteredReviews() {
+        if (!this.searchRestaurant) return this.reviews;
+          return this.reviews.filter(review =>
+          review.restaurant.toLowerCase().includes(this.searchRestaurant.toLowerCase())
+        );
+      },
+      paginatedReviews() {
+        const start = (this.currentPage - 1) * this.itemsPerPage;
+        const end = start + this.itemsPerPage;
+        return this.filteredReviews.slice(start, end);
+      },
+      totalPages() {
+        return Math.ceil(this.filteredReviews.length / this.itemsPerPage);
+      },
+  
+    },
       setup() {
-          const userStore = useUserStore();
-          const reviewsStore = useReviewsStore();
-          const restaurantsStore = useRestaurantsStore();
-          const usersStore = useUsersStore();
-          return { userStore , reviewsStore , usersStore, restaurantsStore};
+        const userStore = useUserStore();
+        const reviewsStore = useReviewsStore();
+        const restaurantsStore = useRestaurantsStore();
+        const usersStore = useUsersStore();
+        return { userStore , reviewsStore , usersStore, restaurantsStore};
       },
   });
 </script>

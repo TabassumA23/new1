@@ -15,17 +15,20 @@
 
       <button @click="createWishlistItem">Add to Wishlist</button>
     </div>
+
   </main>
 </template>
 
 
 <script lang="ts">
   import { defineComponent } from "vue";
-  import { User, Wishlist } from "../types/index";
+  import { User, Wishlist,WishlistItem, Restaurant} from "../types/index";
   import { useUserStore } from "../stores/user";
   import { useUsersStore } from "../stores/users";
+  import { useRestaurantsStore } from "../stores/restaurants";
   import { useWishlistsStore } from "../stores/wishlists";
-  import VueCookies from 'vue-cookies';
+  import { useWishlistItemsStore } from "../stores/wishlistItems";
+  import { useCookies } from 'vue3-cookies';
 
   export default defineComponent({
       data() {
@@ -37,7 +40,6 @@
             wishlistItems: [],
             currentPage: 1,
             perPage: 5
-          
           };
       },
       async mounted() {
@@ -47,79 +49,176 @@
         console.log(sessionCookie)
         // Checking in UserStore with CSRF token
         for (let cookie of sessionCookie) {
-            cookie = cookie.trim();
-            console.log(cookie)
-            if (cookie.startsWith("sessionid" + "=")) {
-                currentSessionid = cookie.substring("sessionid".length + 1);
-            }
+          cookie = cookie.trim();
+          console.log(cookie)
+          if (cookie.startsWith("sessionid" + "=")) {
+            currentSessionid = cookie.substring("sessionid".length + 1);
+          }
         }
         const previousSessionid : string | null = window.sessionStorage.getItem("session_id")
         // Loading values from user store if sessionId matches
         if(currentSessionid == previousSessionid){
-            const userId = Number(window.sessionStorage.getItem("user_id"));
-            try {
-                const userCookie = await this.userStore.fetchUserReturn(Number(window.sessionStorage.getItem("user_id")));
-                console.log("Fetched User:", userCookie);
-            } catch (error) {
-                console.error("Error fetching user:", error);
-            }
-        
-            console.log('checked sesh')
+          const userId = Number(window.sessionStorage.getItem("user_id"));
+          try {
+            const userCookie = await this.userStore.fetchUserReturn(Number(window.sessionStorage.getItem("user_id")));
+            console.log("Fetched User:", userCookie);
+          } catch (error) {
+            console.error("Error fetching user:", error);
+          }
+          console.log('checked sesh')
         }
         else{
-            // Extracting user id from url query
-            const params = new URLSearchParams(window.location.search);
-            const userId: number = parseInt(params.get("u") || "0");
-            console.log(userId)
-            // Fetch user data using url query information on mount
-            let user = await this.userStore.fetchUserReturn(userId);
-            console.log(user)
-            this.userStore.user = user;
-            // Set session variable
-            sessionStorage.setItem("user_id", userId.toString());
-            
-            // Fetching csrf token using session cookie information on mount
-            const session_cookie = (document.cookie).split(';');
-            console.log(session_cookie)
+          // Extracting user id from url query
+          const params = new URLSearchParams(window.location.search);
+          const userId: number = parseInt(params.get("u") || "0");
+          console.log(userId)
+          // Fetch user data using url query information on mount
+          let user = await this.userStore.fetchUserReturn(userId);
+          console.log(user)
+          this.userStore.user = user;
+          // Set session variable
+          sessionStorage.setItem("user_id", userId.toString());
+          
+          // Fetching csrf token using session cookie information on mount
+          const session_cookie = (document.cookie).split(';');
+          console.log(session_cookie)
 
-            //Update user state in UserStore with CSRF token
-            for (let cookie of session_cookie) {
-                cookie = cookie.trim();
-                console.log(cookie)
-                if (cookie.startsWith("csrftoken" + "=")) {
-                    this.userStore.setCsrfToken(cookie.substring("csrftoken".length + 1));
-
-                    console.log(this.userStore.csrf)
-                }
-                //Update sessionStorage state in UserStore with CSRF token
-                console.log(cookie)
-                if (cookie.startsWith("sessionid" + "=")) {
-                    // Set session variable
-                    let sessionId = cookie.substring("csrftoken".length + 1);
-                    sessionStorage.setItem("session_id", sessionId);
-                }
+          //Update user state in UserStore with CSRF token
+          for (let cookie of session_cookie) {
+            cookie = cookie.trim();
+            console.log(cookie)
+            if (cookie.startsWith("csrftoken" + "=")) {
+              this.userStore.setCsrfToken(cookie.substring("csrftoken".length + 1));
+              console.log(this.userStore.csrf)
             }
+            //Update sessionStorage state in UserStore with CSRF token
+            console.log(cookie)
+            if (cookie.startsWith("sessionid" + "=")) {
+              // Set session variable
+              let sessionId = cookie.substring("csrftoken".length + 1);
+              sessionStorage.setItem("session_id", sessionId);
+            }
+          }
         }
+        // Fetching all restaurants from the backend
+        let response = await fetch(`http://localhost:8000/restaurants/`);
+        let restaurantData = await response.json();
+            
+        // Update the state with the fetched restaurant data
+        let madeRestaurants = restaurantData.restaurants as Restaurant[];
+        const restaurantsStore = useRestaurantsStore();
+        restaurantsStore.saveRestaurants(madeRestaurants); 
+        console.log(response)
+
         // Fetching all restaurants from the backend
         let responseW = await fetch(`http://localhost:8000/wishlists/`);
         let wishlistData = await responseW.json();
-        
-
+            
         // Update the state with the fetched restaurant data
         let madeWishlists = wishlistData.wishlists as Wishlist[];
         const wishlistsStore = useWishlistsStore();
         wishlistsStore.saveWishlists(madeWishlists); 
-        console.log(responseW)
+        console.log(responseW)            
 
+        // Fetching all reviews from the backend
+        const resp = await fetch('http://localhost:8000/wishlistItems/');
+        const data = await resp.json();
+        this.wishlistItems = data.wishlistItems;  // Make sure the backend sends an array of reviews
       },
+      methods: {
+        
+        
+        /* Creating a New review */
+        async createWishlistItem() {
+          const wishlistItemsStore = useWishlistItemsStore();
+          const userId = this.userStore.user.id;
+          const newWishlistItem = this.newWishlistItem;
+          const payload = {
+            wishlist_id: this.newWishlistItem.wishlist.id,
+            restaurant_id: this.newWishlistItem.restaurant.id,
+            owner: this.userStore.user.id,
+          };         
+          console.log(payload); 
+               
+          try {
+            const { cookies } = useCookies();
+            const wishlistItemResponse = await fetch('http://localhost:8000/wishlistItems/', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${cookies.get('access_token')}`,
+                'Content-Type': 'application/json',
+                'X-CSRFToken': cookies.get('csrftoken'),
+              },
+              credentials: 'include',
+              body: JSON.stringify(payload),
+            });
+
+            if (!wishlistItemResponse.ok) {
+              const errorText = await wishlistItemResponse.text();
+              console.error("Server error response:", errorText);  
+              throw new Error(errorText);
+            }
+
+            const data = await wishlistItemResponse.json();
+            wishlistItemsStore.addWishlistItem(data.wishlistItem);
+            window.location.reload();
+            alert('WishlistItem added successfully!');
+          } catch (error) {
+            console.error('Error creating WishlistItem:', error);
+            alert('Failed to create WishlistItem');
+          }
+        },
+
+        async deleteWishlistItem(wishlistItemId: number) {
+          // Check if the logged-in user is the one who wrote the wishlist
+          const wishlistItemToDelete = this.wishlistItems.find(wishlistItem => wishlistItem.id === wishlistItemId);
+          if (!wishlistItemToDelete || wishlistItemToDelete.owner.id !== this.user.id) {
+            alert("You cannot delete this wishlistItem. Only the author can delete it.");
+            return; 
+          }
+
+          try {
+            const { cookies } = useCookies();
+            const response = await fetch(`http://localhost:8000/wishlistItem/${wishlistItemId}/`, {
+              method: 'DELETE',
+              headers: {
+                'Authorization': `Bearer ${cookies.get('access_token')}`,
+                'Content-Type': 'application/json',
+                'X-CSRFToken': cookies.get('csrftoken'),
+              },
+              credentials: 'include',
+            });
+
+            if (response.ok) {
+              // Remove the deleted review from the list
+              this.wishlistItems = this.wishlistItems.filter(wishlistItem => wishlistItem.id !== wishlistItemId);
+              alert('wishlistItem deleted successfully!');
+            } else {
+              alert('Failed to delete the wishlistItem.');
+            }
+          } catch (error) {
+            console.error('Error deleting wishlistItem:', error);
+            alert('Failed to delete the wishlistItem.');
+          }
+        },
+
+      }, 
       computed: {
         user(): User | undefined {
-            const userStore = useUserStore();
-            return userStore.user;
+          const userStore = useUserStore();
+          return userStore.user;
         },
         wishlists(): Wishlist[]{
-            const wishlistsStore = useWishlistsStore;
-            return this.wishlistsStore.wishlists; // Bind to the fetched cuisine data from Pinia store
+          const wishlistsStore = useWishlistsStore;
+          return this.wishlistsStore.wishlists; // Bind to the fetched cuisine data from Pinia store
+        },
+        restaurants(): Restaurant[]{
+          const restaurantsStore = useRestaurantsStore;
+          return this.restaurantsStore.restaurants; // Bind to the fetched cuisine data from Pinia store
+        },
+        wishlistItems(): WishlistItem[]{
+          const wishlistItemsStore = useWishlistItemsStore;
+          return this.wishlistItemsStore.wishlistItems; // Bind to the fetched cuisine data from Pinia store
         },
         totalPages() {
           return Math.ceil(this.wishlistItems.length / this.perPage) || 1;
@@ -130,10 +229,12 @@
         }
       },
       setup() {
-          const userStore = useUserStore();
-          const wishlistsStore = useWishlistsStore();
-          const usersStore = useUsersStore();
-          return { userStore , wishlistsStore , usersStore };
+        const userStore = useUserStore();
+        const wishlistsStore = useWishlistsStore();
+        const restaurantsStore = useRestaurantsStore();
+        const usersStore = useUsersStore();
+        const wishlistItemsStore = useWishlistItemsStore();
+        return { userStore , wishlistsStore , usersStore, restaurantsStore, wishlistItemsStore};
       },
   });
 </script>
