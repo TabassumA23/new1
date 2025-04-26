@@ -4,7 +4,7 @@ export interface User {
     first_name: string;
     last_name: string;
     email: string;
-    date_of_birth: number;
+    date_of_birth: string; // Now a string because Django sends ISO string!
     password: string;
     userType: string;
     restaurant: Restaurant[];
@@ -15,9 +15,14 @@ export interface Restaurant {
     api: string;
     name: string;
     description: string;
+    rating: number;
+    seats_available: number;
+    location: string;
+    user: User; // owner user (for authorization)
 }
-export interface Recommendation{
-    id:number;
+
+export interface Recommendation {
+    id: number;
     api: string;
     name: string;
     restaurant: string;
@@ -38,6 +43,7 @@ export interface Wishlist {
     name: string;
     description: string;
 }
+
 export interface WishlistItem {
     id: number;
     api: string;
@@ -51,13 +57,14 @@ export interface Cuisine {
     api: string;
     name: string;
 }
+
 export interface Allergy {
     id: number;
     api: string;
     name: string;
 }
 
-export interface Friendship{
+export interface Friendship {
     id: number;
     api: string;
     user: number;
@@ -66,7 +73,7 @@ export interface Friendship{
     accepted: boolean;
 }
 
-export interface Chosen{
+export interface Chosen {
     id: number;
     api: string;
     user: number;
@@ -74,26 +81,42 @@ export interface Chosen{
     name: string;
 }
 
-export interface ChosenCuisine{
+export interface ChosenCuisine {
     id: number;
     api: string;
     user: number;
-    cusine: number;
+    cusine: number; // typo! should be cuisine everywhere else
     name: string;
 }
-export interface ChosenAllergy{
+
+export interface ChosenAllergy {
     id: number;
     api: string;
     user: number;
     allergy: number;
     name: string;
 }
+
 export interface Reservation {
     id: number;
     api: string;
-    restaurant: string;  
-    reservation_time: string;  
+    restaurant: {
+        id: number;
+        name: string;
+        description: string;
+    };
+    reservation_time: string;
     number_of_people: number;
-    status: string; 
+    status: string; // "Pending" or "Confirmed"
     special_requests: string;
+    user: {
+        id: number;
+        first_name: string;
+        last_name: string;
+        email: string;
+        date_of_birth: string;
+        password: string;
+        userType: string;
+        restaurant: Restaurant[];
+    };
 }
