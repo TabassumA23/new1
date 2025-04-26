@@ -61,9 +61,7 @@
   import { useRestaurantsStore } from "../stores/restaurants";
   import { useReservationsStore } from "../stores/reservations";
   import { useCuisinesStore } from "../stores/cuisines";
-  import { useChosenStore } from "../stores/chosen";
   import { useChosensStore } from "../stores/chosens";
-  import { useChosenCuisineStore } from "../stores/chosenCuisine";
   import { useChosenCuisinesStore } from "../stores/chosenCuisines";
   import { useFriendshipsStore } from "../stores/friendships";
   import VueCookies from 'vue-cookies';
@@ -615,42 +613,42 @@
       }, 
       computed: {
           user() {
-              const userStore = useUserStore;
-              return this.userStore.user; // Bind to the fetched user data from Pinia store
+              const userStore = useUserStore();
+              return userStore.user;
           },
-          restaurants(): Restaurant[]{
-              const restaurantsStore = useRestaurantsStore;
-              return this.restaurantsStore.restaurants; // Bind to the fetched cuisine data from Pinia store
+          restaurants() {
+              const restaurantsStore = useRestaurantsStore();
+              return restaurantsStore.restaurants;
           },
-          reservations(): Reservation[]{
-              const reservationsStore = useReservationsStore;
-              return this.reservationsStore.reservations; // Bind to the fetched cuisine data from Pinia store
+          reservations() {
+              const reservationsStore = useReservationsStore();
+              return reservationsStore.reservations;
           },
-          cuisines(): Cuisine[]{
-              const cuisinesStore = useCuisinesStore;
-              return this.cuisinesStore.cuisines; // Bind to the fetched cuisine data from Pinia store
+          cuisines() {
+              const cuisinesStore = useCuisinesStore();
+              return cuisinesStore.cuisines;
           },
-          friendships(){
-              const friendshipsStore = useFriendshipsStore;
-              return this.friendshipsStore.friendships;
+          friendships() {
+              const friendshipsStore = useFriendshipsStore();
+              return friendshipsStore.friendships;
           },
-          chosens(){
-              const chosensStore = useChosensStore;
-              return this.chosensStore.chosens;
+          chosens() {
+              const chosensStore = useChosensStore();
+              return chosensStore.chosens;
           },
-          chosenCuisines(){
-              const chosenCuisinesStore = useChosenCuisinesStore;
-              return this.chosenCuisinesStore.chosenCuisines;
+          chosenCuisines() {
+              const chosenCuisinesStore = useChosenCuisinesStore();
+              return chosenCuisinesStore.chosenCuisines;
           },
           totalPages() {
-            return Math.ceil(this.reservations.length / this.perPage);
-            },
-            paginatedReservations() {
-            const start = (this.currentPage - 1) * this.perPage;
-            return this.reservations.slice(start, start + this.perPage);
-            }
-    
+              return Math.ceil(this.reservations.length / this.perPage);
+          },
+          paginatedReservations() {
+              const start = (this.currentPage - 1) * this.perPage;
+              return this.reservations.slice(start, start + this.perPage);
+          }
       },
+
       setup() {
           const userStore = useUserStore();
           const restaurantsStore = useRestaurantsStore();
