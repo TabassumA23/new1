@@ -70,7 +70,6 @@
         };
     },
     async mounted() {
-      const { cookies } = useCookies();
       // Fetching csrf token using session cookie information on mount
       const sessionCookie = (document.cookie).split(';');
       let currentSessionid: string = ''
