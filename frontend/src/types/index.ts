@@ -91,9 +91,11 @@ export interface ChosenAllergy{
 export interface Reservation {
     id: number;
     api: string;
-    restaurant: string;  
+    restaurant: Restaurant;  
+    user: User;
     reservation_time: string;  
     number_of_people: number;
     status: string; 
     special_requests: string;
 }
+

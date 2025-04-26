@@ -279,47 +279,53 @@ class Review(models.Model):
             }
         }
 
+
 class Reservation(models.Model):
     '''
     Class for the Reservation
     '''
-    
     PENDING = 0
     CONFIRMED = 1
     STATUS_CHOICES = [
         (PENDING, 'Pending'),
         (CONFIRMED, 'Confirmed'),
     ]
+    
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)  
     reservation_time = models.DateTimeField()
-    number_of_people = models.IntegerField(default=0,validators=[MinValueValidator(0)])
+    number_of_people = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     status = models.IntegerField(choices=STATUS_CHOICES, default=PENDING)
     special_requests = models.TextField(max_length=200)
     
     def __str__(self):
         return f"Reservation at {self.restaurant.name} for {self.number_of_people} people"
-    
+
     '''
-    Dictionary
+    Correct Dictionary for frontend
     '''
     def as_dict(self):
         return {
             'id': self.id,
-            # Obtains URL pattern for individual restaurant
             'api': reverse('reservation api', args=[self.id]),
             'restaurant':  {
-                'name': self.restaurant.name,
                 'id': self.restaurant.id,
+                'name': self.restaurant.name,
+                'description': self.restaurant.description,
             },
             'special_requests': self.special_requests,
             'number_of_people': self.number_of_people,
             'status': dict(self.STATUS_CHOICES).get(self.status),
             'reservation_time': self.reservation_time.strftime('%Y-%m-%d %H:%M:%S'),
             'user': {
+                'id': self.user.id,
                 'first_name': self.user.first_name,
                 'last_name': self.user.last_name,
-                'id': self.user.id,
+                'email': self.user.email,
+                'date_of_birth': str(self.user.date_of_birth),
+                'password': "",  # Always return empty for safety
+                'userType': self.user.user_type,
+                'restaurant': [],  # You can leave this empty array
             }
         }
 
