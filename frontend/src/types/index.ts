@@ -36,13 +36,15 @@ export interface Review {
     description: string;
 }
 
-export interface Wishlist {
+interface Wishlist {
     id: number;
     api: string;
     user: number;
     name: string;
     description: string;
-}
+    wishlist: any[]; // or properly typed array
+  }
+  
 
 export interface WishlistItem {
     id: number;
