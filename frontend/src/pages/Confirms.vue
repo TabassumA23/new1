@@ -190,16 +190,17 @@
               alert('Failed to delete reservation.');
           }
       },
-      async updateStatus(reservation) {
+      async updateStatus(reservation: Reservation) {
           try {
+            const { cookies } = useCookies();
               const payload = {
                   status: reservation.status, 
               };
-              const { cookies } = useCookies();
+              
               const response = await fetch(`http://localhost:8000/reservation/${reservation.id}/`, {
                   method: 'PUT',
                   headers: {
-                      'Authorization': `Bearer ${useCookies.get('access_token')}`,
+                      'Authorization': `Bearer ${cookies.get('access_token')}`,
                       'Content-Type': 'application/json',
                       'X-CSRFToken': cookies.get('csrftoken'),
                   },
