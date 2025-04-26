@@ -614,9 +614,9 @@
 
       }, 
       computed: {
-          user() {
-              const userStore = useUserStore;
-              return this.userStore.user; // Bind to the fetched user data from Pinia store
+          user(): User | undefined {
+              const userStore = useUserStore();
+              return userStore.user;
           },
           restaurants(): Restaurant[]{
               const restaurantsStore = useRestaurantsStore;

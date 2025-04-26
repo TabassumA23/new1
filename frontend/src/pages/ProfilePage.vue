@@ -98,7 +98,7 @@
         <p v-else class="empty-state">No recommendations yet.</p>
       </div>
 
-      <div class="card">
+      <!-- <div class="card">
         <h2>Accepted Friends</h2>
         <ul v-for="(friendship, index) in friendships" :key="index">
           <li v-if="friendship.user==user.id && friendship.accepted == true">
@@ -116,7 +116,7 @@
             <button @click="acceptFriendship(friendship.id)">Accept</button>
           </li>
         </ul>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
@@ -290,7 +290,7 @@
           allergysStore.saveAllergys(madeAllergys); 
           console.log(resA)
 
-          //fetch all the friendships
+          //fetch all the chosenAllergys
           let responseChosenAllergy = await fetch("http://localhost:8000/chosenAllergys/");
           let dataChosenAllergy = await responseChosenAllergy.json();
           let chosenAllergys = dataChosenAllergy.chosenAllergys as ChosenAllergy[];
@@ -739,9 +739,9 @@
 
       }, 
       computed: {
-          user() {
-              const userStore = useUserStore;
-              return this.userStore.user; // Bind to the fetched user data from Pinia store
+          user(): User | undefined {
+              const userStore = useUserStore();
+              return userStore.user;
           },
           restaurants(): Restaurant[]{
               const restaurantsStore = useRestaurantsStore;
