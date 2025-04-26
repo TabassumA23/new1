@@ -173,9 +173,9 @@
               const response = await fetch(`http://localhost:8000/reservation/${reservationId}/`, {
                   method: 'DELETE',
                   headers: {
-                      'Authorization': `Bearer ${VueCookies.get('access_token')}`,
+                      'Authorization': `Bearer ${useCookies.get('access_token')}`,
                       'Content-Type': 'application/json',
-                      'X-CSRFToken': VueCookies.get('csrftoken'),
+                      'X-CSRFToken': useCookies.get('csrftoken'),
                   },
                   credentials: 'include',
               });
@@ -202,9 +202,9 @@
               const response = await fetch(`http://localhost:8000/reservation/${reservation.id}/`, {
                   method: 'PUT',
                   headers: {
-                      'Authorization': `Bearer ${VueCookies.get('access_token')}`,
+                      'Authorization': `Bearer ${useCookies.get('access_token')}`,
                       'Content-Type': 'application/json',
-                      'X-CSRFToken': VueCookies.get('csrftoken'),
+                      'X-CSRFToken': useCookies.get('csrftoken'),
                   },
                   credentials: 'include',
                   body: JSON.stringify(payload),
