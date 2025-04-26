@@ -481,7 +481,10 @@ def reviews_api(request: HttpRequest) -> JsonResponse:
                 name=POST['name'], 
                 restaurant = restaurant,
                 rating=POST['rating'], 
-                description=POST['description'],  # Use 'description' field here
+                food_rating = POST['food_rating'],
+                service_rating = POST['service_rating'], 
+                ambience_rating = POST['ambience_rating'], 
+                description=POST['description'],  
                 user=User.objects.get(id=user_id),  # Use the user_id from the request
             )
             return JsonResponse(review.as_dict())
@@ -489,25 +492,6 @@ def reviews_api(request: HttpRequest) -> JsonResponse:
             return JsonResponse({'error': f'Missing required field: {str(e)}'}, status=400)
         except User.DoesNotExist:
             return JsonResponse({'error': 'User not found'}, status=404)
-
-    # If GET method is used, return all reviews with user details
-    # reviews = Review.objects.all()
-    # reviews_data = []
-    # for review in reviews:
-    #     reviews_data.append({
-    #         'id': review.id,
-    #         'name': review.name,
-    #         'restaurant': review.restaurant,
-    #         'rating': review.rating,
-    #         'description': review.description,  
-    #         'date': review.date,
-    #         'user': {
-    #             'first_name': review.user.first_name,
-    #             'last_name': review.user.last_name,
-    #             'id': review.user.id,
-    #         },
-    #     })
-    # return JsonResponse({'reviews': reviews_data})
     return JsonResponse({
         'reviews': [
             review.as_dict()
@@ -528,6 +512,9 @@ def review_api(request: HttpRequest, review_id: int) -> JsonResponse:
             PUT = json.loads(request.body)
             review.name = PUT.get("name", review.name)
             review.rating = PUT.get("rating", review.rating)
+            review.food_rating = PUT.get("food_rating", review.food_rating)
+            review.service_rating = PUT.get("service_rating", review.service_rating)
+            review.ambience_rating = PUT.get("ambience_rating", review.ambience_rating)
             review.description = PUT.get("description", review.description)
             review.save()
             return JsonResponse(review.as_dict())

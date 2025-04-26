@@ -1,52 +1,57 @@
 <template>
-  <div class="body">
-    <div class="restaurant-blog">
+  <main class="reservations-page">
+    <div class="card reservation-card">
       <h2>Reservations</h2>
 
-    <div
-        class="restaurant-item"
-        
+      <div
+        class="reservation-item"
         v-for="(reservation, index) in reservations"
-        :key="index"
-        
-    >
-        <div class="restaurant-header">
-          <h3>restaurant: {{ reservation.restaurant.name }}</h3>
+        :key="reservation.id || index"
+      >
+        <div class="reservation-header">
+          <h3>Restaurant: {{ reservation.restaurant.name }}</h3>
           <p>
-            <strong>By:</strong> {{ reservation.user.id }}  
-            <!-- | <strong>Date:</strong> {{ formatDate(restaurant.date) }} -->
+            <strong>By:</strong> {{ reservation.user.first_name }}
           </p>
         </div>
 
-        <div class="restaurant-content">
-          <p>reservation_time: {{ reservation.reservation_time }}</p>
+        <div class="reservation-content">
+          <p><strong>Time:</strong> {{ reservation.reservation_time }}</p>
         </div>
 
-        <div class="restaurant-content">
-          <p>number_of_people: {{ reservation.number_of_people }}</p>
+        <div class="reservation-content">
+          <p><strong>Guests:</strong> {{ reservation.number_of_people }}</p>
         </div>
 
-        <div class="restaurant-content">
-            <div v-if="getRestaurantOwnerId(reservation.restaurant.id) === user.id">
-                <p>Status: {{ reservation.status }}</p>
-           
-                <select v-model="reservation.status" @change="updateStatus(reservation)">
-                <option value="0">Pending</option>
-                <option value="1">Confirmed</option>
-                </select>
-            </div>
+        <div class="reservation-content" v-if="getRestaurantOwnerId(reservation.restaurant.id) === user.id">
+          <p><strong>Status:</strong> {{ reservation.status }}</p>
+          <select v-model="reservation.status" @change="updateStatus(reservation)">
+            <option value="0">Pending</option>
+            <option value="1">Confirmed</option>
+          </select>
         </div>
 
-        <div class="restaurant-content">
-          <p>special_requests: {{ reservation.special_requests }}</p>
+        <div class="reservation-content">
+          <p><strong>Special requests:</strong> {{ reservation.special_requests }}</p>
         </div>
-        <div class="restaurant-actions" v-if="reservation.user.id === user.id">
-          <button @click="deleteReservation(reservation.id)">Delete reservation</button>
+
+        <div class="reservation-actions" v-if="reservation.user.id === user.id">
+          <button @click="deleteReservation(reservation.id)">Delete Reservation</button>
         </div>
+        
       </div>
+
+       <!-- Pagination Controls -->
+        <div class="pagination-controls">
+            <button @click="currentPage--" :disabled="currentPage === 1">Previous</button>
+            <span>Page {{ currentPage }} of {{ totalPages }}</span>
+            <button @click="currentPage++" :disabled="currentPage === totalPages">Next</button>
+        </div>
     </div>
-  </div>
+  </main>
 </template>
+
+
 
 <script lang="ts">
   import { defineComponent } from "vue";
@@ -94,6 +99,8 @@
           chosenReservation: "",
           reservation: null,
           chosenChosenCuisine: "",
+          currentPage: 1,
+          perPage: 5
           
           };
       },
@@ -635,6 +642,13 @@
               const chosenCuisinesStore = useChosenCuisinesStore;
               return this.chosenCuisinesStore.chosenCuisines;
           },
+          totalPages() {
+            return Math.ceil(this.reservations.length / this.perPage);
+            },
+            paginatedReservations() {
+            const start = (this.currentPage - 1) * this.perPage;
+            return this.reservations.slice(start, start + this.perPage);
+            }
     
       },
       setup() {
@@ -653,131 +667,125 @@
 
 
 <style scoped>
-
-
-<style scoped>
-    textarea,
-  input {
-    border: 2px solid #ff8c00; /* Or whatever accent color matches your theme */
-    outline: none;
-    background: rgba(255, 255, 255, 0.07); /* subtle contrast but not white */
-    color: #fff;
-    font-size: 1rem;
-    padding: 0.75rem;
-    border-radius: 10px;
-    margin-bottom: 1rem;
-    width: 100%;
-  }
-
-  textarea:focus,
-  input:focus {
-    border-color: #ff00c1; /* highlight border on focus */
-    background: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 0 3px rgba(255, 0, 193, 0.2); /* soft glow */
-  }
-    :root {
+  :root {
     --bg-start: #0f0c29;
-    --bg-end:   #302b63;
-    --card-bg:  rgba(255,255,255,0.05);
-    --accent:   #ff00c1;
-    --text:     #eee;
-    --muted:    #aaa;
-    --radius:   12px;
-    }
+    --bg-end: #302b63;
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --accent: #ff00c1;
+    --text: #eee;
+    --muted: #aaa;
+    --radius: 12px;
+  }
 
-    /* Page container */
-    .body {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
+  .reservations-page {
+    background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
     min-height: 100vh;
     padding: 2rem;
-    background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
     font-family: 'Segoe UI', sans-serif;
     color: var(--text);
-    }
+  }
 
-    /* Reservations list wrapper */
-    .restaurant-blog {
+  .card.reservation-card {
     background: var(--card-bg);
     padding: 1.5rem;
     border-radius: var(--radius);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    }
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  }
 
-    /* Section heading */
-    .restaurant-blog h2 {
-    margin: 0 0 1rem;
-    border-bottom: 1px solid rgba(255,255,255,0.2);
-    padding-bottom: 0.5rem;
+  .reservations-page h2 {
+    margin-bottom: 1rem;
     color: var(--text);
-    font-size: 1.8rem;
-    }
+  }
 
-    /* Individual reservation card */
-    .restaurant-item {
+  .reservation-item {
     background: var(--card-bg);
     margin: 1rem 0;
     padding: 1rem;
     border-radius: var(--radius);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    }
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  }
 
-    .restaurant-header h3 {
-    margin: 0;
+  .reservation-header h3 {
+    margin: 0 0 0.5rem;
     color: var(--accent);
     font-size: 1.4rem;
-    }
+  }
 
-    .restaurant-header p {
+  .reservation-header p {
+    margin: 0;
     color: var(--muted);
     font-size: 0.9rem;
-    margin: 0.25rem 0;
-    }
+  }
 
-    .restaurant-content p {
+  .reservation-content p {
     margin: 0.5rem 0;
     color: var(--text);
     font-size: 1rem;
-    }
+  }
 
-    /* Status dropdown styling */
-    .restaurant-content select {
-    margin-left: 0.5rem;
-    background: rgba(255,255,255,0.1);
-    border: none;
-    border-radius: var(--radius);
-    color: var(--text);
-    padding: 0.4rem 0.6rem;
-    }
+  select {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid #ff8c00;
+    border-radius: 10px;
+    padding: 0.5rem;
+    color: #000;
+    font-size: 1rem;
+    outline: none;
+    margin-top: 0.25rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
 
-    /* Delete button */
-    .restaurant-actions {
+  select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255, 0, 193, 0.2);
+  }
+
+  .reservation-actions {
     text-align: right;
     margin-top: 1rem;
-    }
+  }
 
-    .restaurant-actions button {
-    background: #ff4e4e;
+  .reservation-actions button {
+    background: linear-gradient(90deg, #ff0080, #ff8c00);
     border: none;
-    border-radius: var(--radius);
-    color: #fff;
     padding: 0.5rem 1rem;
+    color: #fff;
+    font-weight: 600;
+    border-radius: var(--radius);
     cursor: pointer;
-    transition: background 0.2s ease;
-    }
-    .restaurant-actions button:hover {
-    background: #ff1c1c;
-    }
+    transition: transform 0.15s ease, opacity 0.2s;
+  }
 
-    /* Responsive */
-    @media (min-width: 600px) {
-    .body {
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  .reservation-actions button:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+
+  .pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .pagination-controls button {
+    background: linear-gradient(90deg, #ff0080, #ff8c00);
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .pagination-controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  @media (min-width: 600px) {
+    .reservation-item {
+      margin: 1rem 0;
     }
-    .restaurant-item {
-        margin: 1rem;
-    }
-    }
+  }
 </style>
-

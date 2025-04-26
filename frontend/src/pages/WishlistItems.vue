@@ -1,44 +1,47 @@
 <template>
-    <div class="body">
-        <div id="create-review">
-            <h2>Welcome {{ user.first_name }}</h2>
-      <!-- Form to Add a New review. -->
-      
-          <h3>Want to add a new restaurant to your wishlist ?</h3>
-          <label for="wishlist">Select Wishlist:</label>
-            <select id="wishlists" v-model="newWishlistItem.wishlist">
-            <option v-for="wishlist in wishlists" :key="wishlist.id" :value="wishlist">
-                {{ wishlist.name }}
-            </option>
-            </select>
-          <label for="restaurant">Select Restaurant:</label>
-            <select id="restaurants" v-model="newWishlistItem.restaurant">
-            <option v-for="restaurant in restaurants" :key="restaurant.id" :value="restaurant">
-                {{ restaurant.name }}
-            </option>
-            </select>
-           <button type="submit" @click="createWishlistItem">Add WishlistItem</button>
-     <div class="review-blog">
-     <br></br>
-    <div>
-      <h2>All Wishlists</h2>
-      <div class="wishlist-item" v-for="(wishlistItem, index,) in wishlistItems" :key="index">
-          <div class="wishlist-header">
-              <h3>{{ wishlistItem.wishlist }}</h3>
-              <h3>{{ wishlistItem.restaurant }}</h3>
-              <!-- <p>by {{ wishlist.user.first_name }} {{ wishlist.user.last_name }}</p> -->
-          </div>
-          <div class="wishlist-actions" v-if="wishlistItem.owner.id === user.id">
-              <button @click="deleteWishlistItem(wishlistItem.id)">Delete WishlistItem</button>
-          </div>
-      </div>
-    </div>
+  <main class="wishlist-page">
+    <!-- Create Wishlist Item Card -->
+    <div class="card wishlist-card">
+      <h3>Add Restaurant to Wishlist</h3>
+      <label for="wishlist-select">Select Wishlist:</label>
+      <select id="wishlist-select" v-model="newWishlistItem.wishlist">
+        <option v-for="wishlist in wishlists" :key="wishlist.id" :value="wishlist">{{ wishlist.name }}</option>
+      </select>
+
+      <label for="restaurant-select">Select Restaurant:</label>
+      <select id="restaurant-select" v-model="newWishlistItem.restaurant">
+        <option v-for="restaurant in restaurants" :key="restaurant.id" :value="restaurant"> {{ restaurant.name }}</option>
+      </select>
+
+      <button @click="createWishlistItem">Add to Wishlist</button>
     </div>
 
-  </div>
-  
-</div>  
+    <!-- All Wishlist Items Listing -->
+    <!-- <h2>All Wishlist Items</h2>
+    <div class="card wishlist-card">
+      <div
+        class="wishlist-item"
+        v-for="item in paginatedItems"
+        :key="item.id"
+      >
+        <div class="wishlist-header">
+          <p>{{ item.wishlist }}"</p>
+        </div>
+        <div class="wishlist-actions">
+          <button v-if="item.owner.id === user.id" @click="deleteWishlistItem(item.id)">Delete</button>
+        </div>
+      </div> -->
+
+      <!-- Pagination Controls -->
+      <!-- <div class="pagination-controls">
+        <button @click="currentPage--" :disabled="currentPage === 1">Previous</button>
+        <span>Page {{ currentPage }} of {{ totalPages }}</span>
+        <button @click="currentPage++" :disabled="currentPage === totalPages">Next</button>
+      </div>
+    </div> -->
+  </main>
 </template>
+
 
 <script lang="ts">
   import { defineComponent } from "vue";
@@ -61,6 +64,8 @@
                 wishlist:"",
             },
             wishlistItems: [],
+            currentPage: 1,
+            perPage: 5
           
           };
       },
@@ -253,6 +258,13 @@
               const wishlistItemsStore = useWishlistItemsStore;
               return this.wishlistItemsStore.wishlistItems; // Bind to the fetched cuisine data from Pinia store
           },
+          totalPages() {
+            return Math.ceil(this.wishlistItems.length / this.perPage) || 1;
+          },
+          paginatedItems() {
+            const start = (this.currentPage - 1) * this.perPage;
+            return this.wishlistItems.slice(start, start + this.perPage);
+          }
       },
       setup() {
           const userStore = useUserStore();
@@ -268,230 +280,117 @@
 
 
 <style scoped>
-  textarea,
-  input {
-    border: 2px solid #ff8c00; /* Or whatever accent color matches your theme */
-    outline: none;
-    background: rgba(255, 255, 255, 0.07); /* subtle contrast but not white */
-    color: #fff;
-    font-size: 1rem;
-    padding: 0.75rem;
-    border-radius: 10px;
-    margin-bottom: 1rem;
-    width: 100%;
-  }
-
-  textarea:focus,
-  input:focus {
-    border-color: #ff00c1; /* highlight border on focus */
-    background: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 0 3px rgba(255, 0, 193, 0.2); /* soft glow */
-  }
-  /* 1) Base & Variables */
   :root {
     --bg-start: #0f0c29;
-    --bg-end:   #302b63;
-    --card-bg:  rgba(255, 255, 255, 0.05);
-    --accent:   #ff00c1;
-    --text:     #eee;
-    --muted:    #aaa;
-    --radius:   12px;
+    --bg-end: #302b63;
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --accent: #ff00c1;
+    --text: #eee;
+    --muted: #aaa;
+    --radius: 12px;
   }
-  .profile-page {
-    font-family: 'Segoe UI', sans-serif;
-    color: var(--text);
+
+  .wishlist-page {
     background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
     min-height: 100vh;
     padding: 2rem;
+    font-family: 'Segoe UI', sans-serif;
+    color: var(--text);
   }
 
-  /* 2) Hero */
-  .hero {
-    display: flex; flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-  }
-  .hero-content h1 {
-    font-size: 2.5rem;
-    margin: 0;
-    letter-spacing: 1px;
-  }
-  .subtitle {
-    color: var(--muted);
-    margin-top: 0.5rem;
-  }
-  .hero-nav .btn {
-    margin-left: 1rem;
-  }
-
-  /* 3) Grid */
-  .grid-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-  }
-
-  /* 4) Card */
-  .card {
+  .card.wishlist-card {
     background: var(--card-bg);
     padding: 1.5rem;
     border-radius: var(--radius);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  }
-  .card h2 {
-    margin-top: 0;
-    border-bottom: 1px solid rgba(255,255,255,0.2);
-    padding-bottom: 0.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    margin-bottom: 2rem;
   }
 
-  /* 5) Profile details */
-  .profile-card dl {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    row-gap: 0.75rem;
-    column-gap: 1rem;
-    margin: 1rem 0;
-  }
-  .profile-card dt {
-    font-weight: 600;
-    color: var(--muted);
-  }
-  .profile-card dd {
-    margin: 0;
+  h2, h3 {
+    margin-bottom: 1rem;
+    color: var(--text);
   }
 
-  /* 6) Buttons */
-  .btn,
-  .btn-sm {
+  label, select, button {
+    display: block;
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  select {
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.07);
+    border: 2px solid #ff8c00;
+    border-radius: 10px;
+    font-size: 1rem;
+    color: #000;
+    outline: none;
+    transition: border-color 0.2s ease;
+  }
+
+  select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255, 0, 193, 0.2);
+  }
+
+  button {
     background: linear-gradient(90deg, #ff0080, #ff8c00);
     border: none;
-    padding: 0.65rem 1.2rem;
+    padding: 0.75rem;
     color: #fff;
     font-weight: 600;
     border-radius: var(--radius);
     cursor: pointer;
-    transition: transform .15s ease;
+    transition: transform 0.15s ease;
   }
-  .btn:hover,
-  .btn-sm:hover {
+
+  button:hover {
     transform: scale(1.05);
   }
-  .btn-sm {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.85rem;
-  }
-  .btn-outline {
-    background: transparent;
-    border: 2px solid var(--accent);
-    color: var(--accent);
-    margin-right: 0.5rem;
-  }
 
-  /* 7) Preferences tags */
-  .prefs-group {
-    margin: 1rem 0;
-    display: flex; align-items: center;
-  }
-  .prefs-group label {
-    flex: 0 0 70px;
-  }
-  .prefs-group select {
-    flex: 1;
-    padding: 0.5rem;
-    background: rgba(255,255,255,0.1);
-    border: none;
-    border-radius: var(--radius);
-    color: var(--text);
-  }
-  .tag-list {
-    list-style: none;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    padding: 0;
-    margin: 0.5rem 0;
-  }
-  .tag-list li {
-    background: rgba(255,255,255,0.15);
-    padding: 0.4rem 0.7rem;
-    border-radius: var(--radius);
-    display: flex; align-items: center;
-  }
-  .tag-list .remove {
-    background: transparent;
-    border: none;
-    color: var(--muted);
-    margin-left: 0.5rem;
-    cursor: pointer;
-  }
-
-  /* 8) Recommendations */
-  .restaurant-item {
-    background: rgba(255,255,255,0.1);
+  .wishlist-item {
+    background: var(--card-bg);
     padding: 1rem;
     border-radius: var(--radius);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     margin-bottom: 1rem;
   }
-  .restaurant-item h3 {
-    margin: 0 0 0.5rem;
+
+  .wishlist-header h3 {
+    margin: 0;
+    color: var(--accent);
   }
-  .empty-state {
+
+  .wishlist-header p {
+    margin: 0.5rem 0 0;
     color: var(--muted);
-    font-style: italic;
-    text-align: center;
+  }
+
+  .wishlist-actions {
+    text-align: right;
     margin-top: 1rem;
   }
 
-  /* 9) Responsive tweaks */
-  @media (max-width: 600px) {
-    .hero {
-      flex-direction: column;
-      text-align: center;
-    }
-    .hero-nav {
-      margin-top: 1rem;
-    }
-  }
-
-  /* PROFILE ROWS: text on left, button on right */
-  .profile-info .field {
+  .pagination-controls {
     display: flex;
-    align-items: center;   /* vertical‑center both pieces */
-    margin: 0.5rem 0;      /* vertical spacing between rows */
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
   }
 
-  /* let the text take up whatever room it needs, but no more */
-  .profile-info .field span {
-    flex: 0 1 auto;        /* don’t grow past content, can shrink if needed */
-    text-align: left;
-  }
-
-  /* shove the button to the extreme right */
-  .profile-info .field button {
-    flex: 0 0 auto;        /* button stays its own width */
-    margin-left: auto;     /* pushes it all the way right */
-  }
-    .profile-info .field button {
+  .pagination-controls button {
     background: linear-gradient(90deg, #ff0080, #ff8c00);
+    color: #fff;
     border: none;
     padding: 0.5rem 1rem;
-    color: #fff;
-    font-weight: 600;
-    border-radius: var(--radius);
+    border-radius: 8px;
     cursor: pointer;
-    transition: transform .15s ease;
-    margin-left: auto; /* keeps them lined up on the right */
   }
-  .profile-info .field button:hover {
-    transform: scale(1.05);
+
+  .pagination-controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
- .wishlist-page {
-  font-family: 'Segoe UI', sans-serif;
-  color: #eee;
-  background: linear-gradient(135deg, #0f0c29, #302b63);
-  min-height: 100vh;
-  padding: 2rem;
- }
 </style>
 

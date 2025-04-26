@@ -1,114 +1,87 @@
 <template>
-  <div class="body">
-    <div class="reservation-form">
-      <h2>Welcome {{ user.first_name }}</h2>
-        <h2>Create a Restaurant</h2>
+  <main class="restaurant-page">
+    <!-- Create Restaurant Card -->
+    <div class="card restaurant-card">
+      <h3>Create a New Restaurant</h3>
+      <label for="restaurant-name">Restaurant name:</label>
+      <input id="restaurant-name" type="text" v-model="newRestaurant.name" placeholder="Type restaurant name..." />
 
-        <label for="restaurant-name">Restaurant name:</label>
-        <input type="name" v-model="newRestaurant.name" />
+      <label for="cuisine">Select Cuisine:</label>
+      <select id="cuisine" v-model="newRestaurant.cuisine">
+        <option v-for="c in cuisines" :key="c.id" :value="c">{{ c.name }}</option>
+      </select>
 
-        <label for="cuisine">Select Cuisine:</label>
-        <select id="cuisines" v-model="newRestaurant.cuisine">
-        <option v-for="cuisine in cuisines" :key="cuisine.id" :value="cuisine">
-            {{ cuisine.name }}
-        </option>
-        </select>
+      <label for="allergies">Allergies:</label>
+      <select id="allergies" v-model="newRestaurant.allergy" multiple>
+        <option v-for="a in allergys" :key="a.id" :value="a.id">{{ a.name }}</option>
+      </select>
 
-        <label for="allergys">Allergies:</label>
-        <select v-model="newRestaurant.allergy" class="form-control" id="allergys" multiple>
-          <option v-for="(allergy, index) in allergys" :key="index" :value="allergy.id">
-            {{ allergy.name }}
-          </option>
-        </select>
+      <label for="rating">Rating:</label>
+      <input id="rating" type="number" v-model="newRestaurant.rating" placeholder="0 - 5" />
 
+      <label for="seats">Seats Available:</label>
+      <input id="seats" type="number" v-model="newRestaurant.seats_available" placeholder="Number of seats" />
 
-        <label for="rating">Rating:</label>
-        <input type="rating" v-model="newRestaurant.rating" />
+      <label for="location">Location:</label>
+      <select id="location" v-model="newRestaurant.location">
+        <option>London</option>
+        <option>Manchester</option>
+        <option>Leeds</option>
+        <option>Liverpool</option>
+        <option>Sheffield</option>
+        <option>Bristol</option>
+        <option>Nottingham</option>
+      </select>
 
+      <button @click="createRestaurant">Add Restaurant</button>
+    </div>
 
-        <label for="seats-available">Seats Available:</label>
-        <input type="number" v-model="newRestaurant.seats_available" />
+    <!-- Filters -->
+    <div class="card restaurant-card filter-card">
+      <h3>Filter Restaurants</h3>
+      <label for="filter-name">By Name:</label>
+      <input id="filter-name" type="text" v-model="filterName" placeholder="Search by name..." />
 
-        <label for="location">Location:</label><br />
-        <select
-          id="location"
-          v-model="newRestaurant.location"
-          required
-          class="form-control"
-        >
-          <option value="London">London</option>
-          <option value="Manchester">Manchester</option>
-          <option value="Leeds">Leeds</option>
-          <option value="Liverpool">Liverpool</option>
-          <option value="Sheffield">Sheffield</option>
-          <option value="Bristol">Bristol</option>
-          <option value="Nottingham">Nottingham</option>
-        </select><br />
+      <label for="filter-cuisine">By Cuisine:</label>
+      <select id="filter-cuisine" v-model="filterCuisine">
+        <option value="">All Cuisines</option>
+        <option v-for="c in cuisines" :key="c.id" :value="c.name">{{ c.name }}</option>
+      </select>
+    </div>
 
-        <!-- <label for="special-requests">Addition notes:</label>
-        <input type="special-requests" v-model="newReservation.special_requests" /> -->
-
-        <button @click="createRestaurant">Create Restaurant</button>
-  </div>
-
-   <div
-        class="restaurant-item"
-        
-        v-for="(restaurant, index) in restaurants"
-        :key="index"
-        
-    >
+    <!-- All Restaurants Listing -->
+    <h2 >All Restaurants</h2>
+    <div class="card restaurant-card">
+      <div class="restaurant-item" v-for="(restaurant, index) in paginatedRestaurants" :key="restaurant.id || index">
         <div class="restaurant-header">
-          <h3>restaurant: {{ restaurant.name }}</h3>
-          <p>
-            <!-- <strong>By:</strong> {{ reservation.user.id }}  -->
-            <!-- | <strong>Date:</strong> {{ formatDate(restaurant.date) }} -->
+          <h3>{{ restaurant.name }}</h3>
+        </div>
+        <div class="restaurant-content">
+          <p><strong>Cuisine:</strong> {{ restaurant.cuisine }}</p>
+          <p><strong>Allergies:</strong> 
+            <span v-for="a in allergys" :key="a.id" :value="a.id">
+              {{ a.name }} |
+            </span>
           </p>
+          <p><strong>Rating:</strong> {{ restaurant.rating }}</p>
+          <p><strong>Seats:</strong> {{ restaurant.seats_available }}</p>
+          <p><strong>Location:</strong> {{ restaurant.location }}</p>
         </div>
-
-        <div class="restaurant-content">
-          <p>cuisine: {{ restaurant.cuisine }}</p>
-        </div>
-
-        <div class="restaurant-content">
-        <p>Allergies:
-          <span v-for="(allergy, index) in restaurant.allergys" :key="index">
-            {{ allergy }}{{ index < restaurant.allergys.length - 1 ? ', ' : '' }}
-          </span>
-        </p>
-      </div>
-        <!-- <div class="restaurant-content" v-for="(restaurant, index) in restaurants" :key="index">
-            
-            <div v-if="restaurant.user.id === user.id">
-                <p>Status: {{ reservation.status }}
-                <select v-model="reservation.status" @change="updateStatus(reservation)">
-                    <option value="0">Pending</option>
-                    <option value="1">Confirmed</option>
-                </select>
-                </p>
-            </div>
-            
-        </div> -->
-
-        <div class="restaurant-content">
-          <p>rating: {{ restaurant.rating }}</p>
-        </div>
-
-        <div class="restaurant-content">
-          <p>location: {{ restaurant.location }}</p>
-        </div>
-
-        <div class="restaurant-content">
-          <p>seats available: {{ restaurant.seats_available }}</p>
-        </div>
-
         <div class="restaurant-actions" v-if="restaurant.user.id === user.id">
-          <button @click="deleteRestaurant(restaurant.id)">Delete restaurant</button>
+          <button @click="deleteRestaurant(restaurant.id)">Delete Restaurant</button>
         </div>
+      </div>
+
+      <!-- Pagination Controls -->
+      <div class="pagination-controls">
+        <button @click="currentPage--" :disabled="currentPage === 1">Previous</button>
+        <span>Page {{ currentPage }} of {{ totalPages }}</span>
+        <button @click="currentPage++" :disabled="currentPage === totalPages">Next</button>
       </div>
     </div>
-  
+  </main>
 </template>
+
 
 <script lang="ts">
   import { defineComponent } from "vue";
@@ -136,10 +109,15 @@
           allergy: [],      // Will hold the number of people
           rating: 0,     // Will hold any special requests (optional)
           seats_available: 0,
-          location: "London"                // Will hold the reservation status (default to 'pending', 0)
+          location: "London",              // Will hold the reservation status (default to 'pending', 0)
           },
           chosenRestaurant: "",
           restaurant: null,
+          currentPage: 1,
+          perPage: 3,
+          filterName: '',
+          filterCuisine: '',
+          filterAllergy: '',
           };
       },
       async mounted() {
@@ -252,6 +230,14 @@
 
       },
       methods: {
+        cuisineName(restaurant) {
+          return restaurant.cuisine && restaurant.cuisine.name
+            ? restaurant.cuisine.name
+            : restaurant.cuisine;
+        },
+        allergyName(allergy) {
+          return allergy && allergy.name ? allergy.name : allergy;
+        },
           
           
           async saveField(field: string) {
@@ -477,6 +463,7 @@
           
 
      }, 
+     
       computed: {
           user() {
               const userStore = useUserStore;
@@ -499,7 +486,31 @@
               const chosensStore = useChosensStore;
               return this.chosensStore.chosens;
           },
+          filteredRestaurants() {
+            return this.restaurants.filter(r => {
+              const matchesName = r.name.toLowerCase().includes(this.filterName.toLowerCase());
+              const cName = this.cuisineName(r);
+              const matchesCuisine = this.filterCuisine ? cName === this.filterCuisine : true;
+              const allergyList = r.allergys.map(a => this.allergyName(a));
+              const matchesAllergy = this.filterAllergy ? allergyList.includes(this.filterAllergy) : true;
+              return matchesName && matchesCuisine && matchesAllergy;
+            });
+          },
+          // Total pages based on filtered results
+          totalPages() {
+            return Math.ceil(this.filteredRestaurants.length / this.perPage) || 1;
+          },
+          // Slice filtered results for current page
+          paginatedRestaurants() {
+            const start = (this.currentPage - 1) * this.perPage;
+            return this.filteredRestaurants.slice(start, start + this.perPage);
+          }
     
+      },
+      watch: {
+        filterName() { this.currentPage = 1; },
+        filterCuisine() { this.currentPage = 1; },
+        filterAllergy() { this.currentPage = 1; }
       },
       setup() {
           const userStore = useUserStore();
@@ -519,145 +530,107 @@
 
 
 <style scoped>
-  textarea,
-  input {
-    border: 2px solid #ff8c00; /* Or whatever accent color matches your theme */
-    outline: none;
-    background: rgba(255, 255, 255, 0.07); /* subtle contrast but not white */
-    color: #fff;
-    font-size: 1rem;
-    padding: 0.75rem;
-    border-radius: 10px;
-    margin-bottom: 1rem;
-    width: 100%;
-  }
-
-  textarea:focus,
-  input:focus {
-    border-color: #ff00c1; /* highlight border on focus */
-    background: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 0 3px rgba(255, 0, 193, 0.2); /* soft glow */
-  }
   :root {
     --bg-start: #0f0c29;
-    --bg-end:   #302b63;
-    --card-bg:  rgba(255,255,255,0.05);
-    --accent:   #ff00c1;
-    --text:     #eee;
-    --muted:    #aaa;
-    --radius:   12px;
+    --bg-end: #302b63;
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --accent: #ff00c1;
+    --text: #eee;
+    --muted: #aaa;
+    --radius: 12px;
   }
 
-  /* Page grid & background */
-  .body {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
+  .restaurant-page {
+    background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
     min-height: 100vh;
     padding: 2rem;
-    background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
     font-family: 'Segoe UI', sans-serif;
     color: var(--text);
   }
 
-  /* Profile box */
-  #profile-box {
+  .card.restaurant-card {
     background: var(--card-bg);
     padding: 1.5rem;
     border-radius: var(--radius);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    grid-column: 1;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    margin-bottom: 2rem;
   }
 
-  /* “Create Restaurant” form card */
-  .reservation-form {
-    background: var(--card-bg);
-    padding: 1.5rem;
-    border-radius: var(--radius);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    grid-column: 2;
-    max-width: 480px;
-    width: 100%;
-    margin: 0 auto;
+  .filter-card {
+    margin-top: 0;
   }
 
-  /* Section headings */
-  #profile-box h2,
-  .reservation-form h2 {
-    margin: 0;
-    border-bottom: 1px solid rgba(255,255,255,0.2);
-    padding-bottom: 0.5rem;
+  h2, h3 {
+    margin-bottom: 1rem;
     color: var(--text);
-    font-size: 1.8rem;
   }
 
-  /* Form labels */
-  .reservation-form label {
+  label {
+    display: block;
+    margin-top: 1rem;
     color: var(--muted);
     font-size: 1rem;
-    margin-top: 1rem;
   }
 
-  /* Inputs & selects */
-  .reservation-form input,
-  .reservation-form select {
+  input, select {
     width: 100%;
-    padding: 0.6rem 0.8rem;
-    background: rgba(255,255,255,0.1);
-    border: none;
-    border-radius: var(--radius);
-    color: var(--text);
+    padding: 0.75rem;
+    margin-top: 0.5rem;
+    background: rgba(255, 255, 255, 0.07);
+    border: 2px solid #ff8c00;
+    border-radius: 10px;
     font-size: 1rem;
-    box-sizing: border-box;
+    color: #000;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
 
-  /* Multi‑select scroll hint */
-  .reservation-form select[multiple] {
-    height: 6rem;
+  input:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255, 0, 193, 0.2);
   }
 
-  /* Neon gradient button */
-  .reservation-form button {
+  button {
     background: linear-gradient(90deg, #ff0080, #ff8c00);
     border: none;
-    border-radius: var(--radius);
-    padding: 0.7rem 1.2rem;
+    padding: 0.75rem 1.5rem;
     color: #fff;
     font-weight: 600;
+    border-radius: var(--radius);
     cursor: pointer;
-    transition: transform .15s ease;
+    transition: transform 0.15s ease;
     margin-top: 1rem;
   }
-  .reservation-form button:hover {
+
+  button:hover {
     transform: scale(1.05);
   }
 
-  /* List of existing restaurants */
   .restaurant-item {
     background: var(--card-bg);
     padding: 1rem;
     border-radius: var(--radius);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    margin: 1rem 0;
-    grid-column: 1 / span 2;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    margin-bottom: 1.5rem;
   }
 
-  /* Restaurant headers */
   .restaurant-header h3 {
     margin: 0;
     color: var(--accent);
+    font-size: 1.4rem;
   }
 
-  /* Restaurant details */
   .restaurant-content p {
-    color: var(--text);
     margin: 0.5rem 0;
+    color: var(--text);
+    font-size: 1rem;
   }
 
-  /* Delete button */
+  .restaurant-actions {
+    text-align: right;
+    margin-top: 1rem;
+  }
+
   .restaurant-actions button {
     background: #ff4e4e;
     border: none;
@@ -665,27 +638,35 @@
     color: #fff;
     padding: 0.5rem 1rem;
     cursor: pointer;
-    transition: background .2s ease;
+    transition: background 0.2s ease;
   }
+
   .restaurant-actions button:hover {
     background: #ff1c1c;
   }
 
-  /* Responsive: single column on narrow screens */
-  @media (max-width: 800px) {
-    .body {
-      grid-template-columns: 1fr;
-    }
-    .reservation-form {
-      grid-column: auto;
-    }
-    #profile-box {
-      grid-column: auto;
-    }
-    .restaurant-item {
-      grid-column: auto;
-    }
+  .pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .pagination-controls button {
+    background: linear-gradient(90deg, #ff0080, #ff8c00);
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .pagination-controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 </style>
+
 
 

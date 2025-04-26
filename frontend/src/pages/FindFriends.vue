@@ -1,32 +1,32 @@
 <template>
-  <div>
+  <main class="find-friends-page">
+    <div class="card">
     <h2>Potential Friends</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Username</th>
-          <th>Request Friends</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Render paginatedData which will already be filtered by age -->
-        <tr v-for="(user, index) in paginatedData" :key="index">       
-          <td v-if="!isFriend(user.id)">{{ user.username }}</td>
-          <td v-if="!isFriend(user.id)"><button @click="addFriendship(user.id)">Request</button></td>
-        </tr>
-      </tbody>
-    </table>
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Request</th>
+          </tr>
+        </thead>
+          <tbody>
+          <tr v-for="(user, index) in paginatedData" :key="index">       
+            <td v-if="!isFriend(user.id)">{{ user.username }}</td>
+            <td v-if="!isFriend(user.id)"><button @click="addFriendship(user.id)">Request</button></td>
+          </tr>
+        </tbody>
+      </table>
 
-    <!-- Pagination Controls -->
-    <div class="pagination">
-      <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
-      <span>Page {{ currentPage }} of {{ totalPages }}</span>
-      <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
+      <!-- Pagination Controls -->
+      <div class="pagination-controls">
+        <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
+        <span>Page {{ currentPage }} of {{ totalPages }}</span>
+        <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
+      </div>
     </div>
 
-  </div>
-
-  
+    
+  </main>
 </template>
 
 <script lang="ts">
@@ -216,28 +216,96 @@
 </script>
 
 <style scoped>
-    table, th, td {
-    border: 1px solid;
+  :root {
+    --bg-start: #0f0c29;
+    --bg-end: #302b63;
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --accent: #ff00c1;
+    --text: #eee;
+    --muted: #aaa;
+    --radius: 12px;
   }
-  textarea,
-  input {
-    border: 2px solid #ff8c00; /* Or whatever accent color matches your theme */
-    outline: none;
-    background: rgba(255, 255, 255, 0.07); /* subtle contrast but not white */
-    color: #fff;
-    font-size: 1rem;
-    padding: 0.75rem;
-    border-radius: 10px;
+
+  .find-friends-page {
+    background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+    min-height: 100vh;
+    padding-top: 0.5rem;
+    padding-bottom: 2rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    font-family: 'Segoe UI', sans-serif;
+    color: var(--text);
+  }
+
+  .card {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    max-width: 800px;
+    margin: auto;
+    margin-top: 0
+  }
+
+  h2 {
     margin-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 0.5rem;
+    color: var(--text);
+  }
+
+  .styled-table {
     width: 100%;
+    border-collapse: collapse;
+    color: var(--text);
   }
 
-  textarea:focus,
-  input:focus {
-    border-color: #ff00c1; /* highlight border on focus */
+  .styled-table th,
+  .styled-table td {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.75rem;
+    text-align: left;
+  }
+
+  .styled-table th {
     background: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 0 3px rgba(255, 0, 193, 0.2); /* soft glow */
+    font-weight: bold;
   }
 
+  .styled-table tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
 
+  .styled-table tr:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  button,
+  .btn-sm {
+    background: linear-gradient(90deg, #ff0080, #ff8c00);
+    border: none;
+    padding: 0.5rem 1rem;
+    color: #fff;
+    font-weight: 600;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+
+  button:hover {
+    transform: scale(1.05);
+  }
+
+  .pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .pagination-controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 </style>

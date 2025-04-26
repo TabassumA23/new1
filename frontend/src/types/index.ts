@@ -16,6 +16,12 @@ export interface Restaurant {
     name: string;
     description: string;
 }
+export interface Recommendation{
+    id:number;
+    api: string;
+    name: string;
+    restaurant: string;
+}
 
 export interface Review {
     id: number;

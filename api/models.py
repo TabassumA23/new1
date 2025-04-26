@@ -267,6 +267,9 @@ class Review(models.Model):
             'name': self.name,
             'restaurant': self.restaurant.name,
             'rating': self.rating,
+            'food_rating': self.food_rating,
+            'service_rating': self.service_rating,
+            'ambience_rating': self.ambience_rating,
             'description': self.description,
             'date': self.date,
             'user': {

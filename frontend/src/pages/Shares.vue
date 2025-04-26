@@ -1,66 +1,19 @@
 <template>
-    <div class="body">
-      <div id="create-review">
-            <h2>Welcome {{ user.first_name }}</h2>
-          <!-- Form to Add a New review. -->
-      
-          <!-- <h3>Want to add a new wishlist to this website?</h3>
-          <h6>Double check spelling before submission!!</h6>
-          <label for="wishlist">Title for Wishlist:</label><br>
-            <textarea id="name" v-model="newWishlist.name" required class="form-control" rows="2" cols="50"></textarea><br>
-
-          <button type="submit" @click="createWishlist">Add Wishlist</button> -->
-      </div>
-     <!-- <div class="review-blog">
-            <h2>All Wishlists</h2>
-      <div class="wishlist-item" v-for="(wishlist, index,) in wishlists" :key="index">
-          <div class="wishlist-header">
-              <h3>{{ wishlist.name }}</h3>
-              <p>by {{ wishlist.user.first_name }} {{ wishlist.user.last_name }}</p>
-              
-              <div class="wishlist-actions">
-                <button @click="viewWishlist(wishlist.id)">View Wishlist</button>
-              </div>
-
-            
-          </div>
-          <div class="wishlist-actions" v-if="wishlist.user.id === user.id">
-              <button @click="deleteWishlist(wishlist.id)">Delete Wishlist</button>
-          </div>
-      </div>
-      <div>
-        <nav class="hero-nav">
-          <RouterLink to="/wishlistItems" class="btn">Add content to wishlist</RouterLink>
-          
-        </nav>
-      </div>
-
-    </div> -->
-    <!-- <div>
-      <h3>Wishlist Contents:</h3>
-      <ul>
-        <li v-for="item in selectedWishlistItems" :key="item.id">
-          {{ item.restaurant }}
-        </li>
-      </ul>
-    </div> -->
-
-    <!-- <div>
-      <nav class="hero-nav">
-        <RouterLink to="/shares" class="btn">Share wishlist with a friend</RouterLink>
-      </nav>
-    </div> -->
-    <div class="wishlist-item" v-for="(wishlist, index) in wishlists" :key="index">
+  <main class="wishlist-page">
+    <div
+      class="card wishlist-card"
+      v-for="(wishlist, index) in paginatedWishlists"
+      :key="wishlist.id || index"
+    >
       <div class="wishlist-header">
         <h3>{{ wishlist.name }}</h3>
         <p>by {{ wishlist.user.first_name }} {{ wishlist.user.last_name }}</p>
-
         <div class="wishlist-actions">
-          <button @click="viewWishlist(wishlist.id)">View Wishlist</button>
+          <button @click="viewWishlist(wishlist.id)">Share</button>
         </div>
       </div>
-      <!-- Only show share section for the selected wishlist -->
-      <div v-if="selectedWishlist && wishlist.id === selectedWishlist.id">
+
+      <div v-if="selectedWishlist && wishlist.id === selectedWishlist.id" class="share-section">
         <label>Share with friends:</label>
         <select v-model="friendsToShare" multiple>
           <option
@@ -71,27 +24,19 @@
             {{ friend.username }}
           </option>
         </select>
-
-        <button @click="shareWishlist(selectedWishlist.id)">Share</button>
+        <button @click="shareWishlist(selectedWishlist.id)">Confirm</button>
       </div>
     </div>
 
-
-    
-
-      
-
-      <h2>Wishlists Shared With Me</h2>
-      <div v-for="wishlist in sharedWishlists" :key="wishlist.id">
-        <h3>{{ wishlist.name }}</h3>
-        <p>Owner: {{ wishlist.user.first_name }} {{ wishlist.user.last_name }}</p>
-      </div>
-
-
-  </div>
-  
-  
+    <!-- pagination controls -->
+    <div class="pagination-controls">
+      <button @click="currentPage--" :disabled="currentPage===1">Previous</button>
+      <span>Page {{ currentPage }} of {{ totalPages }}</span>
+      <button @click="currentPage++" :disabled="currentPage===totalPages">Next</button>
+    </div>
+  </main>
 </template>
+
 
 
 <script lang="ts">
@@ -119,7 +64,9 @@
             selectedWishlistItems: [],
             friendsToShare: [],
             selectedWishlist: "",
-            sharedWishlists: []
+            sharedWishlists: [],
+            currentPage: 1,
+            perPage: 3, 
 
           };
       },
@@ -370,9 +317,21 @@
               .filter(f => f.user === this.user.id && f.accepted)
               .map(f => usersStore.users.find(u => u.id === f.friend))
               .filter(u => u);  // remove undefined
+          },
+          totalPages(): number {
+            return Math.ceil(this.wishlists.length / this.perPage)
+          },
+          paginatedWishlists(): Wishlist[] {
+            const start = (this.currentPage - 1) * this.perPage
+            return this.wishlists.slice(start, start + this.perPage)
           }
 
     
+      },
+      watch: {
+        wishlists() {
+          this.currentPage = 1
+        }
       },
       setup() {
           const userStore = useUserStore();
@@ -387,286 +346,80 @@
 
 
 <style scoped>
-    textarea,
-  input {
-    border: 2px solid #ff8c00; /* Or whatever accent color matches your theme */
-    outline: none;
-    background: rgba(255, 255, 255, 0.07); /* subtle contrast but not white */
-    color: #fff;
-    font-size: 1rem;
-    padding: 0.75rem;
-    border-radius: 10px;
-    margin-bottom: 1rem;
-    width: 100%;
-  }
+:root {
+  --bg-start: #0f0c29;
+  --bg-end:   #302b63;
+  --card-bg:  rgba(255,255,255,0.05);
+  --accent:   #ff00c1;
+  --text:     #eee;
+  --muted:    #aaa;
+  --radius:   12px;
+}
 
-  textarea:focus,
-  input:focus {
-    border-color: #ff00c1; /* highlight border on focus */
-    background: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 0 3px rgba(255, 0, 193, 0.2); /* soft glow */
-  }
-  /* 1) Base & Variables */
-  :root {
-    --bg-start: #0f0c29;
-    --bg-end:   #302b63;
-    --card-bg:  rgba(255, 255, 255, 0.05);
-    --accent:   #ff00c1;
-    --text:     #eee;
-    --muted:    #aaa;
-    --radius:   12px;
-  }
-  .profile-page {
-    font-family: 'Segoe UI', sans-serif;
-    color: var(--text);
-    background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
-    min-height: 100vh;
-    padding: 2rem;
-  }
+.wishlist-page {
+  background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+  min-height: 100vh;
+  padding: 2rem;
+  font-family: 'Segoe UI', sans-serif;
+  color: var(--text);
+}
 
-  /* 2) Hero */
-  .hero {
-    display: flex; flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-  }
-  .hero-content h1 {
-    font-size: 2.5rem;
-    margin: 0;
-    letter-spacing: 1px;
-  }
-  .subtitle {
-    color: var(--muted);
-    margin-top: 0.5rem;
-  }
-  .hero-nav .btn {
-    margin-left: 1rem;
-  }
+/* The “card” wrapper */
+.card.wishlist-card {
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  margin-bottom: 2rem;
+}
 
-  /* 3) Grid */
-  .grid-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-  }
+/* Header inside each card */
+.wishlist-header h3 {
+  margin: 0 0 0.5rem;
+  color: var(--accent);
+}
+.wishlist-header p {
+  color: var(--muted);
+  margin: 0 0 1rem;
+}
 
-  /* 4) Card */
-  .card {
-    background: var(--card-bg);
-    padding: 1.5rem;
-    border-radius: var(--radius);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  }
-  .card h2 {
-    margin-top: 0;
-    border-bottom: 1px solid rgba(255,255,255,0.2);
-    padding-bottom: 0.5rem;
-  }
+/* Buttons match the theme */
+button {
+  background: linear-gradient(90deg, #ff0080, #ff8c00);
+  border: none;
+  padding: 0.6rem 1.2rem;
+  color: #fff;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: transform .15s ease;
+}
+button:hover {
+  transform: scale(1.05);
+}
 
-  /* 5) Profile details */
-  .profile-card dl {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    row-gap: 0.75rem;
-    column-gap: 1rem;
-    margin: 1rem 0;
-  }
-  .profile-card dt {
-    font-weight: 600;
-    color: var(--muted);
-  }
-  .profile-card dd {
-    margin: 0;
-  }
+/* Optional: spacing for your share section */
+.share-section {
+  margin-top: 1rem;
+}
 
-  /* 6) Buttons */
-  .btn,
-  .btn-sm {
-    background: linear-gradient(90deg, #ff0080, #ff8c00);
-    border: none;
-    padding: 0.65rem 1.2rem;
-    color: #fff;
-    font-weight: 600;
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: transform .15s ease;
-  }
-  .btn:hover,
-  .btn-sm:hover {
-    transform: scale(1.05);
-  }
-  .btn-sm {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.85rem;
-  }
-  .btn-outline {
-    background: transparent;
-    border: 2px solid var(--accent);
-    color: var(--accent);
-    margin-right: 0.5rem;
-  }
-
-  /* 7) Preferences tags */
-  .prefs-group {
-    margin: 1rem 0;
-    display: flex; align-items: center;
-  }
-  .prefs-group label {
-    flex: 0 0 70px;
-  }
-  .prefs-group select {
-    flex: 1;
-    padding: 0.5rem;
-    background: rgba(255,255,255,0.1);
-    border: none;
-    border-radius: var(--radius);
-    color: var(--text);
-  }
-  .tag-list {
-    list-style: none;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    padding: 0;
-    margin: 0.5rem 0;
-  }
-  .tag-list li {
-    background: rgba(255,255,255,0.15);
-    padding: 0.4rem 0.7rem;
-    border-radius: var(--radius);
-    display: flex; align-items: center;
-  }
-  .tag-list .remove {
-    background: transparent;
-    border: none;
-    color: var(--muted);
-    margin-left: 0.5rem;
-    cursor: pointer;
-  }
-
-  /* 8) Recommendations */
-  .restaurant-item {
-    background: rgba(255,255,255,0.1);
-    padding: 1rem;
-    border-radius: var(--radius);
-    margin-bottom: 1rem;
-  }
-  .restaurant-item h3 {
-    margin: 0 0 0.5rem;
-  }
-  .empty-state {
-    color: var(--muted);
-    font-style: italic;
-    text-align: center;
-    margin-top: 1rem;
-  }
-
-  /* 9) Responsive tweaks */
-  @media (max-width: 600px) {
-    .hero {
-      flex-direction: column;
-      text-align: center;
-    }
-    .hero-nav {
-      margin-top: 1rem;
-    }
-  }
-
-  /* PROFILE ROWS: text on left, button on right */
-  .profile-info .field {
-    display: flex;
-    align-items: center;   /* vertical‑center both pieces */
-    margin: 0.5rem 0;      /* vertical spacing between rows */
-  }
-
-  /* let the text take up whatever room it needs, but no more */
-  .profile-info .field span {
-    flex: 0 1 auto;        /* don’t grow past content, can shrink if needed */
-    text-align: left;
-  }
-
-  /* shove the button to the extreme right */
-  .profile-info .field button {
-    flex: 0 0 auto;        /* button stays its own width */
-    margin-left: auto;     /* pushes it all the way right */
-  }
-    .profile-info .field button {
-    background: linear-gradient(90deg, #ff0080, #ff8c00);
-    border: none;
-    padding: 0.5rem 1rem;
-    color: #fff;
-    font-weight: 600;
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: transform .15s ease;
-    margin-left: auto; /* keeps them lined up on the right */
-  }
-  .profile-info .field button:hover {
-    transform: scale(1.05);
-  }
-    .wishlist-page {
-    font-family: 'Segoe UI', sans-serif;
-    color: #eee;
-    background: linear-gradient(135deg, #0f0c29, #302b63);
-    min-height: 100vh;
-    padding: 2rem;
-    }
-
-    .wishlist-card {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    margin-bottom: 2rem;
-    }
-
-    input {
-    width: 100%;
-    padding: 1rem;
-    border-radius: 10px;
-    border: none;
-    margin-bottom: 1rem;
-    font-size: 1rem;
-    }
-
-    button {
-    background: linear-gradient(90deg, #ff0080, #ff8c00);
-    border: none;
-    padding: 0.75rem 1.5rem;
-    color: #fff;
-    font-weight: 600;
-    border-radius: 10px;
-    cursor: pointer;
-    }
-
-    button:hover {
-    transform: scale(1.05);
-    }
-
-    .wishlist-list {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    }
-
-    ul {
-    list-style: none;
-    padding: 0;
-    }
-
-    li {
-    background: rgba(255,255,255,0.1);
-    margin: 0.5rem 0;
-    padding: 0.75rem;
-    border-radius: 10px;
-    }
-
-    span {
-    font-size: 0.85rem;
-    color: #aaa;
-    margin-left: 1rem;
-    }
+/* Pagination (if you haven’t already) */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.pagination-controls button {
+  background: linear-gradient(90deg,#ff0080,#ff8c00);
+  color: #fff;
+  border: none;
+  padding: .5rem 1rem;
+  border-radius: 8px;
+}
+.pagination-controls button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
 </style>
+
 

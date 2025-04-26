@@ -63,7 +63,7 @@
 
 <style scoped>
 :root {
-  --bg-color:rgb(38, 125, 201); /* match login page */
+  --bg-color:rgb(246, 248, 250); 
   --card-bg: rgba(255, 255, 255, 0.05);
   --accent: #ff00c1;
   --text: #fff;

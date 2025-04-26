@@ -1,7 +1,6 @@
 <template>
   <div class="body">
     <div class="reservation-form">
-      <h2>Welcome {{ user.first_name }}</h2>
         <h3>Create a Reservation</h3>
         <label for="restaurant">Select Restaurant:</label>
         <select id="restaurants" v-model="newReservation.restaurant">
@@ -21,7 +20,7 @@
         <label for="special-requests">Addition notes:</label>
         <input type="special-requests" v-model="newReservation.special_requests" />
 
-        <button @click="createReservation">Make Reservation</button>
+        <button @click="createReservation">Special requests:</button>
   </div>
   </div>
 </template>
@@ -206,7 +205,7 @@
                 reservation_time: this.newReservation.reservation_time,
                 number_of_people: this.newReservation.number_of_people,
                 status: 0,
-                special_requests: this.newReservation.special_requests,
+                special_requests: this.newReservation.special_requests || "",
                 user_id: userId,
             };
 
@@ -404,12 +403,54 @@
 
 
 <style scoped>
-  textarea,
-  input {
-    border: 2px solid #ff8c00; /* Or whatever accent color matches your theme */
+  :root {
+    --bg-start: #0f0c29;
+    --bg-end: #302b63;
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --accent: #ff00c1;
+    --text: #eee;
+    --muted: #aaa;
+    --radius: 12px;
+  }
+
+  .body {
+    background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+    min-height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+    color: var(--text);
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+  }
+
+  .reservation-form {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    max-width: 500px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  h2, h3, label {
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+
+  label {
+    font-size: 1rem;
+    color: var(--muted);
+    margin-top: 1rem;
+  }
+
+  input,
+  select {
+    border: 2px solid #ff8c00;
     outline: none;
-    background: rgba(255, 255, 255, 0.07); /* subtle contrast but not white */
-    color: #fff;
+    background: rgba(255, 255, 255, 0.07);
+    color: #000;
     font-size: 1rem;
     padding: 0.75rem;
     border-radius: 10px;
@@ -417,119 +458,28 @@
     width: 100%;
   }
 
-  textarea:focus,
-  input:focus {
-    border-color: #ff00c1; /* highlight border on focus */
+  input:focus,
+  select:focus {
+    border-color: var(--accent);
     background: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 0 3px rgba(255, 0, 193, 0.2); /* soft glow */
-  }
-  /* 1) Shared color + font variables */
-  :root {
-    --bg-start: #0f0c29;
-    --bg-end:   #302b63;
-    --card-bg:  rgba(255,255,255,0.05);
-    --accent:   #ff00c1;
-    --text:     #eee;
-    --muted:    #aaa;
-    --radius:   12px;
+    box-shadow: 0 0 0 3px rgba(255, 0, 193, 0.2);
   }
 
-  /* 2) Page background & grid layout */
-  .body {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-    min-height: 100vh;
-    padding: 2rem;
-    background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
-    font-family: 'Segoe UI', sans-serif;
-    color: var(--text);
-  }
-
-  /* 3) Profile box card (left column) */
-  #profile-box {
-    background: var(--card-bg);
-    padding: 1.5rem;
-    border-radius: var(--radius);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    grid-column: 1;
-    align-self: start;
-  }
-
-  /* 4) Reservation form card (right column) */
-  .reservation-form {
-    background: var(--card-bg);
-    padding: 1.5rem;
-    border-radius: var(--radius);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    grid-column: 2;
-    align-self: start;
-    max-width: 480px;
-    width: 100%;
-    margin: 0 auto;
-  }
-
-  /* 5) Section headings */
-  .reservation-form h2,
-  #profile-box h2 {
-    margin: 0;
-    border-bottom: 1px solid rgba(255,255,255,0.2);
-    padding-bottom: 0.5rem;
-    color: var(--text);
-    font-size: 1.8rem;
-  }
-
-  /* 6) Form labels */
-  .reservation-form label {
-    color: var(--muted);
-    font-size: 1rem;
-    margin-top: 1rem;
-  }
-
-  /* 7) Inputs & selects */
-  .reservation-form input,
-  .reservation-form select {
-    width: 100%;
-    padding: 0.6rem 0.8rem;
-    background: rgba(255,255,255,0.1);
-    border: none;
-    border-radius: var(--radius);
-    color: var(--text);
-    font-size: 1rem;
-    box-sizing: border-box;
-  }
-
-  /* 8) Neon‑gradient button */
-  .reservation-form button {
+  button {
     background: linear-gradient(90deg, #ff0080, #ff8c00);
     border: none;
-    border-radius: var(--radius);
-    padding: 0.7rem 1.2rem;
+    padding: 0.75rem 1.5rem;
     color: #fff;
     font-weight: 600;
+    border-radius: var(--radius);
     cursor: pointer;
-    transition: transform .15s ease;
+    transition: transform 0.15s ease;
     margin-top: 1rem;
   }
-  .reservation-form button:hover {
+
+  button:hover {
     transform: scale(1.05);
   }
-
-  /* 9) Responsive: stack into one column */
-  @media (max-width: 800px) {
-    .body {
-      grid-template-columns: 1fr;
-    }
-    .reservation-form {
-      grid-column: auto;
-      margin-top: 1rem;
-    }
-    #profile-box {
-      grid-column: auto;
-    }
-  }
 </style>
+
 
