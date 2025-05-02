@@ -14,6 +14,8 @@ import Confirms from "../pages/Confirms.vue";
 import Wishlists from "../pages/Wishlists.vue";
 import WishlistItems from "../pages/WishlistItems.vue";
 import Shares from "../pages/Shares.vue";
+import Cuisines from "../pages/Cuisines.vue";
+import Allergys from "../pages/Allergys.vue";
 
 let base = (import.meta.env.MODE == 'development') ? import.meta.env.BASE_URL : ''
 
@@ -34,6 +36,16 @@ const router = createRouter({
     path: "/confirms",
     name: "Confirms",
     component: Confirms,
+  },
+  {
+    path: "/cuisines",
+    name: "Cuisines",
+    component: Cuisines,
+  },
+  {
+    path: "/allergys",
+    name: "Allergys",
+    component: Allergys,
   },
   {
     path: "/restaurants",

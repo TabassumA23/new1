@@ -9,6 +9,8 @@
         <nav class="hero-nav">
           <RouterLink to="/restaurants" class="btn">Add / View Restaurants</RouterLink>
           <RouterLink to="/confirms"    class="btn">View Reservations</RouterLink>
+          <RouterLink to="/cuisines"    class="btn">Add Cuisines</RouterLink>
+          <RouterLink to="/allergys"    class="btn">Add Diatary requirements (allergies)</RouterLink>
         </nav>
       </div>
     </section>

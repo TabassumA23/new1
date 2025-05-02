@@ -59,7 +59,8 @@ urlpatterns = [
     path('wishlistItems/', wishlistItems_api, name='wishlistItems api'),
     path('wishlistItem/<int:wishlistItem_id>/', wishlistItem_api, name='wishlistItem api'),
     
-    path("share_wishlist/<int:wishlist_id>/", views.share_wishlist),
+    path("share_wishlist/<int:wishlist_id>/", views.share_wishlist, name='share_wishlist'),
+
     path("shared_wishlists/<int:user_id>/", views.get_shared_wishlists),
 
 
@@ -68,6 +69,8 @@ urlpatterns = [
     path('wishlist/<int:wishlist_id>/', wishlist_api, name='wishlist api'),
     path('wishlist/<int:wishlist_id>/items/', wishlist_items_api),
 
+    path('cuisiness/', cuisines_api, name='cuisines api'),
+    path('cuisine/<int:cuisine_id>/', cuisine_api, name='cuisine api'),
     
     
 ]

@@ -38,17 +38,60 @@
       />
 
       <!-- Review -->
-      <div v-for="(review, index) in paginatedReviews" :key="index" class="review-item">
-        <div class="review-header">
-          <h3>{{ review.name }}</h3>
-          <p><strong>By:</strong> {{ review.user.first_name }} {{ review.user.last_name }} | <strong>Date:</strong> {{ formatDate(review.date) }}</p>
-        </div>
-        <div class="review-content">
-          <p>{{ review.description }}</p>
-        </div>
-        <div class="review-actions" v-if="review.user.id === user.id">
-          <button @click="deleteReview(review.id)">Delete Review</button>
-        </div>
+      <div
+        v-for="(review, id) in paginatedReviews"
+        :key="review.id"
+        class="review-item"
+      >
+        <!-- EDIT MODE -->
+        <template   v-if="review.user.id === user.id && editingId === review.id">
+          <div class="review-edit-form">
+            <input v-model="editedReview.name" placeholder="Review title" />
+            <select v-model="editedReview.restaurantId">
+              <option
+                v-for="r in restaurants"
+                :key="r.id"
+                :value="r.id"
+              >{{ r.name }}</option>
+            </select>
+            <input type="number" min="1" max="5" v-model="editedReview.rating" placeholder="Overall" />
+            <input type="number" min="1" max="5" v-model="editedReview.food_rating" placeholder="Food" />
+            <input type="number" min="1" max="5" v-model="editedReview.service_rating" placeholder="Service" />
+            <input type="number" min="1" max="5" v-model="editedReview.ambience_rating" placeholder="Ambience" />
+            <textarea v-model="editedReview.description" rows="3" placeholder="Description"></textarea>
+            <button @click="saveReviewEdit(review.id)">Save</button>
+            <button @click="cancelReviewEdit()">Cancel</button>
+          </div>
+        </template>
+
+        <!-- READ-ONLY MODE -->
+        <template v-else>
+          <div class="review-header">
+            <h3>{{ review.name }}</h3>
+            <p>
+              <strong>By:</strong>
+              {{ review.user.first_name }} {{ review.user.last_name }}
+              |
+              <strong>Date:</strong>
+              {{ formatDate(review.date) }}
+            </p>
+          </div>
+          <div class="review-content">
+            <p>{{ review.description }}</p>
+            <p>
+              <strong>Overall:</strong> {{ review.rating }} ☆
+              <strong>Food:</strong> {{ review.food_rating }} ☆
+              <strong>Service:</strong> {{ review.service_rating }} ☆
+              <strong>Ambience:</strong> {{ review.ambience_rating }} ☆
+            </p>
+            <p><strong>Restaurant:</strong> {{ review.restaurant.name }}</p>
+          </div>
+
+          <div class="review-actions" v-if="review.user.id === user.id">
+            <button @click="startReviewEdit(review)">Edit</button>
+            <button @click="deleteReview(review.id)">Delete</button>
+          </div>
+        </template>
       </div>
 
       <!-- Pagination -->
@@ -85,7 +128,30 @@
             restaurant: null,
             rating: "",
             description: ""
-            }
+            },
+
+     
+      editingId: null as number | null,
+      editedReview: {
+        name: '',
+        restaurantId: 0,
+        rating: 1,
+        food_rating: 1,
+        service_rating: 1,
+        ambience_rating: 1,
+        description: ''
+      },
+
+      newReview: {
+        name: '',
+        restaurant: null as Restaurant | null,
+        rating: 1,
+        food_rating: 1,
+        service_rating: 1,
+        ambience_rating: 1,
+        description: ''
+      }
+    
         };
       },
       async mounted() {
@@ -166,6 +232,60 @@
             this.reviews = data.reviews;  // Make sure the backend sends an array of reviews
       },
       methods: {
+        startReviewEdit(r: Review) {
+          this.editingId = r.id
+          this.editedReview = {
+            name: r.name,
+            restaurantId: r.restaurant.id,
+            rating: r.rating,
+            food_rating: r.food_rating,
+            service_rating: r.service_rating,
+            ambience_rating: r.ambience_rating,
+            description: r.description
+          }
+        },
+
+        cancelReviewEdit() {
+          this.editingId = null
+        },
+
+        async saveReviewEdit(id: number) {
+          try {
+            const payload = {
+              name: this.editedReview.name.trim(),
+              restaurant_id: this.editedReview.restaurantId,
+              rating: this.editedReview.rating,
+              food_rating: this.editedReview.food_rating,
+              service_rating: this.editedReview.service_rating,
+              ambience_rating: this.editedReview.ambience_rating,
+              description: this.editedReview.description.trim(),
+            }
+
+            const res = await fetch(`http://localhost:8000/review/${id}/`, {
+              method: 'PUT',
+              headers: {
+                'Authorization': `Bearer ${VueCookies.get('access_token')}`,
+                'Content-Type': 'application/json',
+                'X-CSRFToken': VueCookies.get('csrftoken'),
+              },
+              credentials: 'include',
+              body: JSON.stringify(payload)
+            })
+            if (!res.ok) throw new Error('Update failed')
+
+            const updated = await res.json()
+
+            // update your local array
+            const idx = this.reviews.findIndex(r => r.id === id)
+            if (idx > -1) this.reviews.splice(idx, 1, updated.review)
+
+            this.cancelReviewEdit()
+            alert('Review updated!')
+          } catch (e) {
+            console.error(e)
+            alert('Could not save changes.')
+          }
+        },
         formatDate(date) {
             const d = new Date(date);
             return d.toLocaleDateString();  // This will display only the date in the format 'MM/DD/YYYY'

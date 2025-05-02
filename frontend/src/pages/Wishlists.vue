@@ -24,9 +24,28 @@
     <div class="card wishlist-card">
       <div class="wishlist-item" v-for="(wishlist, index) in paginatedWishlists" :key="index">
         <div class="wishlist-header">
-          <h3>{{ wishlist.name }}</h3>
-          <p>by {{ wishlist.user.first_name }} {{ wishlist.user.last_name }}</p>
+          <!-- EDIT MODE -->
+          <template v-if="editingId === wishlist.id">
+            <input
+              v-model="editedName"
+              class="edit-input"
+              placeholder="New name…"
+            />
+            <button @click="saveEdit(wishlist.id)">Save</button>
+            <button @click="cancelEdit()">Cancel</button>
+          </template>
 
+          <!-- READ-ONLY MODE -->
+          <template v-else>
+            <h3>{{ wishlist.name }}</h3>
+            <button
+              v-if="wishlist.user.id === user.id"
+              @click="startEdit(wishlist)"
+            >Rename</button>
+          </template>
+
+          <p>by {{ wishlist.user.first_name }} {{ wishlist.user.last_name }}</p>
+          <p>by {{ wishlist.user.first_name }} {{ wishlist.user.last_name }}</p>
           <div v-if="selectedWishlist && wishlist.id === selectedWishlist.id">
             <h4>Wishlist Contents:</h4>
             <ul>
@@ -85,14 +104,14 @@
           return {
             newWishlist: {
                 name: "",
-              
-                
             },
             wishlists: [],
             selectedWishlistItems: [],
             friendsToShare: [],
             selectedWishlist: "",
             sharedWishlists: [],
+            editingId: null as number | null,
+            editedName: '',
 
             currentPage: 1,
             itemsPerPage: 3, 
@@ -198,6 +217,49 @@
             this.sharedWishlists = dataS.shared_wishlists;
       },
       methods: {
+         startEdit(w: Wishlist) {
+          this.editingId = w.id
+          this.editedName = w.name
+        },
+
+        // cancel / exit edit mode
+        cancelEdit() {
+          this.editingId = null
+          this.editedName = ''
+        },
+
+        // call your API, update local list
+        async saveEdit(id: number) {
+          const name = this.editedName.trim()
+          if (!name) return alert("Name can't be blank.")
+
+          try {
+            const res = await fetch(
+              `http://localhost:8000/wishlist/${id}/`,
+              {
+                method: 'PUT',
+                headers: {
+                  'Authorization': `Bearer ${VueCookies.get('access_token')}`,
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': VueCookies.get('csrftoken'),
+                },
+                credentials: 'include',
+                body: JSON.stringify({ name }),
+              }
+            )
+            if (!res.ok) throw new Error('Rename failed')
+
+            // locally update without reload
+            const idx = this.wishlists.findIndex(w => w.id === id)
+            if (idx > -1) this.wishlists[idx].name = name
+
+            this.cancelEdit()
+            alert('Wishlist renamed!')
+          } catch (e) {
+            console.error(e)
+            alert('Could not rename wishlist.')
+          }
+        },
         formatDate(date) {
             const d = new Date(date);
             return d.toLocaleDateString();  // This will display only the date in the format 'MM/DD/YYYY'

@@ -7,7 +7,9 @@ from django.contrib import auth
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils.dateparse import parse_datetime
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 
 from .models import Chosen, Restaurant, User, Friendship, ChosenCuisine, Cuisine, Review, Reservation, Allergy,ChosenAllergy, Wishlist,WishlistItem,WishlistShare
 from .forms import LoginForm, SignUpForm, UpdatePassForm, UpdateUserForm
@@ -152,6 +154,7 @@ def user_api(request: HttpRequest, user_id: int) -> JsonResponse:
     # GET method
     return JsonResponse(user.as_dict())
 
+@login_required
 # APIs for friendship model below
 def friendships_api(request: HttpRequest) -> JsonResponse:
     """API endpoint for the Friendship"""
@@ -178,6 +181,7 @@ def friendships_api(request: HttpRequest) -> JsonResponse:
         ]
     })
 
+@login_required
 def friendship_api(request: HttpRequest, friendship_id: int) -> JsonResponse:
     """API endpoint for a single friendship"""
     try:
@@ -204,7 +208,7 @@ def friendship_api(request: HttpRequest, friendship_id: int) -> JsonResponse:
 
     return JsonResponse(friendship.as_dict())
 
-
+@login_required
 # APIs for chosen model below
 def chosens_api(request: HttpRequest) -> JsonResponse:
     """API endpoint for the Chosen"""
@@ -237,7 +241,7 @@ def chosens_api(request: HttpRequest) -> JsonResponse:
         ]
     })
 
-
+@login_required
 def chosen_api(request: HttpRequest, chosen_id: int) -> JsonResponse:
     """API endpoint for a single chosen"""
     try:
@@ -318,6 +322,7 @@ def update_username(request: HttpRequest) -> HttpResponse:
         form = UpdateUserForm()
         return render(request, "api/auth/updateUsername.html", {"form": form})
     
+@login_required
 # APIs for cuisine model below
 def cuisines_api(request: HttpRequest) -> JsonResponse:
     """API endpoint for the Cuisine"""
@@ -340,6 +345,7 @@ def cuisines_api(request: HttpRequest) -> JsonResponse:
         ]
     })
 
+@login_required
 def cuisine_api(request: HttpRequest, cuisine_id: int) -> JsonResponse:
     """API endpoint for a single cuisine"""
     try:
@@ -367,6 +373,7 @@ def cuisine_api(request: HttpRequest, cuisine_id: int) -> JsonResponse:
     return JsonResponse(cuisine.as_dict())
 
 # APIs for chosenCuisine model below
+@login_required
 def chosenCuisines_api(request: HttpRequest) -> JsonResponse:
     """API endpoint for the chosenCuisine"""
 
@@ -398,7 +405,7 @@ def chosenCuisines_api(request: HttpRequest) -> JsonResponse:
         ]
     })
 
-
+@login_required
 def chosenCuisine_api(request: HttpRequest,  chosenCuisine_id: int) -> JsonResponse:
     """API endpoint for a single chosenCuisine"""
     try:
@@ -419,6 +426,7 @@ def chosenCuisine_api(request: HttpRequest,  chosenCuisine_id: int) -> JsonRespo
 
 
 # APIs for chosenCuisine model below
+@login_required
 def chosenAllergys_api(request: HttpRequest) -> JsonResponse:
     """API endpoint for the chosenAllergy"""
 
@@ -448,7 +456,7 @@ def chosenAllergys_api(request: HttpRequest) -> JsonResponse:
         ]
     })
 
-
+@login_required
 def chosenAllergy_api(request: HttpRequest,  chosenAllergy_id: int) -> JsonResponse:
     """API endpoint for a single chosenAllergy"""
     try:
@@ -468,6 +476,7 @@ def chosenAllergy_api(request: HttpRequest,  chosenAllergy_id: int) -> JsonRespo
     return JsonResponse(chosenAllergy.as_dict())
 
 # APIs for restaurant model below
+
 def reviews_api(request: HttpRequest) -> JsonResponse:
     """API endpoint for the Review"""
 
@@ -530,6 +539,7 @@ def review_api(request: HttpRequest, review_id: int) -> JsonResponse:
     return JsonResponse(review.as_dict())
 
 # APIs for restaurant model below
+
 def reservations_api(request: HttpRequest) -> JsonResponse:
     """API endpoint for the Reservation"""
 
@@ -538,13 +548,18 @@ def reservations_api(request: HttpRequest) -> JsonResponse:
         try:
             POST = json.loads(request.body)
             user_id = POST['user_id']
-            
-            print("Received POST data:", POST)  # Debugging line to check POST data
 
-            # Ensure 'number_of_people' is in the request
+            print("Received POST data:", POST)
+
             if 'number_of_people' not in POST:
                 return JsonResponse({"error": "'number_of_people' is missing"}, status=400)
 
+            restaurant = Restaurant.objects.get(id=POST['restaurant_id'])
+            user = User.objects.get(id=user_id)
+
+            reservation_time = parse_datetime(POST['reservation_time'])
+            if reservation_time is None:
+                return JsonResponse({"error": "Invalid datetime format."}, status=400)
             restaurant = Restaurant.objects.get(id=POST['restaurant_id'])
             reservation = Reservation.objects.create(
                 restaurant=restaurant,
@@ -560,8 +575,11 @@ def reservations_api(request: HttpRequest) -> JsonResponse:
             return JsonResponse({"error": f"Missing field: {str(e)}"}, status=400)
         except Restaurant.DoesNotExist:
             return JsonResponse({"error": "Restaurant not found"}, status=404)
+        except User.DoesNotExist:
+            return JsonResponse({"error": "User not found"}, status=404)
         except Exception as e:
             return JsonResponse({"error": f"Error: {str(e)}"}, status=500)
+
 
     # If GET method is used, return all reservations
     return JsonResponse({
@@ -578,18 +596,41 @@ def reservation_api(request: HttpRequest, reservation_id: int) -> JsonResponse:
     except Reservation.DoesNotExist:
         return JsonResponse({"error": "Reservation not found."}, status=404)
 
-    # PUT method to update reservation
+     # PUT method to update reservation
     if request.method == 'PUT':
         try:
             PUT = json.loads(request.body)
-            
-            reservation.reservation_time = PUT.get("reservation_time", reservation.reservation_time)
-            reservation.number_of_people = PUT.get("number_of_people", reservation.number_of_people)
+
+            # update linked restaurant if provided
+            if "restaurant" in PUT:
+                # assume front-end sends an integer restaurant id
+                reservation.restaurant = Restaurant.objects.get(
+                    pk=PUT["restaurant"]
+                )
+
+            # scalar fields
+            reservation.reservation_time = PUT.get(
+                "reservation_time", reservation.reservation_time
+            )
+            reservation.number_of_people = PUT.get(
+                "number_of_people", reservation.number_of_people
+            )
             reservation.status = PUT.get("status", reservation.status)
-            reservation.special_requests = PUT.get("special_requests", reservation.special_requests)
+            reservation.special_requests = PUT.get(
+                "special_requests", reservation.special_requests
+            )
+
             reservation.save()
             return JsonResponse(reservation.as_dict())
+
+        except Restaurant.DoesNotExist:
+            return JsonResponse(
+                {"error": "Restaurant with that ID not found."}, status=400
+            )
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
         except Exception as e:
+            # fallback capture
             return JsonResponse({"error": str(e)}, status=500)
 
     # DELETE method to delete reservation
@@ -603,6 +644,7 @@ def reservation_api(request: HttpRequest, reservation_id: int) -> JsonResponse:
 
 
 # APIs for cuisine model below
+@login_required
 def allergys_api(request: HttpRequest) -> JsonResponse:
     """API endpoint for the Cuisine"""
 
@@ -624,6 +666,7 @@ def allergys_api(request: HttpRequest) -> JsonResponse:
         ]
     })
 
+@login_required
 def allergy_api(request: HttpRequest, allergy_id: int) -> JsonResponse:
     """API endpoint for a single cuisine"""
     try:
@@ -652,6 +695,7 @@ def allergy_api(request: HttpRequest, allergy_id: int) -> JsonResponse:
 
 
 # APIs for restaurant model below
+@login_required
 def restaurants_api(request: HttpRequest) -> JsonResponse:
     """API endpoint for the Restaurant"""
 
@@ -703,6 +747,7 @@ def restaurants_api(request: HttpRequest) -> JsonResponse:
         ]
     })
 
+@login_required
 def restaurant_api(request: HttpRequest, restaurant_id: int) -> JsonResponse:
     """API endpoint for a single restaurant"""
     try:
@@ -710,25 +755,37 @@ def restaurant_api(request: HttpRequest, restaurant_id: int) -> JsonResponse:
     except Restaurant.DoesNotExist:
         return JsonResponse({"error": "Restaurant not found."}, status=404)
 
-    # PUT method to update restaurant
+     # PUT method to update restaurant
     if request.method == 'PUT':
         try:
-            PUT = json.loads(request.body)
-            restaurant.name = PUT.get("name", restaurant.name)
-            restaurant.rating = PUT.get("rating", restaurant.rating)
-            restaurant.seats_available = PUT.get("seats_available", restaurant.seats_available)
-            restaurant.location = PUT.get("location", restaurant.location)
+            data = json.loads(request.body)
 
-            if "allergy_ids" in PUT:
-                allergys = Allergy.objects.filter(id__in=PUT['allergy_ids'])
-                restaurant.allergys.set(allergys)  # Update the allergies
-             
+            # 1) Update simple fields
+            restaurant.name            = data.get("name", restaurant.name)
+            restaurant.rating          = data.get("rating", restaurant.rating)
+            restaurant.seats_available = data.get("seats_available", restaurant.seats_available)
+            restaurant.location        = data.get("location", restaurant.location)
+
+            # 2) Update the cuisine FK if provided
+            if "cuisine_id" in data:
+                restaurant.cuisine = get_object_or_404(Cuisine, pk=data["cuisine_id"])
+
+            # 3) Update M2M allergies if provided
+            if "allergy_ids" in data:
+                qs = Allergy.objects.filter(pk__in=data["allergy_ids"])
+                restaurant.allergys.set(qs)
 
             restaurant.save()
             return JsonResponse(restaurant.as_dict())
+
+        except Cuisine.DoesNotExist:
+            return JsonResponse({"error": "Cuisine not found."}, status=400)
+        except Allergy.DoesNotExist:
+            return JsonResponse({"error": "One or more allergies not found."}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON."}, status=400)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
-
     # DELETE method to delete restaurant
     if request.method == 'DELETE':
         restaurant.delete()
@@ -761,7 +818,7 @@ def recommend_restaurants(request):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
 
-
+@login_required
 # APIs for restaurant model below
 def wishlists_api(request: HttpRequest) -> JsonResponse:
     """API endpoint for the wishlist"""
@@ -787,6 +844,7 @@ def wishlists_api(request: HttpRequest) -> JsonResponse:
         ]
     })
 
+@login_required
 def wishlist_api(request: HttpRequest, wishlist_id: int) -> JsonResponse:
     """API endpoint for a single wishlist"""
     try:
@@ -807,8 +865,10 @@ def wishlist_api(request: HttpRequest, wishlist_id: int) -> JsonResponse:
 
     # DELETE method to delete restaurant
     if request.method == 'DELETE':
+        if request.user != wishlist.owner:
+            return JsonResponse({"error": "Unauthorized"}, status=403)
         wishlist.delete()
-        return JsonResponse({}, status=204)  # 204 No Content
+        return JsonResponse({}, status=204)
 
     # GET restaurant data
     return JsonResponse(wishlist.as_dict())
@@ -816,6 +876,7 @@ def wishlist_api(request: HttpRequest, wishlist_id: int) -> JsonResponse:
 
 
 # For wishlist items
+@login_required
 def wishlistItems_api(request: HttpRequest) -> JsonResponse:
     if request.method == 'POST':
         try:
@@ -844,7 +905,7 @@ def wishlistItems_api(request: HttpRequest) -> JsonResponse:
         ]
     })
 
-
+@login_required
 def wishlistItem_api(request: HttpRequest, wishlistItem_id: int) -> JsonResponse:
     try:
         wishlistItem = WishlistItem.objects.get(id=wishlistItem_id)
@@ -871,7 +932,7 @@ def wishlistItem_api(request: HttpRequest, wishlistItem_id: int) -> JsonResponse
 
     return JsonResponse(wishlistItem.as_dict())
 
-
+@login_required
 def wishlist_items_api(request, wishlist_id):
     if request.method == 'GET':
         items = WishlistItem.objects.filter(wishlist_id=wishlist_id)
@@ -879,7 +940,7 @@ def wishlist_items_api(request, wishlist_id):
             "items": [item.as_dict() for item in items]
         })
     
-
+@login_required
 def share_wishlist(request, wishlist_id):
     try:
         wishlist = Wishlist.objects.get(id=wishlist_id)

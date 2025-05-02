@@ -181,8 +181,6 @@
               }
           },
         
-
-
          /* Creating a New review */
         async createReservation() {
             const reservationsStore = useReservationsStore();

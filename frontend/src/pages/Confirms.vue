@@ -28,6 +28,7 @@
           <select v-model="reservation.status" @change="updateStatus(reservation)">
             <option value="0">Pending</option>
             <option value="1">Confirmed</option>
+            <option :value="2">Declined</option>
           </select>
         </div>
 

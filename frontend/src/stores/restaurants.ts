@@ -30,5 +30,9 @@ export const useRestaurantsStore = defineStore('restaurants', {
         removeRestaurant(id: number) {
             this.restaurants = this.restaurants.filter(restaurant => restaurant.id !== id);
         },
+        updateRestaurant(updated: Restaurant) {
+            const i = this.restaurants.findIndex(r => r.id === updated.id)
+            if (i > -1) this.restaurants.splice(i, 1, updated)
+        },
     },
 });

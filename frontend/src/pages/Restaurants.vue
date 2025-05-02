@@ -52,25 +52,71 @@
     <!-- All Restaurants Listing -->
     <h2 >All Restaurants</h2>
     <div class="card restaurant-card">
-      <div class="restaurant-item" v-for="(restaurant, index) in paginatedRestaurants" :key="restaurant.id || index">
-        <div class="restaurant-header">
-          <h3>{{ restaurant.name }}</h3>
+      <div
+        class="restaurant-item"
+        v-for="r in paginatedRestaurants"
+        :key="r.id"
+      >
+        <!-- EDIT MODE -->
+        <div v-if="editingId === r.id" class="edit-form">
+          <input v-model="editedRestaurant.name" placeholder="Name" />
+
+          <select v-model="editedRestaurant.cuisine_id">
+            <option
+              v-for="c in cuisines"
+              :key="c.id"
+              :value="c.id"
+            >{{ c.name }}</option>
+          </select>
+
+          <select v-model="editedRestaurant.allergy_ids" multiple>
+            <option
+              v-for="a in allergys"
+              :key="a.id"
+              :value="a.id"
+            >{{ a.name }}</option>
+          </select>
+
+          <input
+            type="number"
+            v-model="editedRestaurant.rating"
+            placeholder="Rating"
+          />
+          <input
+            type="number"
+            v-model="editedRestaurant.seats_available"
+            placeholder="Seats"
+          />
+          <select v-model="editedRestaurant.location">
+            <!-- your location options -->
+            <option>London</option>
+            <option>Manchester</option>
+            <!-- …etc… -->
+          </select>
+
+          <button @click="saveRestaurant(r.id)">Save</button>
+          <button @click="cancelEdit()">Cancel</button>
         </div>
-        <div class="restaurant-content">
-          <p><strong>Cuisine:</strong> {{ restaurant.cuisine }}</p>
-          <p><strong>Allergies:</strong> 
-            <span v-for="a in allergys" :key="a.id" :value="a.id">
-              {{ a.name }} |
-            </span>
+
+        <!-- READ-ONLY MODE -->
+        <div v-else class="restaurant-content">
+          <h3>{{ r.name }}</h3>
+          <p><strong>Cuisine:</strong> {{ cuisineName(r) }}</p>
+          <p>
+            <strong>Allergies:</strong>
+            {{ r.allergys.map(a => allergyName(a)).join(', ') }}
           </p>
-          <p><strong>Rating:</strong> {{ restaurant.rating }}</p>
-          <p><strong>Seats:</strong> {{ restaurant.seats_available }}</p>
-          <p><strong>Location:</strong> {{ restaurant.location }}</p>
-        </div>
-        <div class="restaurant-actions" v-if="restaurant.user.id === user.id">
-          <button @click="deleteRestaurant(restaurant.id)">Delete Restaurant</button>
+          <p><strong>Rating:</strong> {{ r.rating }}</p>
+          <p><strong>Seats:</strong> {{ r.seats_available }}</p>
+          <p><strong>Location:</strong> {{ r.location }}</p>
+
+          <div class="restaurant-actions" v-if="r.user.id === user.id">
+            <button @click="startEdit(r)">Edit</button>
+            <button @click="deleteRestaurant(r.id)">Delete</button>
+          </div>
         </div>
       </div>
+
 
       <!-- Pagination Controls -->
       <div class="pagination-controls">
@@ -118,6 +164,15 @@
           filterName: '',
           filterCuisine: '',
           filterAllergy: '',
+          editingId: null as number|null,
+          editedRestaurant: {
+            name: '',
+            cuisine_id: 0,
+            allergy_ids: [] as number[],
+            rating: 0,
+            seats_available: 0,
+            location: '',
+          },
           };
       },
       async mounted() {
@@ -230,6 +285,51 @@
 
       },
       methods: {
+        startEdit(r: Restaurant) {
+          this.editingId = r.id
+          this.editedRestaurant = {
+            name: r.name,
+            cuisine_id: typeof r.cuisine === 'object' ? r.cuisine.id : r.cuisine,
+            allergy_ids: r.allergys.map(a => a.id ?? a) as number[],
+            rating: r.rating,
+            seats_available: r.seats_available,
+            location: r.location,
+          }
+        },
+        cancelEdit() {
+          this.editingId = null
+        },
+        async saveRestaurant(id: number) {
+          try {
+            const payload = {
+              name: this.editedRestaurant.name,
+              cuisine_id: this.editedRestaurant.cuisine_id,
+              allergy_ids: this.editedRestaurant.allergy_ids,
+              rating: this.editedRestaurant.rating,
+              seats_available: this.editedRestaurant.seats_available,
+              location: this.editedRestaurant.location,
+            }
+            const res = await fetch(`http://localhost:8000/restaurant/${id}/`, {
+              method: 'PUT',
+              headers: {
+                'Authorization': `Bearer ${VueCookies.get('access_token')}`,
+                'Content-Type': 'application/json',
+                'X-CSRFToken': VueCookies.get('csrftoken'),
+              },
+              credentials: 'include',
+              body: JSON.stringify(payload),
+            })
+            if (!res.ok) throw new Error('Update failed')
+            const { restaurant: updated } = await res.json()
+            // update Pinia store
+            this.restaurantsStore.updateRestaurant(updated)
+            this.editingId = null
+            alert('Restaurant updated!')
+          } catch (e) {
+            console.error(e)
+            alert('Could not save changes.')
+          }
+        },
         cuisineName(restaurant) {
           return restaurant.cuisine && restaurant.cuisine.name
             ? restaurant.cuisine.name
