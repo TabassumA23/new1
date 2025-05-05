@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
+from django.utils.dateparse import parse_datetime
 
 from .models import Chosen, Restaurant, User, Friendship, ChosenCuisine, Cuisine, Review, Reservation, Allergy,ChosenAllergy, Wishlist,WishlistItem,WishlistShare
 from .forms import LoginForm, SignUpForm, UpdatePassForm, UpdateUserForm
@@ -530,6 +531,7 @@ def review_api(request: HttpRequest, review_id: int) -> JsonResponse:
     return JsonResponse(review.as_dict())
 
 # APIs for restaurant model below
+@login_required
 def reservations_api(request: HttpRequest) -> JsonResponse:
     """API endpoint for the Reservation"""
 
@@ -544,11 +546,13 @@ def reservations_api(request: HttpRequest) -> JsonResponse:
             # Ensure 'number_of_people' is in the request
             if 'number_of_people' not in POST:
                 return JsonResponse({"error": "'number_of_people' is missing"}, status=400)
-
+            reservation_time = parse_datetime(POST['reservation_time'])
+            if reservation_time is None:
+                return JsonResponse({"error": "Invalid datetime format."}, status=400)
             restaurant = Restaurant.objects.get(id=POST['restaurant_id'])
             reservation = Reservation.objects.create(
                 restaurant=restaurant,
-                reservation_time=POST['reservation_time'],
+                reservation_time=reservation_time,
                 number_of_people=POST['number_of_people'],
                 status=POST['status'],
                 special_requests=POST.get('special_requests', ''),
@@ -807,8 +811,9 @@ def wishlist_api(request: HttpRequest, wishlist_id: int) -> JsonResponse:
 
     # DELETE method to delete restaurant
     if request.method == 'DELETE':
-        wishlist.delete()
-        return JsonResponse({}, status=204)  # 204 No Content
+        if request.user != wishlist.owner:
+            return JsonResponse({"error": "Unauthorized"}, status=403)
+
 
     # GET restaurant data
     return JsonResponse(wishlist.as_dict())
