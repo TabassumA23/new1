@@ -74,11 +74,11 @@
           // Fetching csrf token using session cookie information on mount
           const sessionCookie = (document.cookie).split(';');
           let currentSessionid: string = ''
-          console.log(sessionCookie)
+
           // Checking in UserStore with CSRF token
           for (let cookie of sessionCookie) {
               cookie = cookie.trim();
-              console.log(cookie)
+
               if (cookie.startsWith("sessionid" + "=")) {
                   currentSessionid = cookie.substring("sessionid".length + 1);
               }
@@ -90,40 +90,39 @@
               const userId = Number(window.sessionStorage.getItem("user_id"));
               try {
                   const userCookie = await this.userStore.fetchUserReturn(Number(window.sessionStorage.getItem("user_id")));
-                  console.log("Fetched User:", userCookie);
+
               } catch (error) {
                   console.error("Error fetching user:", error);
               }
-          
-              console.log('checked sesh')
+      
+      
           }
           else{
               // Extracting user id from url query
               const params = new URLSearchParams(window.location.search);
               const userId: number = parseInt(params.get("u") || "0");
-              console.log(userId)
+          
               // Fetch user data using url query information on mount
               let user = await this.userStore.fetchUserReturn(userId);
-              console.log(user)
+    
               this.userStore.user = user;
               // Set session variable
               sessionStorage.setItem("user_id", userId.toString());
               
               // Fetching csrf token using session cookie information on mount
               const session_cookie = (document.cookie).split(';');
-              console.log(session_cookie)
+ 
 
               //Update user state in UserStore with CSRF token
               for (let cookie of session_cookie) {
                   cookie = cookie.trim();
-                  console.log(cookie)
+        
                   if (cookie.startsWith("csrftoken" + "=")) {
                       this.userStore.setCsrfToken(cookie.substring("csrftoken".length + 1));
 
-                      console.log(this.userStore.csrf)
                   }
                   //Update sessionStorage state in UserStore with CSRF token
-                  console.log(cookie)
+            
                   if (cookie.startsWith("sessionid" + "=")) {
                      // Set session variable
                      let sessionId = cookie.substring("csrftoken".length + 1);
@@ -140,7 +139,7 @@
             let madeRestaurants = restaurantData.restaurants as Restaurant[];
             const restaurantsStore = useRestaurantsStore();
             restaurantsStore.saveRestaurants(madeRestaurants); 
-            console.log(response)
+
 
             // Fetching all reviews from the backend
             const resp = await fetch('http://localhost:8000/wishlists/');
@@ -174,7 +173,7 @@
           try {
             const response = await fetch(`http://localhost:8000/wishlist/${wishlistId}/items/`);
             const data = await response.json();
-            console.log("Wishlist contents:", data.items);
+   
             this.selectedWishlistItems = data.items;
 
             // 👇 You must store the selected wishlist

@@ -37,15 +37,14 @@
 
           <!-- READ-ONLY MODE -->
           <template v-else>
-            <h3>{{ wishlist.name }}</h3>
-            <button
-              v-if="wishlist.user.id === user.id"
-              @click="startEdit(wishlist)"
-            >Rename</button>
+            <h3> Wishlist: {{ wishlist.name }}</h3>
+            <p>by {{ wishlist.user.first_name }} {{ wishlist.user.last_name }}</p>
+            <button v-if="wishlist.user.id === user.id" @click="startEdit(wishlist)">Rename</button>
+            <button @click="viewWishlist(wishlist.id)">View Wishlist</button>
+            <button v-if="wishlist.user.id === user.id" @click="deleteWishlist(wishlist.id)">Delete Wishlist</button>
           </template>
 
-          <p>by {{ wishlist.user.first_name }} {{ wishlist.user.last_name }}</p>
-          <p>by {{ wishlist.user.first_name }} {{ wishlist.user.last_name }}</p>
+          
           <div v-if="selectedWishlist && wishlist.id === selectedWishlist.id">
             <h4>Wishlist Contents:</h4>
             <ul>
@@ -53,11 +52,6 @@
                 {{ item.restaurant }}
               </li>
             </ul>
-          </div>
-
-          <div class="wishlist-actions">
-            <button @click="viewWishlist(wishlist.id)">View Wishlist</button>
-            <button v-if="wishlist.user.id === user.id" @click="deleteWishlist(wishlist.id)">Delete Wishlist</button>
           </div>
         </div>
       </div>
@@ -71,9 +65,24 @@
     <h2>Wishlists Shared With Me</h2>
     <div class="card wishlist-card">
       <div v-for="wishlist in paginatedSharedWishlists" :key="wishlist.id">
-        <h3>{{ wishlist.name }}</h3>
+        <h3> Wishlist: {{ wishlist.name }}</h3>
         <p>Owner: {{ wishlist.user.first_name }} {{ wishlist.user.last_name }}</p>
+        
+        
+          <div v-if="selectedWishlist && wishlist.id === selectedWishlist.id">
+            <h4>Wishlist Contents:</h4>
+            <ul>
+              <li v-for="item in selectedWishlistItems" :key="item.id">
+                {{ item.restaurant }}
+              </li>
+            </ul>
+          </div>
+          <div class="wishlist-actions">
+            <button @click="viewWishlist(wishlist.id)">View Wishlist</button>
+          </div>
       </div>
+      
+      
     </div>
     <div class="pagination-controls">
       <button @click="currentSharedPage--" :disabled="currentSharedPage === 1">Previous</button>
@@ -125,11 +134,11 @@
           // Fetching csrf token using session cookie information on mount
           const sessionCookie = (document.cookie).split(';');
           let currentSessionid: string = ''
-          console.log(sessionCookie)
+   
           // Checking in UserStore with CSRF token
           for (let cookie of sessionCookie) {
               cookie = cookie.trim();
-              console.log(cookie)
+           
               if (cookie.startsWith("sessionid" + "=")) {
                   currentSessionid = cookie.substring("sessionid".length + 1);
               }
@@ -141,40 +150,39 @@
               const userId = Number(window.sessionStorage.getItem("user_id"));
               try {
                   const userCookie = await this.userStore.fetchUserReturn(Number(window.sessionStorage.getItem("user_id")));
-                  console.log("Fetched User:", userCookie);
+           
               } catch (error) {
                   console.error("Error fetching user:", error);
               }
-          
-              console.log('checked sesh')
+
           }
           else{
               // Extracting user id from url query
               const params = new URLSearchParams(window.location.search);
               const userId: number = parseInt(params.get("u") || "0");
-              console.log(userId)
+            
               // Fetch user data using url query information on mount
               let user = await this.userStore.fetchUserReturn(userId);
-              console.log(user)
+      
               this.userStore.user = user;
               // Set session variable
               sessionStorage.setItem("user_id", userId.toString());
               
               // Fetching csrf token using session cookie information on mount
               const session_cookie = (document.cookie).split(';');
-              console.log(session_cookie)
+           
 
               //Update user state in UserStore with CSRF token
               for (let cookie of session_cookie) {
                   cookie = cookie.trim();
-                  console.log(cookie)
+      
                   if (cookie.startsWith("csrftoken" + "=")) {
                       this.userStore.setCsrfToken(cookie.substring("csrftoken".length + 1));
 
-                      console.log(this.userStore.csrf)
+                  
                   }
                   //Update sessionStorage state in UserStore with CSRF token
-                  console.log(cookie)
+                
                   if (cookie.startsWith("sessionid" + "=")) {
                      // Set session variable
                      let sessionId = cookie.substring("csrftoken".length + 1);
@@ -191,7 +199,7 @@
             let madeRestaurants = restaurantData.restaurants as Restaurant[];
             const restaurantsStore = useRestaurantsStore();
             restaurantsStore.saveRestaurants(madeRestaurants); 
-            console.log(response)
+     
 
             // Fetching all reviews from the backend
             const resp = await fetch('http://localhost:8000/wishlists/');
@@ -262,16 +270,16 @@
         },
         formatDate(date) {
             const d = new Date(date);
-            return d.toLocaleDateString();  // This will display only the date in the format 'MM/DD/YYYY'
+            return d.toLocaleDateString();  // format 'MM/DD/YYYY'
         },
         async viewWishlist(wishlistId: number) {
           try {
             const response = await fetch(`http://localhost:8000/wishlist/${wishlistId}/items/`);
             const data = await response.json();
-            console.log("Wishlist contents:", data.items);
+           
             this.selectedWishlistItems = data.items;
 
-            // 👇 You must store the selected wishlist
+         
             const wishlist = this.wishlists.find(w => w.id === wishlistId);
             this.selectedWishlist = wishlist;
 
@@ -300,8 +308,7 @@
 
             if (response.ok) {
               alert("Wishlist shared successfully!");
-              // Optionally reload or refetch shared data
-              // await this.fetchSharedWishlists();
+       
             } else {
               const error = await response.text();
               console.error("Failed to share wishlist:", error);
@@ -333,7 +340,7 @@
                 
             };
             
-            console.log(payload); 
+            
             
             
             try {
@@ -350,7 +357,7 @@
 
               if (!wishlistResponse.ok) {
                 const errorText = await wishlistResponse.text();
-                console.error("Server error response:", errorText);  // SHOW this in console
+                console.error("Server error response:", errorText); 
                 throw new Error(errorText);
               }
 

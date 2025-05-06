@@ -74,13 +74,4 @@ npm install vue-cookies
 
 ----------------------------------------------------------------------------------------------------------------------------
 
-Evie Bishop 220232902 was assigned to building the backend models, views, urls, she also made several of the CRUDS statements and worked on the friends table.
-
-Temidayo Ogunfuye 220098803 was assigned to login page and logout page, csrf and sessions and worked on several of the cruds statements.
-
-Tabassum Ahmed 220349071 was assigned to do pagination and assigned to building the backend models, views, urls, she also made several of the CRUDS statement. 
-
-Overall we were very happy with the amount each other did and we helped each other throughout.
-We were all inolved in testing and deployment.
-
 Superuser -> username: admin, password: coursework, email: ec22943@qmul.ac.uk

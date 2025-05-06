@@ -15,30 +15,6 @@
 
       <button @click="createWishlistItem">Add to Wishlist</button>
     </div>
-
-    <!-- All Wishlist Items Listing -->
-    <!-- <h2>All Wishlist Items</h2>
-    <div class="card wishlist-card">
-      <div
-        class="wishlist-item"
-        v-for="item in paginatedItems"
-        :key="item.id"
-      >
-        <div class="wishlist-header">
-          <p>{{ item.wishlist }}"</p>
-        </div>
-        <div class="wishlist-actions">
-          <button v-if="item.owner.id === user.id" @click="deleteWishlistItem(item.id)">Delete</button>
-        </div>
-      </div> -->
-
-      <!-- Pagination Controls -->
-      <!-- <div class="pagination-controls">
-        <button @click="currentPage--" :disabled="currentPage === 1">Previous</button>
-        <span>Page {{ currentPage }} of {{ totalPages }}</span>
-        <button @click="currentPage++" :disabled="currentPage === totalPages">Next</button>
-      </div>
-    </div> -->
   </main>
 </template>
 
@@ -73,11 +49,11 @@
           // Fetching csrf token using session cookie information on mount
           const sessionCookie = (document.cookie).split(';');
           let currentSessionid: string = ''
-          console.log(sessionCookie)
+         
           // Checking in UserStore with CSRF token
           for (let cookie of sessionCookie) {
               cookie = cookie.trim();
-              console.log(cookie)
+       
               if (cookie.startsWith("sessionid" + "=")) {
                   currentSessionid = cookie.substring("sessionid".length + 1);
               }
@@ -89,40 +65,39 @@
               const userId = Number(window.sessionStorage.getItem("user_id"));
               try {
                   const userCookie = await this.userStore.fetchUserReturn(Number(window.sessionStorage.getItem("user_id")));
-                  console.log("Fetched User:", userCookie);
+             
               } catch (error) {
                   console.error("Error fetching user:", error);
               }
           
-              console.log('checked sesh')
+
           }
           else{
               // Extracting user id from url query
               const params = new URLSearchParams(window.location.search);
               const userId: number = parseInt(params.get("u") || "0");
-              console.log(userId)
+
               // Fetch user data using url query information on mount
               let user = await this.userStore.fetchUserReturn(userId);
-              console.log(user)
+
               this.userStore.user = user;
               // Set session variable
               sessionStorage.setItem("user_id", userId.toString());
               
               // Fetching csrf token using session cookie information on mount
               const session_cookie = (document.cookie).split(';');
-              console.log(session_cookie)
+              
 
               //Update user state in UserStore with CSRF token
               for (let cookie of session_cookie) {
                   cookie = cookie.trim();
-                  console.log(cookie)
+            
                   if (cookie.startsWith("csrftoken" + "=")) {
                       this.userStore.setCsrfToken(cookie.substring("csrftoken".length + 1));
 
-                      console.log(this.userStore.csrf)
                   }
                   //Update sessionStorage state in UserStore with CSRF token
-                  console.log(cookie)
+         
                   if (cookie.startsWith("sessionid" + "=")) {
                      // Set session variable
                      let sessionId = cookie.substring("csrftoken".length + 1);
@@ -139,8 +114,7 @@
             let madeRestaurants = restaurantData.restaurants as Restaurant[];
             const restaurantsStore = useRestaurantsStore();
             restaurantsStore.saveRestaurants(madeRestaurants); 
-            console.log(response)
-
+    
                 // Fetching all restaurants from the backend
             let responseW = await fetch(`http://localhost:8000/wishlists/`);
             let wishlistData = await responseW.json();
@@ -150,14 +124,14 @@
             let madeWishlists = wishlistData.wishlists as Wishlist[];
             const wishlistsStore = useWishlistsStore();
             wishlistsStore.saveWishlists(madeWishlists); 
-            console.log(responseW)
+   
 
             
 
             // Fetching all reviews from the backend
             const resp = await fetch('http://localhost:8000/wishlistItems/');
             const data = await resp.json();
-            this.wishlistItems = data.wishlistItems;  // Make sure the backend sends an array of reviews
+            this.wishlistItems = data.wishlistItems;  
       },
       methods: {
         formatDate(date) {
@@ -176,8 +150,6 @@
               owner: this.userStore.user.id,
             };
 
-            
-            console.log(payload); 
             
             
             try {

@@ -150,7 +150,7 @@ class User(AbstractUser):
     allergys = models.ManyToManyField(Allergy, related_name= "allergys")
     chosen_allergy = models.ManyToManyField(Allergy, through='ChosenAllergy')
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+         return f"{self.first_name} {self.last_name}"
     
     '''
     Dictionary
@@ -168,8 +168,6 @@ class User(AbstractUser):
             'password': self.password,
             'user_type': self.user_type,
         }
-    
-
     
 class Chosen(models.Model):
      """

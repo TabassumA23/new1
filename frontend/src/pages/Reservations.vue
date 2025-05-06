@@ -20,7 +20,7 @@
         <label for="special-requests">Addition notes:</label>
         <input type="special-requests" v-model="newReservation.special_requests" />
 
-        <button @click="createReservation">Special requests:</button>
+        <button @click="createReservation">Create Reservation</button>
   </div>
   </div>
 </template>

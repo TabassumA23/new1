@@ -32,11 +32,11 @@
           // Fetching csrf token using session cookie information on mount
           const sessionCookie = (document.cookie).split(';');
           let currentSessionid: string = ''
-          console.log(sessionCookie)
+     
           // Checking in UserStore with CSRF token
           for (let cookie of sessionCookie) {
               cookie = cookie.trim();
-              console.log(cookie)
+
               if (cookie.startsWith("sessionid" + "=")) {
                   currentSessionid = cookie.substring("sessionid".length + 1);
               }
@@ -53,35 +53,35 @@
                   console.error("Error fetching user:", error);
               }
           
-              console.log('checked sesh')
+
           }
           else{
               // Extracting user id from url query
               const params = new URLSearchParams(window.location.search);
               const userId: number = parseInt(params.get("u") || "0");
-              console.log(userId)
+        
               // Fetch user data using url query information on mount
               let user = await this.userStore.fetchUserReturn(userId);
-              console.log(user)
+     
               this.userStore.user = user;
               // Set session variable
               sessionStorage.setItem("user_id", userId.toString());
               
               // Fetching csrf token using session cookie information on mount
               const session_cookie = (document.cookie).split(';');
-              console.log(session_cookie)
+
 
               //Update user state in UserStore with CSRF token
               for (let cookie of session_cookie) {
                   cookie = cookie.trim();
-                  console.log(cookie)
+         
                   if (cookie.startsWith("csrftoken" + "=")) {
                       this.userStore.setCsrfToken(cookie.substring("csrftoken".length + 1));
 
                       console.log(this.userStore.csrf)
                   }
                   //Update sessionStorage state in UserStore with CSRF token
-                  console.log(cookie)
+         
                   if (cookie.startsWith("sessionid" + "=")) {
                      // Set session variable
                      let sessionId = cookie.substring("csrftoken".length + 1);
@@ -116,9 +116,7 @@
                 description: this.newCuisine.description,  
                 user_id: userId,
             };
-            
-            console.log(payload); 
-            console.log(userId);  
+
             
             try {
                 const cuisineResponse = await fetch('http://localhost:8000/cuisines/', {
@@ -132,13 +130,7 @@
                     body: JSON.stringify(payload),
                 });
 
-                const responseText = await cuisineResponse.text();  // Log raw response for debugging
-                console.log(responseText);
-
-                // Add the newly created review to the Pinia store
-                // const data = await reviewResponse.json();
-                // let createdReview = data.review;
-                // reviewsStore.addReview(createdReview);
+       
                 window.location.reload();
                 alert('cuisine added successfully!');
             } catch (error) {
