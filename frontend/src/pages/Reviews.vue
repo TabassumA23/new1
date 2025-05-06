@@ -28,23 +28,25 @@
     </div>
 
     <h2>All Reviews</h2>
-    <div class="card review-list-card">
-
-      <!-- Filter by restaurant -->
+    <!-- Filter by restaurant -->
       <input
         type="text"
         v-model="searchRestaurant"
         placeholder="Filter by restaurant name..."
       />
+    <div class="card review-list-card">
+
+      
 
       <!-- Review -->
       <div
         v-for="(review, id) in paginatedReviews"
-        :key="review.id"
+        :key="id"
         class="review-item"
       >
         <!-- EDIT MODE -->
-        <template   v-if="review.user.id === user.id && editingId === review.id">
+        <template v-if="review.user && user && review.user.id === user.id && editingId === review.id">
+
           <div class="review-edit-form">
             <input v-model="editedReview.name" placeholder="Review title" />
             <select v-model="editedReview.restaurantId">
@@ -67,7 +69,8 @@
         <!-- READ-ONLY MODE -->
         <template v-else>
           <div class="review-header">
-            <h3>{{ review.name }}</h3>
+            <h3>Title: {{ review.name }}</h3>
+            <p><strong>Restaurant:</strong> {{ review.restaurant?.name || 'Unknown' }}</p>
             <p>
               <strong>By:</strong>
               {{ review.user.first_name }} {{ review.user.last_name }}
@@ -77,17 +80,19 @@
             </p>
           </div>
           <div class="review-content">
-            <p>{{ review.description }}</p>
+            <p>Review: {{ review.description }}</p>
             <p>
               <strong>Overall:</strong> {{ review.rating }} ☆
               <strong>Food:</strong> {{ review.food_rating }} ☆
               <strong>Service:</strong> {{ review.service_rating }} ☆
               <strong>Ambience:</strong> {{ review.ambience_rating }} ☆
             </p>
-            <p><strong>Restaurant:</strong> {{ review.restaurant.name }}</p>
+            
+
           </div>
 
-          <div class="review-actions" v-if="review.user.id === user.id">
+          <div class="review-actions" v-if="review.user && user && review.user.id === user.id">
+
             <button @click="startReviewEdit(review)">Edit</button>
             <button @click="deleteReview(review.id)">Delete</button>
           </div>
@@ -158,11 +163,11 @@
           // Fetching csrf token using session cookie information on mount
           const sessionCookie = (document.cookie).split(';');
           let currentSessionid: string = ''
-          console.log(sessionCookie)
+
           // Checking in UserStore with CSRF token
           for (let cookie of sessionCookie) {
               cookie = cookie.trim();
-              console.log(cookie)
+
               if (cookie.startsWith("sessionid" + "=")) {
                   currentSessionid = cookie.substring("sessionid".length + 1);
               }
@@ -174,40 +179,39 @@
               const userId = Number(window.sessionStorage.getItem("user_id"));
               try {
                   const userCookie = await this.userStore.fetchUserReturn(Number(window.sessionStorage.getItem("user_id")));
-                  console.log("Fetched User:", userCookie);
+             
               } catch (error) {
                   console.error("Error fetching user:", error);
               }
-          
-              console.log('checked sesh')
+        
           }
           else{
               // Extracting user id from url query
               const params = new URLSearchParams(window.location.search);
               const userId: number = parseInt(params.get("u") || "0");
-              console.log(userId)
+
               // Fetch user data using url query information on mount
               let user = await this.userStore.fetchUserReturn(userId);
-              console.log(user)
+           
               this.userStore.user = user;
               // Set session variable
               sessionStorage.setItem("user_id", userId.toString());
               
               // Fetching csrf token using session cookie information on mount
               const session_cookie = (document.cookie).split(';');
-              console.log(session_cookie)
+         
 
               //Update user state in UserStore with CSRF token
               for (let cookie of session_cookie) {
                   cookie = cookie.trim();
-                  console.log(cookie)
+            
                   if (cookie.startsWith("csrftoken" + "=")) {
                       this.userStore.setCsrfToken(cookie.substring("csrftoken".length + 1));
 
-                      console.log(this.userStore.csrf)
+                     
                   }
                   //Update sessionStorage state in UserStore with CSRF token
-                  console.log(cookie)
+                  
                   if (cookie.startsWith("sessionid" + "=")) {
                      // Set session variable
                      let sessionId = cookie.substring("csrftoken".length + 1);
@@ -224,7 +228,6 @@
             let madeRestaurants = restaurantData.restaurants as Restaurant[];
             const restaurantsStore = useRestaurantsStore();
             restaurantsStore.saveRestaurants(madeRestaurants); 
-            console.log(response)
 
             // Fetching all reviews from the backend
             const resp = await fetch('http://localhost:8000/reviews/');
@@ -280,6 +283,7 @@
             if (idx > -1) this.reviews.splice(idx, 1, updated.review)
 
             this.cancelReviewEdit()
+            window.location.reload();
             alert('Review updated!')
           } catch (e) {
             console.error(e)
@@ -307,10 +311,7 @@
                 date: this.newReview.date,
                 user_id: userId,
             };
-            
-            console.log(payload); 
-            console.log(userId);  
-            
+
             try {
                 const reviewResponse = await fetch('http://localhost:8000/reviews/', {
                     method: 'POST',
@@ -322,25 +323,17 @@
                     credentials: 'include',
                     body: JSON.stringify(payload),
                 });
-
-                const responseText = await reviewResponse.text();  // Log raw response for debugging
-                console.log(responseText);
-
-                // Add the newly created review to the Pinia store
-                // const data = await reviewResponse.json();
-                // let createdReview = data.review;
-                // reviewsStore.addReview(createdReview);
                 window.location.reload();
                 alert('Review added successfully!');
             } catch (error) {
-                    console.error('Error creating reservation:', error);
-                    alert('Failed to create reservation');
+              console.error('Error creating reservation:', error);
+              alert('Failed to create reservation');
             }
         },
         async deleteReview(reviewId: number) {
             // Check if the logged-in user is the one who wrote the review
             const reviewToDelete = this.reviews.find(review => review.id === reviewId);
-            if (!reviewToDelete || reviewToDelete.user.id !== this.user.id) {
+            if (!reviewToDelete || !reviewToDelete.user || reviewToDelete.user.id !== this.user.id) {
                 alert("You cannot delete this review. Only the author can delete it.");
                 return; // Prevent deletion
             }
@@ -384,10 +377,10 @@
             return this.restaurantsStore.restaurants; // Bind to the fetched cuisine data from Pinia store
         },
         filteredReviews() {
-            if (!this.searchRestaurant) return this.reviews;
-            return this.reviews.filter(review =>
-            review.restaurant.toLowerCase().includes(this.searchRestaurant.toLowerCase())
-            );
+          if (!this.searchRestaurant) return this.reviews;
+          return this.reviews.filter(review =>
+            review.restaurant?.name?.toLowerCase().includes(this.searchRestaurant.toLowerCase())
+          );
         },
         paginatedReviews() {
             const start = (this.currentPage - 1) * this.itemsPerPage;

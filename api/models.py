@@ -264,7 +264,10 @@ class Review(models.Model):
         return {
             'id': self.id,
             'name': self.name,
-            'restaurant': self.restaurant.name,
+            'restaurant': {
+                'id': self.restaurant.id,
+                'name': self.restaurant.name,
+            },
             'rating': self.rating,
             'food_rating': self.food_rating,
             'service_rating': self.service_rating,
