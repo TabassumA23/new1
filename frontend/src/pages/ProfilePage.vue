@@ -97,7 +97,7 @@
             <p><strong>Seats:</strong> {{ restaurant.seats_available }}</p>
           </div>
         </div>
-        <p v-else class="empty-state">No recommendations yet.</p>
+        <p v-else class="empty-state">No recommendations yet. Please reset your preferences for new recommendations.</p>
       </div>
 
       <div class="card">
@@ -171,15 +171,15 @@
           };
       },
       async mounted() {
-          console.log(this.user.userType); 
+
           // Fetching csrf token using session cookie information on mount
           const sessionCookie = (document.cookie).split(';');
           let currentSessionid: string = ''
-          console.log(sessionCookie)
+
           // Checking in UserStore with CSRF token
           for (let cookie of sessionCookie) {
               cookie = cookie.trim();
-              console.log(cookie)
+
               if (cookie.startsWith("sessionid" + "=")) {
                   currentSessionid = cookie.substring("sessionid".length + 1);
               }
@@ -191,23 +191,22 @@
               const userId = Number(window.sessionStorage.getItem("user_id"));
               try {
                   const userCookie = await this.userStore.fetchUserReturn(Number(window.sessionStorage.getItem("user_id")));
-                  console.log("Fetched User:", userCookie);
-                  console.log(this.user.user_type); 
+           
                   
               } catch (error) {
                   console.error("Error fetching user:", error);
               }
           
-              console.log('checked sesh')
+
           }
           else{
               // Extracting user id from url query
               const params = new URLSearchParams(window.location.search);
               const userId: number = parseInt(params.get("u") || "0");
-              console.log(userId)
+   
               // Fetch user data using url query information on mount
               let user = await this.userStore.fetchUserReturn(userId);
-              console.log(user)
+      
               
               this.userStore.user = user;
               // Set session variable
@@ -215,19 +214,19 @@
               
               // Fetching csrf token using session cookie information on mount
               const session_cookie = (document.cookie).split(';');
-              console.log(session_cookie)
+
 
               //Update user state in UserStore with CSRF token
               for (let cookie of session_cookie) {
                   cookie = cookie.trim();
-                  console.log(cookie)
+
                   if (cookie.startsWith("csrftoken" + "=")) {
                       this.userStore.setCsrfToken(cookie.substring("csrftoken".length + 1));
 
                       console.log(this.userStore.csrf)
                   }
                   //Update sessionStorage state in UserStore with CSRF token
-                  console.log(cookie)
+
                   if (cookie.startsWith("sessionid" + "=")) {
                      // Set session variable
                      let sessionId = cookie.substring("csrftoken".length + 1);
@@ -245,7 +244,7 @@
           let madeRestaurants = restaurantData.restaurants as Restaurant[];
           const restaurantsStore = useRestaurantsStore();
           restaurantsStore.saveRestaurants(madeRestaurants); 
-          console.log(response)
+
 
           // Fetching all cuisines from the backend
           let res = await fetch(`http://localhost:8000/cuisines/`);
@@ -255,7 +254,7 @@
           let madeCuisines = cuisineData.cuisines as Cuisine[];
           const cuisinesStore = useCuisinesStore();
           cuisinesStore.saveCuisines(madeCuisines); 
-          console.log(res)
+
 
           //fetch all the friendships
           let responseFriendship = await fetch("http://localhost:8000/friendships/");
@@ -290,7 +289,7 @@
           let madeAllergys = allergyData.allergys as Allergy[];
           const allergysStore = useAllergysStore();
           allergysStore.saveAllergys(madeAllergys); 
-          console.log(resA)
+
 
           //fetch all the friendships
           let responseChosenAllergy = await fetch("http://localhost:8000/chosenAllergys/");
@@ -308,31 +307,27 @@
           
       },
       methods: {
-          //console.log(user.userType)
+    
           toggleEditField(field: string) {
-            console.log(typeof field)
+           
               this[`edit${field}`] = !this[`edit${field}`];
               if (this[`edit${field}`]) {
                   this.editedUser[field.toLowerCase()] = this.user[field.toLowerCase()];
               }
-              //this.editPassword = !this.editPassword; // Toggle edit mode
+     
           },
 
-          // Fetch the current user's chosen cuisines and allergies
+      
            // Fetch the current user's chosen cuisines and allergies
           async getUserPreferences() {
             const user = this.userStore.user;
-            console.log('Updated Chosen Cuisines:', this.chosenCuisines);
-
-
-            // Ensure that chosenCuisine and allergies are defined, default to empty array if not
+        
             this.chosenCuisines = user.chosenCuisines || [];  // Default to empty array if undefined
             this.chosenAllergys = user.chosenAllergys || [];  // Default to empty array if undefined
 
-            console.log("Chosen Cuisines:", this.chosenCuisines);
-            console.log("Allergies:", this.chosenAllergys);
 
-            // Now fetch the recommended restaurants based on preferences
+
+            //  fetch the recommended restaurants based on preferences
             await this.getRecommendedRestaurants();
           },
           // Fetch the recommended restaurants from the backend
@@ -363,7 +358,7 @@
               if (response.ok) {
                 const data = await response.json();
                 this.recommendedRestaurants = data.restaurants;  // Set the fetched recommended restaurants
-                console.log("Recommended Restaurants:", this.recommendedRestaurants);
+    
               } else {
                 console.error('Failed to fetch recommended restaurants');
               }
@@ -382,7 +377,7 @@
                   const payload = {
                       [field.toLowerCase()]: this.editedUser[field.toLowerCase()],
                   };
-                  console.log(payload)
+          
                   const response = await fetch(`http://localhost:8000/user/${this.user.id}/`, {
                       method: "PUT",
                       headers: {
@@ -394,14 +389,14 @@
                       body: JSON.stringify(payload),
                   });
               
-                  console.log("CSRF Token:", this.userStore.csrf);
+
 
                   if (!response.ok) {
                       throw new Error("Failed to update field");
                   }
 
                   const updatedUser = await response.json();
-                  console.log(updatedUser)
+      
                   this.userStore = this.userStore.saveUsers(updatedUser); // Update the user state in the store
                   window.location.reload();
                   alert(`${field} updated successfully!`);
@@ -534,7 +529,7 @@
           },
           //rejects the friendships between users and friend whether pending or accepted
           async deleteFriendship(friendshipId: number) {
-            console.log(friendshipId)
+
             try {
               const response = await fetch(`http://localhost:8000/friendship/${friendshipId}/`, {
                 method: "DELETE",
