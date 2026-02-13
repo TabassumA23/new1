@@ -10,7 +10,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.utils.dateparse import parse_datetime
 
-from .models import Chosen, Restaurant, User, Friendship, ChosenCuisine, Cuisine, Review, Reservation, Allergy,ChosenAllergy, Wishlist,WishlistItem,WishlistShare
+from .models import TrialParticipation, Trial, User, TrialQuestionAnswer, TrialQuestion, TrialReview, TrialOption,TrialSpecificSelection
 from .forms import LoginForm, SignUpForm, UpdatePassForm, UpdateUserForm
 
 # Authenticate login before Vue SPA redirect
@@ -44,27 +44,39 @@ def signup_user(request: HttpRequest) -> HttpResponse:
         form = SignUpForm(request.POST)
         # Clean values if valid and authenticate
         if form.is_valid():
-            first_name=form.cleaned_data["first_name"]
-            last_name=form.cleaned_data["last_name"]
+            first_name = form.cleaned_data["first_name"]
+            last_name = form.cleaned_data["last_name"]
             username = form.cleaned_data["username"]
-            email=form.cleaned_data["email"]
-            date_of_birth=form.cleaned_data["date_of_birth"]
-            password=form.cleaned_data["password"]
-            user_type = form.cleaned_data["user_type"]
+            email = form.cleaned_data["email"]
+            date_of_birth = form.cleaned_data["date_of_birth"]
+            phone_number = form.cleaned_data.get("phone_number")
+            password = form.cleaned_data["password"]
+            # user_type field commented out in your model
+            # user_type = form.cleaned_data.get("user_type", UserType.CUSTOMER)
+
+            # Authenticate first to check if user already exists
             user = auth.authenticate(username=username, password=password)
             # Rendering Vue SPA if an existing user is not found
             if user is None:
                 # Create a new user with input form details
-                user = User.objects.create_user(username=username, email=email, password=password)
-                user.first_name=first_name
-                user.last_name=last_name
-                user.date_of_birth=date_of_birth
-                user.user_type=user_type
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password,
+                )
+                user.first_name = first_name
+                user.last_name = last_name
+                user.date_of_birth = date_of_birth
+                user.phone_number = phone_number
+                # user.user_type = user_type  # Uncomment if you re-enable user_type
                 user.save()
 
+                # Log in the new user
                 auth.login(request, user)
-                user_id=user.id
-                return redirect(settings.LOGIN_REDIRECT_URL+'?u=%s' %user_id)
+
+                # Redirect to Vue SPA with user ID
+                user_id = user.id
+                return redirect(f"{settings.LOGIN_REDIRECT_URL}?u={user_id}")
             else:
                 # Show failed user creation
                 return render(request, "api/auth/signup.html", {"form": form, "message": 'User already exists with that username. Please try again.'})
@@ -89,29 +101,49 @@ def users_api(request: HttpRequest) -> JsonResponse:
     if request.method == 'POST':
         try:
             POST = json.loads(request.body)
-            required_fields = ['first_name', 'last_name', 'email', 'date_of_birth', 'password']
+            required_fields = ['first_name', 'last_name', 'email', 'date_of_birth', 'password', 'phone_number']
             missing_fields = [field for field in required_fields if field not in POST]
             if missing_fields:
                 return JsonResponse({"error": f"Missing fields: {', '.join(missing_fields)}"}, status=400)
 
-            chosen_restaurants = POST.get('chosen_restaurant', [])
+            # Optional trial participation, question answers, and specific selections
+            trial_ids = POST.get('trial_ids', [])                # list of Trial IDs
+            question_answers = POST.get('question_answers', [])  # list of dicts: {question_id, answer_text}
+            option_ids = POST.get('option_ids', [])              # list of TrialOption IDs
+
+            # Create user
             user = User.objects.create(
                 first_name=POST['first_name'],
                 last_name=POST['last_name'],
                 email=POST['email'],
+                phone_number=phone_number,
                 date_of_birth=POST['date_of_birth'],
                 password=POST['password'],
             )
 
-            for chosen_restaurant_id in chosen_restaurants:
-                chosen_restaurant = Restaurant.objects.get(id=chosen_restaurant_id)  # Ensure hobbies exist
-                user.chosen_restaurant.add(chosen_restaurant)
+             # Add trials (TrialParticipation)
+            for trial_id in trial_ids:
+                trial = Trial.objects.get(id=trial_id)
+                TrialParticipation.objects.create(user=user, trial=trial)
+
+            # Add question answers (TrialQuestionAnswer)
+            for qa in question_answers:
+                question = TrialQuestion.objects.get(id=qa['question_id'])
+                answer_text = qa.get('answer_text', 'chosenAnswer')
+                TrialQuestionAnswer.objects.create(user=user, question=question, answer_text=answer_text)
+
+            # Add specific selections (TrialSpecificSelection)
+            for option_id in option_ids:
+                option = TrialOption.objects.get(id=option_id)
+                TrialSpecificSelection.objects.create(user=user, option=option)
 
             return JsonResponse(user.as_dict(), status=201)
-        #restaurant not found when is retrived by id 
-        except Restaurant.DoesNotExist:
-            return JsonResponse({"error": "restaurant not found."}, status=400)
-        #general error hendler 
+            return JsonResponse(user.as_dict(), status=201)
+       # Handle missing related objects
+        except (Trial.DoesNotExist, TrialQuestion.DoesNotExist, TrialOption.DoesNotExist):
+            return JsonResponse({"error": "Invalid trial, question, or option ID provided."}, status=400)
+
+        # General error
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
@@ -130,136 +162,60 @@ def user_api(request: HttpRequest, user_id: int) -> JsonResponse:
     except User.DoesNotExist:
         return JsonResponse({"error": "User not found."}, status=404)
 
-    # PUT method
+    # PUT method to update user fields
     if request.method == 'PUT':
         try:
             PUT = json.loads(request.body)
             user.first_name = PUT.get("first_name", user.first_name)
             user.last_name = PUT.get("last_name", user.last_name)
             user.email = PUT.get("email", user.email)
+            user.phone_number = PUT.get("phone_number", user.phone_number)
             user.date_of_birth = PUT.get("date_of_birth", user.date_of_birth)
             user.password = PUT.get("password", user.password)
-
             user.save()
             return JsonResponse({"success": "User updated successfully."})
-        except Restaurant.DoesNotExist:
-            return JsonResponse({"error": "restaurant not found."}, status=400)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
     # DELETE method
     if request.method == 'DELETE':
         user.delete()
-        return JsonResponse({})
+        return JsonResponse({}, status=204)
+
 
     # GET method
     return JsonResponse(user.as_dict())
 
-# APIs for friendship model below
-def friendships_api(request: HttpRequest) -> JsonResponse:
-    """API endpoint for the Friendship"""
-
-    # POST method which is the create method
-    if request.method == 'POST':
-        # Create a new friendship
-        POST = json.loads(request.body)
-        user = User.objects.get(id=POST.get("user_id"))
-        friend = User.objects.get(id=POST.get("friend_id"))
-
-        friendship = Friendship.objects.create(
-            user = user,
-            friend = friend,
-            accepted = POST['accepted'],
-        )
-        return JsonResponse(friendship.as_dict())
-
-    # GET method which allows the user to view all hobbies
-    return JsonResponse({
-        'friendships': [
-            friendship.as_dict()
-            for friendship in Friendship.objects.all()
-        ]
-    })
-
-def friendship_api(request: HttpRequest, friendship_id: int) -> JsonResponse:
-    """API endpoint for a single friendship"""
-    try:
-        friendship = Friendship.objects.get(id=friendship_id)
-    except Friendship.DoesNotExist:
-        return JsonResponse({"error": "Friendship not found."}, status=404)
-
-    if request.method == 'PUT':
-        # Ensure the user has permission to accept the friendship
-        if request.user.id != friendship.user.id:
-            return JsonResponse({"error": "Unauthorized to accept this friendship."}, status=403)
-
-        friendship.accepted = True
-        friendship.save()
-        return JsonResponse({"friendship": friendship.as_dict()})
-
-    elif request.method == 'DELETE':
-        # Ensure the user has permission to delete the friendship
-        if request.user.id != friendship.user.id:
-            return JsonResponse({"error": "Unauthorized to delete this friendship."}, status=403)
-
-        friendship.delete()
-        return JsonResponse({}, status=204)  # 204 No Content
-
-    return JsonResponse(friendship.as_dict())
-
 
 # APIs for chosen model below
-def chosens_api(request: HttpRequest) -> JsonResponse:
-    """API endpoint for the Chosen"""
+# APIs for TrialParticipation (Chosen trial)
+def trial_participations_api(request: HttpRequest) -> JsonResponse:
+    """API endpoint for TrialParticipation"""
 
-    # POST method which is the create method
     if request.method == 'POST':
-        try:
-            # Create a new restaurant
-            POST = json.loads(request.body)
-            user = User.objects.get(id=POST.get("user_id"))
-            restaurant = Restaurant.objects.get(id=POST.get("restaurant_id"))
-            chosen = Chosen.objects.create(
-                user = user,
-                restaurant = restaurant,
+        POST = json.loads(request.body)
+        user = User.objects.get(id=POST['user_id'])
+        trial = Trial.objects.get(id=POST['trial_id'])
+        participation = TrialParticipation.objects.create(user=user, trial=trial)
+        return JsonResponse(participation.as_dict())
 
-            )
-            return JsonResponse(chosen.as_dict())
-        except ObjectDoesNotExist:
-            return JsonResponse({'error': 'Invalid user_id or restaurant_id'}, status=404)
-        except IntegrityError:
-            return JsonResponse({'error': 'Chosen creation failed due to integrity error'}, status=400)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
-
-    # GET method which allows the user to view all hobbies
     return JsonResponse({
-        'chosens': [
-            chosen.as_dict()
-            for chosen in Chosen.objects.all()
-        ]
+        'trial_participations': [tp.as_dict() for tp in TrialParticipation.objects.all()]
     })
 
 
-def chosen_api(request: HttpRequest, chosen_id: int) -> JsonResponse:
-    """API endpoint for a single chosen"""
+def trial_participation_api(request: HttpRequest, tp_id: int) -> JsonResponse:
+    """API endpoint for a single TrialParticipation"""
     try:
-        chosen = Chosen.objects.get(id=chosen_id)
-    except chosen.DoesNotExist:
-        return JsonResponse({"error": "Chosen not found."}, status=404)
+        tp = TrialParticipation.objects.get(id=tp_id)
+    except TrialParticipation.DoesNotExist:
+        return JsonResponse({"error": "TrialParticipation not found."}, status=404)
 
-    # PUT method to update chosen need to finish
-    
-
-    # DELETE method to delete chosen
     if request.method == 'DELETE':
-        chosen.delete()
-        return JsonResponse({}, status=204)  # 204 No Content
+        tp.delete()
+        return JsonResponse({}, status=204)
 
-    # GET chosen data
-    return JsonResponse(chosen.as_dict())
-
-
+    return JsonResponse(tp.as_dict())
 
 @login_required
 def update_password(request: HttpRequest) -> HttpResponse:
@@ -322,613 +278,318 @@ def update_username(request: HttpRequest) -> HttpResponse:
         return render(request, "api/auth/updateUsername.html", {"form": form})
     
 # APIs for cuisine model below
-def cuisines_api(request: HttpRequest) -> JsonResponse:
-    """API endpoint for the Cuisine"""
 
-    # POST method which is the create method
+# APIs for TrialQuestion (Cuisine equivalent)
+def trial_questions_api(request: HttpRequest) -> JsonResponse:
+    """API endpoint for TrialQuestion"""
+
     if request.method == 'POST':
-        # Create a new cuisine
         POST = json.loads(request.body)
-        cuisine = Cuisine.objects.create(
+        question = TrialQuestion.objects.create(
             name=POST['name'],
-            description=POST['description'],
+            description=POST.get('description', '')
         )
-        return JsonResponse(cuisine.as_dict())
+        return JsonResponse(question.as_dict())
 
-    # GET method which allows the user to view all hobbies
     return JsonResponse({
-        'cuisines': [
-            cuisine.as_dict()
-            for cuisine in Cuisine.objects.all()
-        ]
+        'trial_questions': [q.as_dict() for q in TrialQuestion.objects.all()]
     })
 
-def cuisine_api(request: HttpRequest, cuisine_id: int) -> JsonResponse:
-    """API endpoint for a single cuisine"""
+def trial_question_api(request: HttpRequest, question_id: int) -> JsonResponse:
+    """API endpoint for a single TrialQuestion"""
     try:
-        cuisine = Cuisine.objects.get(id=cuisine_id)
-    except Cuisine.DoesNotExist:
-        return JsonResponse({"error": "cuisine not found."}, status=404)
-
-    # PUT method to update cuisine
-    if request.method == 'PUT':
-        try:
-            PUT = json.loads(request.body)
-            cuisine.name = PUT.get("name", cuisine.name)
-            cuisine.description = PUT.get("description", cuisine.description)
-            cuisine.save()
-            return JsonResponse(cuisine.as_dict())
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-
-    # DELETE method to delete cuisine
-    if request.method == 'DELETE':
-        cuisine.delete()
-        return JsonResponse({}, status=204)  # 204 No Content
-
-    # GET cuisine data
-    return JsonResponse(cuisine.as_dict())
-
-# APIs for chosenCuisine model below
-def chosenCuisines_api(request: HttpRequest) -> JsonResponse:
-    """API endpoint for the chosenCuisine"""
-
-    # POST method which is the create method
-    if request.method == 'POST':
-        try:
-            # Create a new restaurant
-            POST = json.loads(request.body)
-            user = User.objects.get(id=POST.get("user_id"))
-            cuisine = Cuisine.objects.get(id=POST.get("cuisine_id"))
-            chosenCuisine = ChosenCuisine.objects.create(
-                user = user,
-                cuisine = cuisine,
-
-            )
-            return JsonResponse(chosenCuisine.as_dict())
-        except ObjectDoesNotExist:
-            return JsonResponse({'error': 'Invalid user_id or restaurant_id'}, status=404)
-        except IntegrityError:
-            return JsonResponse({'error': 'chosenCuisine creation failed due to integrity error'}, status=400)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
-
-    # GET method which allows the user to view all hobbies
-    return JsonResponse({
-        'chosenCuisines': [
-            chosenCuisine.as_dict()
-            for chosenCuisine in ChosenCuisine.objects.all()
-        ]
-    })
-
-
-def chosenCuisine_api(request: HttpRequest,  chosenCuisine_id: int) -> JsonResponse:
-    """API endpoint for a single chosenCuisine"""
-    try:
-        chosenCuisine = ChosenCuisine.objects.get(id=chosenCuisine_id)
-    except chosenCuisine.DoesNotExist:
-        return JsonResponse({"error": "chosenCuisine not found."}, status=404)
-
-    # PUT method to update chosenCuisine need to finish
-    
-
-    # DELETE method to delete chosenCuisine
-    if request.method == 'DELETE':
-        chosenCuisine.delete()
-        return JsonResponse({}, status=204)  # 204 No Content
-
-    # GET chosenCuisine data
-    return JsonResponse(chosenCuisine.as_dict())
-
-
-# APIs for chosenCuisine model below
-def chosenAllergys_api(request: HttpRequest) -> JsonResponse:
-    """API endpoint for the chosenAllergy"""
-
-    # POST method which is the create method
-    if request.method == 'POST':
-        try:
-            # Create a new restaurant
-            POST = json.loads(request.body)
-            user = User.objects.get(id=POST.get("user_id"))
-            allergy = Allergy.objects.get(id=POST.get("allergy_id"))
-            chosenAllergy = ChosenAllergy.objects.create(
-                user = user,
-                allergy = allergy,
-
-            )
-            return JsonResponse(chosenAllergy.as_dict())
-        except ObjectDoesNotExist:
-            return JsonResponse({'error': 'Invalid user_id or restaurant_id'}, status=404)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
-
-    # GET method which allows the user to view all hobbies
-    return JsonResponse({
-        'chosenAllergys': [
-            chosenAllergy.as_dict()
-            for chosenAllergy in ChosenAllergy.objects.all()
-        ]
-    })
-
-
-def chosenAllergy_api(request: HttpRequest,  chosenAllergy_id: int) -> JsonResponse:
-    """API endpoint for a single chosenAllergy"""
-    try:
-        chosenAllergy = ChosenAllergy.objects.get(id=chosenAllergy_id)
-    except chosenAllergy.DoesNotExist:
-        return JsonResponse({"error": "chosenAllergy not found."}, status=404)
-
-    # PUT method to update chosenAllergy need to finish
-    
-
-    # DELETE method to delete chosenAllergy
-    if request.method == 'DELETE':
-        chosenAllergy.delete()
-        return JsonResponse({}, status=204)  # 204 No Content
-
-    # GET chosenAllergy data
-    return JsonResponse(chosenAllergy.as_dict())
-
-# APIs for restaurant model below
-def reviews_api(request: HttpRequest) -> JsonResponse:
-    """API endpoint for the Review"""
-
-    if request.method == 'POST':
-        try:
-            POST = json.loads(request.body)
-            restaurant = Restaurant.objects.get(id=POST['restaurant_id'])
-            user_id = POST['user_id']
-            # Use 'description' instead of 'review' to match the model
-            review = Review.objects.create(
-                name=POST['name'], 
-                restaurant = restaurant,
-                rating=POST['rating'], 
-                food_rating = POST['food_rating'],
-                service_rating = POST['service_rating'], 
-                ambience_rating = POST['ambience_rating'], 
-                description=POST['description'],  
-                user=User.objects.get(id=user_id),  # Use the user_id from the request
-            )
-            return JsonResponse(review.as_dict())
-        except KeyError as e:
-            return JsonResponse({'error': f'Missing required field: {str(e)}'}, status=400)
-        except User.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=404)
-    return JsonResponse({
-        'reviews': [
-            review.as_dict()
-            for review in Review.objects.all()
-        ]
-    })
-
-def review_api(request: HttpRequest, review_id: int) -> JsonResponse:
-    """API endpoint for a single review"""
-    try:
-        review = Review.objects.get(id=review_id)
-    except Review.DoesNotExist:
-        return JsonResponse({"error": "Review not found."}, status=404)
-
-    # PUT method to update restaurant
-    if request.method == 'PUT':
-        try:
-            PUT = json.loads(request.body)
-            review.name = PUT.get("name", review.name)
-            review.rating = PUT.get("rating", review.rating)
-            review.food_rating = PUT.get("food_rating", review.food_rating)
-            review.service_rating = PUT.get("service_rating", review.service_rating)
-            review.ambience_rating = PUT.get("ambience_rating", review.ambience_rating)
-            review.description = PUT.get("description", review.description)
-            review.save()
-            return JsonResponse(review.as_dict())
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-
-    # DELETE method to delete restaurant
-    if request.method == 'DELETE':
-        review.delete()
-        return JsonResponse({}, status=204)  # 204 No Content
-
-    # GET restaurant data
-    return JsonResponse(review.as_dict())
-
-# APIs for restaurant model below
-@login_required
-def reservations_api(request: HttpRequest) -> JsonResponse:
-    """API endpoint for the Reservation"""
-
-    # POST method to create a reservation
-    if request.method == 'POST':
-        try:
-            POST = json.loads(request.body)
-            user_id = POST['user_id']
-            
-            print("Received POST data:", POST)  # Debugging line to check POST data
-
-            # Ensure 'number_of_people' is in the request
-            if 'number_of_people' not in POST:
-                return JsonResponse({"error": "'number_of_people' is missing"}, status=400)
-            reservation_time = parse_datetime(POST['reservation_time'])
-            if reservation_time is None:
-                return JsonResponse({"error": "Invalid datetime format."}, status=400)
-            restaurant = Restaurant.objects.get(id=POST['restaurant_id'])
-            reservation = Reservation.objects.create(
-                restaurant=restaurant,
-                reservation_time=reservation_time,
-                number_of_people=POST['number_of_people'],
-                status=POST['status'],
-                special_requests=POST.get('special_requests', ''),
-                user=User.objects.get(id=user_id),
-            )
-            return JsonResponse(reservation.as_dict())
-
-        except KeyError as e:
-            return JsonResponse({"error": f"Missing field: {str(e)}"}, status=400)
-        except Restaurant.DoesNotExist:
-            return JsonResponse({"error": "Restaurant not found"}, status=404)
-        except Exception as e:
-            return JsonResponse({"error": f"Error: {str(e)}"}, status=500)
-
-    # If GET method is used, return all reservations
-    return JsonResponse({
-        'reservations': [
-            reservation.as_dict()
-            for reservation in Reservation.objects.all()
-        ]
-    })
-
-def reservation_api(request: HttpRequest, reservation_id: int) -> JsonResponse:
-    """API endpoint for a single reservation"""
-    try:
-        reservation = Reservation.objects.get(id=reservation_id)
-    except Reservation.DoesNotExist:
-        return JsonResponse({"error": "Reservation not found."}, status=404)
-
-    # PUT method to update reservation
-    if request.method == 'PUT':
-        try:
-            PUT = json.loads(request.body)
-            
-            reservation.reservation_time = PUT.get("reservation_time", reservation.reservation_time)
-            reservation.number_of_people = PUT.get("number_of_people", reservation.number_of_people)
-            reservation.status = PUT.get("status", reservation.status)
-            reservation.special_requests = PUT.get("special_requests", reservation.special_requests)
-            reservation.save()
-            return JsonResponse(reservation.as_dict())
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-
-    # DELETE method to delete reservation
-    if request.method == 'DELETE':
-        reservation.delete()
-        return JsonResponse({}, status=204)  # 204 No Content
-
-    # GET reservation data
-    return JsonResponse(reservation.as_dict())
-
-
-
-# APIs for cuisine model below
-def allergys_api(request: HttpRequest) -> JsonResponse:
-    """API endpoint for the Cuisine"""
-
-    # POST method which is the create method
-    if request.method == 'POST':
-        # Create a new cuisine
-        POST = json.loads(request.body)
-        allergy = Allergy.objects.create(
-            name=POST['name'],
-            
-        )
-        return JsonResponse(allergy.as_dict())
-
-    # GET method which allows the user to view all hobbies
-    return JsonResponse({
-        'allergys': [
-            allergy.as_dict()
-            for allergy in Allergy.objects.all()
-        ]
-    })
-
-def allergy_api(request: HttpRequest, allergy_id: int) -> JsonResponse:
-    """API endpoint for a single cuisine"""
-    try:
-        allergy = Allergy.objects.get(id=allergy_id)
-    except Allergy.DoesNotExist:
-        return JsonResponse({"error": "allergy not found."}, status=404)
-
-    # PUT method to update cuisine
-    if request.method == 'PUT':
-        try:
-            PUT = json.loads(request.body)
-            allergy.name = PUT.get("name", allergy.name)
-            allergy.description = PUT.get("description", allergy.description)
-            allergy.save()
-            return JsonResponse(allergy.as_dict())
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-
-    # DELETE method to delete cuisine
-    if request.method == 'DELETE':
-        allergy.delete()
-        return JsonResponse({}, status=204)  # 204 No Content
-
-    # GET cuisine data
-    return JsonResponse(allergy.as_dict())
-
-
-# APIs for restaurant model below
-def restaurants_api(request: HttpRequest) -> JsonResponse:
-    """API endpoint for the Restaurant"""
-
-    # POST method which is the create method
-    if request.method == 'POST':
-        POST = json.loads(request.body)
-        # Create a new restaurant
-        user_id = POST.get('user_id')
-        cuisine_id = POST.get('cuisine_id')
-        allergy_ids = POST.get('allergy_ids')
-        user = User.objects.get(id = user_id)
-        cuisine = Cuisine.objects.get(id =cuisine_id)
-        allergys = Allergy.objects.filter(id__in=allergy_ids)
-        POST = json.loads(request.body)
-        
-        restaurant = Restaurant.objects.create(
-            name=POST['name'],
-            cuisine= cuisine,
-            rating=POST['rating'],
-            seats_available=POST['seats_available'],
-            location=POST['location'],
-            user=user,  
-        )
-        restaurant.allergys.set(allergys)
-        restaurant.save()
-        return JsonResponse(restaurant.as_dict())
-    # If GET method is used, return all reviews with user details
-    # restaurants = Restaurant.objects.all()
-    # restaurants_data = []
-    # for restaurant in restaurants:
-    #     restaurants_data.append({
-    #         'id': restaurant.id,
-    #         'name': restaurant.name,
-    #         'description': restaurant.description,  
-    #         'rating': restaurant.rating,
-    #         'seats_available': restaurant.seats_available,
-    #         'location': restaurant.location,
-    #         'user': {
-    #             'first_name': restaurant.user.first_name,
-    #             'last_name': restaurant.user.last_name,
-    #             'id': restaurant.user.id,
-    #         },
-    #     })
-    # GET method which allows the user to view all hobbies
-    return JsonResponse({
-        'restaurants': [
-            restaurant.as_dict()
-            for restaurant in Restaurant.objects.all()
-        ]
-    })
-
-def restaurant_api(request: HttpRequest, restaurant_id: int) -> JsonResponse:
-    """API endpoint for a single restaurant"""
-    try:
-        restaurant = Restaurant.objects.get(id=restaurant_id)
-    except Restaurant.DoesNotExist:
-        return JsonResponse({"error": "Restaurant not found."}, status=404)
-
-    # PUT method to update restaurant
-    if request.method == 'PUT':
-        try:
-            PUT = json.loads(request.body)
-            restaurant.name = PUT.get("name", restaurant.name)
-            restaurant.rating = PUT.get("rating", restaurant.rating)
-            restaurant.seats_available = PUT.get("seats_available", restaurant.seats_available)
-            restaurant.location = PUT.get("location", restaurant.location)
-
-            if "allergy_ids" in PUT:
-                allergys = Allergy.objects.filter(id__in=PUT['allergy_ids'])
-                restaurant.allergys.set(allergys)  # Update the allergies
-             
-
-            restaurant.save()
-            return JsonResponse(restaurant.as_dict())
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-
-    # DELETE method to delete restaurant
-    if request.method == 'DELETE':
-        restaurant.delete()
-        return JsonResponse({}, status=204)  # 204 No Content
-
-    # GET restaurant data
-    return JsonResponse(restaurant.as_dict())
-
-
-def recommend_restaurants(request):
-    """API endpoint to recommend restaurants based on allergies and cuisines"""
-    
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            allergy_ids = data.get('allergys', [])
-            cuisine_ids = data.get('cuisines', [])
-
-            # Filter restaurants based on selected allergies and cuisines
-            recommended_restaurants = Restaurant.objects.filter(
-                allergys__in=allergy_ids,
-                cuisine__in=cuisine_ids
-            ).distinct()  # distinct to avoid duplicates
-
-            # Prepare the response data
-            restaurants_data = [restaurant.as_dict() for restaurant in recommended_restaurants]
-
-            return JsonResponse({'restaurants': restaurants_data}, status=200)
-        
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
-
-
-# APIs for restaurant model below
-def wishlists_api(request: HttpRequest) -> JsonResponse:
-    """API endpoint for the wishlist"""
-
-    if request.method == 'POST':
-        try:
-            POST = json.loads(request.body)
-            
-            owner_id = POST['owner']
-            wishlist = Wishlist.objects.create(
-                name=POST['name'],
-                owner=User.objects.get(id=owner_id)
-            )
-            return JsonResponse(wishlist.as_dict())
-        except KeyError as e:
-            return JsonResponse({'error': f'Missing required field: {str(e)}'}, status=400)
-        except User.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=404)
-    return JsonResponse({
-        'wishlists': [
-            wishlist.as_dict()
-            for wishlist in Wishlist.objects.all()
-        ]
-    })
-
-def wishlist_api(request: HttpRequest, wishlist_id: int) -> JsonResponse:
-    """API endpoint for a single wishlist"""
-    try:
-        wishlist = Wishlist.objects.get(id=wishlist_id)
-    except Wishlist.DoesNotExist:
-        return JsonResponse({"error": "wishlist not found."}, status=404)
-
-    # PUT method to update restaurant
-    if request.method == 'PUT':
-        try:
-            PUT = json.loads(request.body)
-            wishlist.name = PUT.get("name", wishlist.name)
-            wishlist.owner = PUT.get("owner", wishlist.owner)
-            wishlist.save()
-            return JsonResponse(wishlist.as_dict())
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-
-    # DELETE method to delete restaurant
-    if request.method == 'DELETE':
-        if request.user != wishlist.owner:
-            return JsonResponse({"error": "Unauthorized"}, status=403)
-
-
-    # GET restaurant data
-    return JsonResponse(wishlist.as_dict())
-
-
-# For wishlist items
-def wishlistItems_api(request: HttpRequest) -> JsonResponse:
-    if request.method == 'POST':
-        try:
-            POST = json.loads(request.body)
-
-            wishlist_id = POST['wishlist_id']
-            restaurant_id = POST['restaurant_id']
-            owner_id = POST['owner']
-
-            wishlist_item = WishlistItem.objects.create(
-                wishlist=Wishlist.objects.get(id=wishlist_id),
-                restaurant=Restaurant.objects.get(id=restaurant_id),
-                owner=User.objects.get(id=owner_id)
-            )
-            return JsonResponse(wishlist_item.as_dict(), status=201)
-        except KeyError as e:
-            return JsonResponse({'error': f'Missing required field: {str(e)}'}, status=400)
-        except (User.DoesNotExist, Wishlist.DoesNotExist, Restaurant.DoesNotExist) as e:
-            return JsonResponse({'error': str(e)}, status=404)
-
-    # GET method
-    return JsonResponse({
-        'wishlistItems': [
-            item.as_dict()
-            for item in WishlistItem.objects.all()
-        ]
-    })
-
-
-def wishlistItem_api(request: HttpRequest, wishlistItem_id: int) -> JsonResponse:
-    try:
-        wishlistItem = WishlistItem.objects.get(id=wishlistItem_id)
-    except WishlistItem.DoesNotExist:
-        return JsonResponse({"error": "wishlist item not found."}, status=404)
+        question = TrialQuestion.objects.get(id=question_id)
+    except TrialQuestion.DoesNotExist:
+        return JsonResponse({"error": "TrialQuestion not found."}, status=404)
 
     if request.method == 'PUT':
-        try:
-            PUT = json.loads(request.body)
-            if 'restaurant_id' in PUT:
-                wishlistItem.restaurant = Restaurant.objects.get(id=PUT['restaurant_id'])
-            if 'wishlist_id' in PUT:
-                wishlistItem.wishlist = Wishlist.objects.get(id=PUT['wishlist_id'])
-            if 'owner' in PUT:
-                wishlistItem.owner = User.objects.get(id=PUT['owner'])
-            wishlistItem.save()
-            return JsonResponse(wishlistItem.as_dict())
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+        PUT = json.loads(request.body)
+        question.name = PUT.get("name", question.name)
+        question.description = PUT.get("description", question.description)
+        question.save()
+        return JsonResponse(question.as_dict())
 
     if request.method == 'DELETE':
-        wishlistItem.delete()
+        question.delete()
         return JsonResponse({}, status=204)
 
-    return JsonResponse(wishlistItem.as_dict())
+    return JsonResponse(question.as_dict())
 
+# APIs for chosenCuisine model below
+# APIs for TrialQuestionAnswer (ChosenCuisine equivalent)
+def trial_question_answers_api(request: HttpRequest) -> JsonResponse:
+    """API endpoint for TrialQuestionAnswer"""
+    if request.method == 'POST':
+        POST = json.loads(request.body)
+        user = User.objects.get(id=POST['user_id'])
+        question = TrialQuestion.objects.get(id=POST['question_id'])
+        answer = POST.get('answer_text', 'chosenAnswer')
+        tqa = TrialQuestionAnswer.objects.create(user=user, question=question, answer_text=answer)
+        return JsonResponse(tqa.as_dict())
 
-def wishlist_items_api(request, wishlist_id):
-    if request.method == 'GET':
-        items = WishlistItem.objects.filter(wishlist_id=wishlist_id)
-        return JsonResponse({
-            "items": [item.as_dict() for item in items]
-        })
-    
-
-def share_wishlist(request, wishlist_id):
+    return JsonResponse({
+        'trial_question_answers': [tqa.as_dict() for tqa in TrialQuestionAnswer.objects.all()]
+    })
+def trial_question_answer_api(request: HttpRequest, tqa_id: int) -> JsonResponse:
+    """API endpoint for a single TrialQuestionAnswer"""
     try:
-        wishlist = Wishlist.objects.get(id=wishlist_id)
-    except Wishlist.DoesNotExist:
-        return JsonResponse({"error": "Wishlist not found"}, status=404)
+        tqa = TrialQuestionAnswer.objects.get(id=tqa_id)
+    except TrialQuestionAnswer.DoesNotExist:
+        return JsonResponse({"error": "TrialQuestionAnswer not found."}, status=404)
 
     if request.method == 'PUT':
-        data = json.loads(request.body)
-        friend_ids = data.get("shared_with", [])
-        users = User.objects.filter(id__in=friend_ids)
-        wishlist.shared_with.set(users)
-        wishlist.save()
-        return JsonResponse(wishlist.as_dict())
+        PUT = json.loads(request.body)
+        tqa.answer_text = PUT.get("answer_text", tqa.answer_text)
+        tqa.save()
+        return JsonResponse(tqa.as_dict())
 
-    return JsonResponse({"error": "Method not allowed"}, status=405)
+    if request.method == 'DELETE':
+        tqa.delete()
+        return JsonResponse({}, status=204)
 
-def share_wishlist(request, wishlist_id):
+    return JsonResponse(tqa.as_dict())
+
+# APIs for chosenCuisine model below
+# APIs for TrialSpecificSelection (ChosenAllergy equivalent)
+def trial_specific_selections_api(request: HttpRequest) -> JsonResponse:
+    """API endpoint for TrialSpecificSelection"""
+
+    if request.method == 'POST':
+        POST = json.loads(request.body)
+        user = User.objects.get(id=POST['user_id'])
+        option = TrialOption.objects.get(id=POST['option_id'])
+        selection = TrialSpecificSelection.objects.create(user=user, option=option)
+        return JsonResponse(selection.as_dict())
+
+    return JsonResponse({
+        'trial_specific_selections': [s.as_dict() for s in TrialSpecificSelection.objects.all()]
+    })
+
+
+def trial_specific_selection_api(request: HttpRequest, selection_id: int) -> JsonResponse:
+    """API endpoint for a single TrialSpecificSelection"""
     try:
-        data = json.loads(request.body)
-        shared_user_ids = data.get("shared_with", [])
-        wishlist = Wishlist.objects.get(id=wishlist_id)
-        
-        for user_id in shared_user_ids:
-            user = User.objects.get(id=user_id)
-            wishlist.shared_with.add(user)
+        selection = TrialSpecificSelection.objects.get(id=selection_id)
+    except TrialSpecificSelection.DoesNotExist:
+        return JsonResponse({"error": "TrialSpecificSelection not found."}, status=404)
 
-        return JsonResponse({"message": "Wishlist shared successfully."}, status=200)
-    except Wishlist.DoesNotExist:
-        return JsonResponse({"error": "Wishlist not found."}, status=404)
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=400)
+    if request.method == 'DELETE':
+        selection.delete()
+        return JsonResponse({}, status=204)
 
-def shared_wishlists(request, user_id):
-    shares = WishlistShare.objects.filter(user__id=user_id)
-    shared_wishlist_data = [s.wishlist.as_dict() for s in shares]
-    return JsonResponse({"shared_wishlists": shared_wishlist_data})
+    return JsonResponse(selection.as_dict())
 
-def get_shared_wishlists(request, user_id):
+# APIs for restaurant model below
+# APIs for TrialReview (Review equivalent)
+def trial_reviews_api(request: HttpRequest) -> JsonResponse:
+    """API endpoint for TrialReview"""
+
+    if request.method == 'POST':
+        POST = json.loads(request.body)
+        trial = Trial.objects.get(id=POST['trial_id'])
+        user = User.objects.get(id=POST['user_id'])
+        review = TrialReview.objects.create(
+            name=POST.get('name', ''),
+            trial=trial,
+            rating=POST['rating'],
+            description=POST.get('description', ''),
+            user=user
+        )
+        return JsonResponse(review.as_dict())
+
+    return JsonResponse({
+        'trial_reviews': [r.as_dict() for r in TrialReview.objects.all()]
+    })
+
+
+def trial_review_api(request: HttpRequest, review_id: int) -> JsonResponse:
+    """API endpoint for a single TrialReview"""
     try:
-        user = User.objects.get(id=user_id)
-        wishlists = user.shared_list.all()
-        return JsonResponse({
-            "shared_wishlists": [w.as_dict() for w in wishlists]
-        })
-    except User.DoesNotExist:
-        return JsonResponse({"error": "User not found."}, status=404)
+        review = TrialReview.objects.get(id=review_id)
+    except TrialReview.DoesNotExist:
+        return JsonResponse({"error": "TrialReview not found."}, status=404)
+
+    if request.method == 'PUT':
+        PUT = json.loads(request.body)
+        review.name = PUT.get("name", review.name)
+        review.rating = PUT.get("rating", review.rating)
+        review.description = PUT.get("description", review.description)
+        review.save()
+        return JsonResponse(review.as_dict())
+
+    if request.method == 'DELETE':
+        review.delete()
+        return JsonResponse({}, status=204)
+
+    return JsonResponse(review.as_dict())
+
+# APIs for cuisine model below
+# APIs for TrialOption (Allergy equivalent)
+def trial_options_api(request: HttpRequest) -> JsonResponse:
+    """API endpoint for TrialOption"""
+
+    if request.method == 'POST':
+        POST = json.loads(request.body)
+        option = TrialOption.objects.create(
+            name=POST['name'],
+            description=POST.get('description', '')
+        )
+        return JsonResponse(option.as_dict())
+
+    return JsonResponse({
+        'trial_options': [option.as_dict() for option in TrialOption.objects.all()]
+    })
+
+def trial_option_api(request: HttpRequest, option_id: int) -> JsonResponse:
+    """API endpoint for a single TrialOption"""
+    try:
+        option = TrialOption.objects.get(id=option_id)
+    except TrialOption.DoesNotExist:
+        return JsonResponse({"error": "TrialOption not found."}, status=404)
+
+    if request.method == 'PUT':
+        PUT = json.loads(request.body)
+        option.name = PUT.get("name", option.name)
+        option.description = PUT.get("description", option.description)
+        option.save()
+        return JsonResponse(option.as_dict())
+
+    if request.method == 'DELETE':
+        option.delete()
+        return JsonResponse({}, status=204)
+
+    return JsonResponse(option.as_dict())
+
+
+# APIs for restaurant model below
+def trials_api(request: HttpRequest) -> JsonResponse:
+    """API endpoint for Trial"""
+
+    if request.method == 'POST':
+        POST = json.loads(request.body)
+        user = User.objects.get(id=POST['user_id'])
+        question = TrialQuestion.objects.get(id=POST['question_id'])
+        option_ids = POST.get('option_ids', [])
+        trial = Trial.objects.create(
+            name=POST['name'],
+            user=user,
+            question=question
+        )
+        options = TrialOption.objects.filter(id__in=option_ids)
+        trial.options.set(options)
+        trial.save()
+        return JsonResponse(trial.as_dict())
+
+    return JsonResponse({
+        'trials': [trial.as_dict() for trial in Trial.objects.all()]
+    })
+def trial_api(request: HttpRequest, trial_id: int) -> JsonResponse:
+    """API endpoint for a single Trial"""
+    try:
+        trial = Trial.objects.get(id=trial_id)
+    except Trial.DoesNotExist:
+        return JsonResponse({"error": "Trial not found."}, status=404)
+
+    if request.method == 'PUT':
+        PUT = json.loads(request.body)
+        trial.name = PUT.get("name", trial.name)
+        if "question_id" in PUT:
+            trial.question = TrialQuestion.objects.get(id=PUT["question_id"])
+        if "option_ids" in PUT:
+            options = TrialOption.objects.filter(id__in=PUT["option_ids"])
+            trial.options.set(options)
+        trial.save()
+        return JsonResponse(trial.as_dict())
+
+    if request.method == 'DELETE':
+        trial.delete()
+        return JsonResponse({}, status=204)
+
+    return JsonResponse(trial.as_dict())
+
+
+
+    # try:
+    #     user = User.objects.get(id=user_id)
+    #     wishlists = user.shared_list.all()
+    #     return JsonResponse({
+    #         "shared_wishlists": [w.as_dict() for w in wishlists]
+    #     })
+    # except User.DoesNotExist:
+    #     return JsonResponse({"error": "User not found."}, status=404)
+
+
+# # APIs for restaurant model below
+# @login_required
+# def reservations_api(request: HttpRequest) -> JsonResponse:
+#     """API endpoint for the Reservation"""
+
+#     # POST method to create a reservation
+#     if request.method == 'POST':
+#         try:
+#             POST = json.loads(request.body)
+#             user_id = POST['user_id']
+            
+#             print("Received POST data:", POST)  # Debugging line to check POST data
+
+#             # Ensure 'number_of_people' is in the request
+#             if 'number_of_people' not in POST:
+#                 return JsonResponse({"error": "'number_of_people' is missing"}, status=400)
+#             reservation_time = parse_datetime(POST['reservation_time'])
+#             if reservation_time is None:
+#                 return JsonResponse({"error": "Invalid datetime format."}, status=400)
+#             restaurant = Restaurant.objects.get(id=POST['restaurant_id'])
+#             reservation = Reservation.objects.create(
+#                 restaurant=restaurant,
+#                 reservation_time=reservation_time,
+#                 number_of_people=POST['number_of_people'],
+#                 status=POST['status'],
+#                 special_requests=POST.get('special_requests', ''),
+#                 user=User.objects.get(id=user_id),
+#             )
+#             return JsonResponse(reservation.as_dict())
+
+#         except KeyError as e:
+#             return JsonResponse({"error": f"Missing field: {str(e)}"}, status=400)
+#         except Restaurant.DoesNotExist:
+#             return JsonResponse({"error": "Restaurant not found"}, status=404)
+#         except Exception as e:
+#             return JsonResponse({"error": f"Error: {str(e)}"}, status=500)
+
+#     # If GET method is used, return all reservations
+#     return JsonResponse({
+#         'reservations': [
+#             reservation.as_dict()
+#             for reservation in Reservation.objects.all()
+#         ]
+#     })
+
+# def reservation_api(request: HttpRequest, reservation_id: int) -> JsonResponse:
+#     """API endpoint for a single reservation"""
+#     try:
+#         reservation = Reservation.objects.get(id=reservation_id)
+#     except Reservation.DoesNotExist:
+#         return JsonResponse({"error": "Reservation not found."}, status=404)
+
+#     # PUT method to update reservation
+#     if request.method == 'PUT':
+#         try:
+#             PUT = json.loads(request.body)
+            
+#             reservation.reservation_time = PUT.get("reservation_time", reservation.reservation_time)
+#             reservation.number_of_people = PUT.get("number_of_people", reservation.number_of_people)
+#             reservation.status = PUT.get("status", reservation.status)
+#             reservation.special_requests = PUT.get("special_requests", reservation.special_requests)
+#             reservation.save()
+#             return JsonResponse(reservation.as_dict())
+#         except Exception as e:
+#             return JsonResponse({"error": str(e)}, status=500)
+
+#     # DELETE method to delete reservation
+#     if request.method == 'DELETE':
+#         reservation.delete()
+#         return JsonResponse({}, status=204)  # 204 No Content
+
+#     # GET reservation data
+#     return JsonResponse(reservation.as_dict())
+

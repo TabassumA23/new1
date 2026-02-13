@@ -36,8 +36,8 @@ class PageView(models.Model):
 
     def __str__(self):
         return f"Page view count: {self.count}"
-    
-class Allergy(models.Model):
+# Allergy
+class TrialOption(models.Model):
     '''
     Class for the allergy
     '''
@@ -60,8 +60,8 @@ class Allergy(models.Model):
             'description': self.description,
             
         }
-    
-class Cuisine(models.Model):
+#Cuisine 
+class TrialQuestion(models.Model):
     '''
     Class for the cusine
     '''
@@ -81,44 +81,33 @@ class Cuisine(models.Model):
             "name": self.name,
             "description": self.description,
         }
-    
-class Restaurant(models.Model):
-    '''
-    Class for the restaurant
-    '''
+#Restaurant   
+class Trial(models.Model):
+    """
+    Class for a trial
+    """
     name = models.CharField(max_length=100)
-    cuisine = models.ForeignKey(Cuisine, on_delete=models.CASCADE) 
-    allergys = models.ManyToManyField(Allergy)
-    rating = models.IntegerField(default=0)
-    seats_available = models.IntegerField(default=0)
-    location = models.TextField(max_length=100)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    question = models.ForeignKey(TrialQuestion, on_delete=models.CASCADE)
+    options = models.ManyToManyField(TrialOption)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Owner / creator of trial
     
-
     def __str__(self):
         return self.name
     
-    '''
-    Dictionary
-    '''
     def as_dict(self):
         return {
             'id': self.id,
-            # Obtains URL pattern for individual restaurant
-            'api': reverse('restaurant api', args=[self.id]),
+            'api': reverse('trial api', args=[self.id]),
             'name': self.name,
-            'cuisine': self.cuisine.name,
-            'allergys': [allergy.name for allergy in self.allergys.all()],
-            'rating': self.rating,
-            'seats_available': self.seats_available,
-            'location' : self.location,
+            'question': self.question.name,
+            'options': [option.name for option in self.options.all()],
             'user': {
                 'first_name': self.user.first_name,
                 'last_name': self.user.last_name,
                 'id': self.user.id,
             }
-            
         }
+
 
 
 
@@ -127,7 +116,7 @@ class Restaurant(models.Model):
 class UserType(models.TextChoices):
     OWNER = 'Owner', 'Owner'
     CUSTOMER = 'Customer', 'Customer'
-
+#Patient
 class User(AbstractUser):
     '''
     Class containing the custom user model which inherits the abstract user model from django making use of 
@@ -136,19 +125,18 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
+    phone_number = models.CharField(max_length=20, blank=True)
     date_of_birth = models.DateField(default='2000-01-01')
     password = models.CharField(max_length=100)
-    user_type = models.CharField(
-        max_length=20,
-        choices=UserType.choices,
-        default=UserType.CUSTOMER,
-    )  
-    chosen_restaurant = models.ManyToManyField(Restaurant, through='Chosen', related_name="related_rest+")
-    chosen_cuisine = models.ManyToManyField(Cuisine, through='ChosenCuisine')
-    friends = models.ManyToManyField('self', through='Friendship', symmetrical=False, related_name="friends_with+")
-    cuisines = models.ManyToManyField(Cuisine, related_name="cuisines")
-    allergys = models.ManyToManyField(Allergy, related_name= "allergys")
-    chosen_allergy = models.ManyToManyField(Allergy, through='ChosenAllergy')
+    # user_type = models.CharField(
+    #     max_length=20,
+    #     choices=UserType.choices,
+    #     default=UserType.CUSTOMER,
+    # )  
+    trialParticipation = models.ManyToManyField(Trial, through='TrialParticipation', related_name="participants")
+    trialQuestionAnswer = models.ManyToManyField(TrialQuestion, through='TrialQuestionAnswer', related_name="answered_by")
+    trialSpecificSelection = models.ManyToManyField(TrialOption, through='TrialSpecificSelection', related_name="selected_by")
+
     def __str__(self):
          return f"{self.first_name} {self.last_name}"
     
@@ -158,120 +146,98 @@ class User(AbstractUser):
     def as_dict(self):
         return {  
             'id': self.id,  
-            # Obtains URL pattern for individual user
+            # Obtains URL pattern for individual user 
             'api': reverse('user api', args=[self.id]),
-            'username' : self.username,
+            'username': self.username,
             'first_name': self.first_name,
             'last_name': self.last_name,
             'email': self.email,
+            'phone_number': self.phone_number,
             'date_of_birth': self.date_of_birth,
             'password': self.password,
-            'user_type': self.user_type,
+            # 'user_type': self.user_type,
         }
-    
-class Chosen(models.Model):
+
+
+#chosen Trial    
+#Chosen
+#(records a user’s enrollment in a trial)
+class TrialParticipation(models.Model):
      """
     This class is the Chosen Model which is a through model 
     which creates a many to many relationship between user and restaurant
     """
      user = models.ForeignKey('User', on_delete=models.CASCADE)
-     restaurant = models.ForeignKey('Restaurant', on_delete=models.CASCADE)
-     name= models.CharField(max_length=100, default="chosen")
+     trial = models.ForeignKey('Trial', on_delete=models.CASCADE)
+     #title= models.CharField(max_length=100, default="chosen")
      def as_dict(self):
         return{
             'id': self.id,
             'api': reverse('chosen api', args=[self.id]),
             'user': self.user.id,
-            'restaurant': self.restaurant.id,
-            'name': self.restaurant.name,
+            'trial': self.trial.id,
+            #'title': self.trial.title,
         }
-class ChosenCuisine(models.Model):
-     """
-    This class is the ChosenCuisine Model which is a through model 
-    which creates a many to many relationship between user and cuisine
+#ChosenCuisine
+class TrialQuestionAnswer(models.Model):
     """
-     user = models.ForeignKey('User', on_delete=models.CASCADE, related_name="chosen_cuisines",)
-     cuisine = models.ForeignKey('Cuisine', on_delete=models.CASCADE, related_name="chosen_by",)
-     name= models.CharField(max_length=100, default="chosenCuisine")
-     def as_dict(self):
-        return{
+    Through model linking a User to a TrialQuestion they answered.
+    Related names kept for reverse queries.
+    """
+    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name="chosen_questions")
+    question = models.ForeignKey('TrialQuestion', on_delete=models.CASCADE, related_name="chosen_by_users")
+    answer_text = models.TextField(blank=True, default="chosenAnswer")
+    
+    def as_dict(self):
+        return {
             'id': self.id,
-            'api': reverse('chosen api', args=[self.id]),
+            'api': reverse('trialquestionanswer api', args=[self.id]),
             'user': self.user.id,
-            'cuisine': self.cuisine.id,
-            'name': self.cuisine.name,
+            'question': self.question.id,
+            'answer_text': self.answer_text,
         }
      
-
-class ChosenAllergy(models.Model):
-     """
-    This class is the ChosenAllergy Model which is a through model 
-    which creates a many to many relationship between user and allergy
+#ChosenAllergy
+class TrialSpecificSelection(models.Model):
     """
-     user = models.ForeignKey('User', on_delete=models.CASCADE)
-     allergy = models.ForeignKey('Allergy', on_delete=models.CASCADE)
-     name= models.CharField(max_length=100, default="chosenAllergy")
-     def as_dict(self):
-        return{
-            'id': self.id,
-            'api': reverse('chosen api', args=[self.id]),
-            'user': self.user.id,
-            'allergy': self.allergy.id,
-            'name': self.allergy.name,
-        }
-
-class Friendship(models.Model):
+    Through model linking a User to a TrialOption or Allergy they selected.
     """
-    This class is the Friendship Model which is a through model 
-    which creates a many to many relationship between user and friend
-    """
-    user = models.ForeignKey('User', related_name="from_user", on_delete=models.CASCADE)
-    friend = models.ForeignKey('User', related_name="to_user", on_delete=models.CASCADE)
-    username = models.CharField(max_length=100, default="username")
-    accepted = models.BooleanField(default=False)
+    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name="selected_options")
+    option = models.ForeignKey('TrialOption', on_delete=models.CASCADE, related_name="selected_by_users")
 
     def as_dict(self):
-        return{
+        return {
             'id': self.id,
-            'api': reverse('friendship api', args=[self.id]),
+            'api': reverse('trialspecificselection api', args=[self.id]),
             'user': self.user.id,
-            'friend': self.friend.id,
-            'username': self.friend.username,
-            'accepted': self.accepted,
+            'option': self.option.id,
         }
 
-class Review(models.Model):
-    '''
-    Class for the review
-    '''
-    name = models.CharField(max_length=255, blank=True) 
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
-    rating = models.IntegerField() 
-    food_rating = models.IntegerField() 
-    service_rating = models.IntegerField() 
-    ambience_rating = models.IntegerField() 
-    description = models.TextField(max_length=500)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Foreign key to User model
+# #(trial feedback review/ results )
+
+class TrialReview(models.Model):
+    """
+    Class for trial feedback / review
+    """
+    name = models.CharField(max_length=255, blank=True)  # Optional title for the review
+    trial = models.ForeignKey('Trial', on_delete=models.CASCADE, related_name="reviews")
+    rating = models.IntegerField()  # Overall rating
+    description = models.TextField(max_length=500, blank=True)  # Optional detailed feedback
+    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name="trial_reviews")
     date = models.DateTimeField(default=timezone.now)  
-    
+
     def __str__(self):
-        return self.restaurant.name
-    
-    '''
-    Dictionary
-    '''
+        return f"{self.trial.name} - {self.user.first_name}"
+
     def as_dict(self):
         return {
             'id': self.id,
             'name': self.name,
-            'restaurant': {
-                'id': self.restaurant.id,
-                'name': self.restaurant.name,
+            'trial': {
+                'id': self.trial.id,
+                'name': self.trial.name,
             },
             'rating': self.rating,
-            'food_rating': self.food_rating,
-            'service_rating': self.service_rating,
-            'ambience_rating': self.ambience_rating,
             'description': self.description,
             'date': self.date,
             'user': {
@@ -281,104 +247,5 @@ class Review(models.Model):
             }
         }
 
-class Reservation(models.Model):
-    '''
-    Class for the Reservation
-    '''
-    
-    PENDING = 0
-    CONFIRMED = 1
-    DECLINED = 2
-    STATUS_CHOICES = [
-        (PENDING, 'Pending'),
-        (CONFIRMED, 'Confirmed'),
-        (DECLINED, 'Declined'),
-    ]
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)  
-    reservation_time = models.DateTimeField()
-    number_of_people = models.IntegerField(default=0,validators=[MinValueValidator(0)])
-    status = models.IntegerField(choices=STATUS_CHOICES, default=PENDING)
-    special_requests = models.TextField(max_length=200)
-    
-    def __str__(self):
-        return f"Reservation at {self.restaurant.name} for {self.number_of_people} people"
-    
-    '''
-    Dictionary
-    '''
-    def as_dict(self):
-        reservation_time = self.reservation_time
-        if isinstance(reservation_time, str):
-            reservation_time = parse_datetime(reservation_time)
-        return {
-            'id': self.id,
-            # Obtains URL pattern for individual restaurant
-            'api': reverse('reservation api', args=[self.id]),
-            'restaurant':  {
-                'name': self.restaurant.name,
-                'id': self.restaurant.id,
-            },
-            'special_requests': self.special_requests,
-            'number_of_people': self.number_of_people,
-            'status': dict(self.STATUS_CHOICES).get(self.status),
-            'reservation_time': reservation_time.strftime('%Y-%m-%d %H:%M:%S') if reservation_time else "",
-            'user': {
-                'first_name': self.user.first_name,
-                'last_name': self.user.last_name,
-                'id': self.user.id,
-            }
-        }
 
-class Wishlist(models.Model):
-    name = models.CharField(max_length=100)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_wishlists')
-    shared_with = models.ManyToManyField(User, related_name="shared_list", blank=True)
-    
-    def __str__(self):
-        return self.name
-    def as_dict(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "owner": self.owner.id,
-            "username": self.owner.username,
-            "shared_with": [user.id for user in self.shared_with.all()],
-            "user": {
-                    "id": self.owner.id,
-                    "first_name": self.owner.first_name,
-                    "last_name": self.owner.last_name,
-                },
-        }
-
-
-class WishlistItem(models.Model):
-    wishlist = models.ForeignKey(Wishlist, on_delete=models.CASCADE)
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
-    
-    
-
-    def as_dict(self):
-        return {
-            "id": self.id,
-            "wishlist_id": self.wishlist.id,
-            "restaurant": self.restaurant.name,
-            
-            "owner": {
-                'first_name': self.owner.first_name,
-                'last_name': self.owner.last_name,
-                'id': self.owner.id,
-            }
-        }
-
-class WishlistShare(models.Model):
-    wishlist = models.ForeignKey(Wishlist, on_delete=models.CASCADE, related_name='shared')
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    can_edit = models.BooleanField(default=False)
-
-    class Meta:
-        unique_together = ('wishlist', 'user')
-    def __str__(self):
-        return f"{self.user.username} access to {self.wishlist.name}"
 

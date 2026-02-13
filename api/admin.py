@@ -1,66 +1,49 @@
 from django.contrib import admin
+from .models import (
+    User, Trial, TrialQuestion, TrialOption, TrialParticipation,
+    TrialQuestionAnswer, TrialSpecificSelection, TrialReview
+)
 
-# Register your models here.
-
-from .models import User, Restaurant, Cuisine, Review, Reservation, Allergy, Wishlist, WishlistItem
-
-'''Register the friendship through model to the admin panel'''
-
-class FriendshipInline(admin.TabularInline):
-    model = User.friends.through
+# Register the trial participation through model
+class TrialParticipationInline(admin.TabularInline):
+    model = User.trialParticipation.through
     fk_name = 'user'
 
-'''Register the friendship through model to the admin panel'''
-
-class ChosenInline(admin.TabularInline):
-    model = User.chosen_restaurant.through
+# Register the trial question answer through model
+class TrialQuestionAnswerInline(admin.TabularInline):
+    model = User.trialQuestionAnswer.through
     fk_name = 'user'
 
-class ChosenCuisineInline(admin.TabularInline):
-    model = User.chosen_cuisine.through
+# Register the trial specific selection through model
+class TrialSpecificSelectionInline(admin.TabularInline):
+    model = User.trialSpecificSelection.through
     fk_name = 'user'
 
-
-'''Register the user model to the admin panel'''
+# Register the user model to the admin panel
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    inlines = (ChosenInline, FriendshipInline, ChosenCuisineInline)
+    inlines = (TrialParticipationInline, TrialQuestionAnswerInline, TrialSpecificSelectionInline)
 
+# Register the Trial model
+@admin.register(Trial)
+class TrialAdmin(admin.ModelAdmin):
+    list_display = ('name', 'user', 'question')
+    search_fields = ('name', 'user__first_name', 'user__last_name')
+    list_filter = ('question',)
 
-@admin.register(Restaurant)
-class RestaurantAdmin(admin.ModelAdmin):
-    '''Register the restaurant model to the admin panel'''
-    list_display = ('name','rating', 'seats_available', 'location')
-
-@admin.register(Cuisine)
-class CuisineAdmin(admin.ModelAdmin):
-    '''Register the cuisine model to the admin panel'''
-    list_display = ('name','description')
-
-@admin.register(Allergy)
-class AllergyAdmin(admin.ModelAdmin):
-    '''Register the cuisine model to the admin panel'''
+# Register the TrialQuestion model
+@admin.register(TrialQuestion)
+class TrialQuestionAdmin(admin.ModelAdmin):
     list_display = ('name', 'description')
 
-@admin.register(Review)
-class ReviewAdmin(admin.ModelAdmin):
-    '''Register the cuisine model to the admin panel'''
-    list_display = ( 'description', 'user')
+# Register the TrialOption model
+@admin.register(TrialOption)
+class TrialOptionAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description')
 
-@admin.register(Reservation)
-class ReservationAdmin(admin.ModelAdmin):
-    '''Register the reservation model to the admin panel'''
-    list_display = ('restaurant', 'reservation_time', 'number_of_people', 'status', 'special_requests')
-    list_filter = ('status',)
-    search_fields = ('restaurant__name', 'status')  
-
-@admin.register(Wishlist)
-class WishlistAdmin(admin.ModelAdmin):
-    '''Register the cuisine model to the admin panel'''
-    list_display = ( 'name', 'owner')
-
-@admin.register(WishlistItem)
-class WishlistItemAdmin(admin.ModelAdmin):
-    '''Register the cuisine model to the admin panel'''
-    list_display = ( 'wishlist', 'restaurant')
-
+# Register the TrialReview model
+@admin.register(TrialReview)
+class TrialReviewAdmin(admin.ModelAdmin):
+    list_display = ('trial', 'user', 'rating', 'date')
+    search_fields = ('trial__name', 'user__first_name', 'user__last_name')
+    list_filter = ('rating',)
